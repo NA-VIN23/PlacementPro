@@ -2,179 +2,112 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
 import {
-    CheckCircle2, ChevronRight, BookOpen, Clock, Users, FileText, Upload,
-    Wand2, Trash2, Plus, BrainCircuit, Code, Sigma, AlertCircle, Save
+    CheckCircle2, Users,
+    Code, Sigma, MessageSquare, Layers, AlertCircle, Save, BookOpen
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useData } from '../../context/DataContext';
 
-type AssessmentStep = 'Type' | 'Source' | 'Parameters' | 'Assign';
-type QuestionType = 'Technical' | 'Aptitude' | 'Logical' | 'Coding';
-type SourceType = 'Manual' | 'QuestionBank' | 'AI_PDF';
+type AssessmentStep = 'Configure' | 'Assign' | 'Review';
+
+interface PartConfig {
+    id: string;
+    name: string;
+    type: 'Technical' | 'Aptitude' | 'Coding' | 'Interview';
+    icon: React.ElementType;
+    color: string;
+    questions: number;
+    duration: number;
+}
 
 export const StaffAssignAssessment: React.FC = () => {
     const navigate = useNavigate();
     const { addAssessment } = useData();
-    const [currentStep, setCurrentStep] = useState<AssessmentStep>('Type');
+    const [currentStep, setCurrentStep] = useState<AssessmentStep>('Configure');
 
     // Form State
-    const [type, setType] = useState<QuestionType>('Technical');
-    const [source, setSource] = useState<SourceType>('Manual');
+    const [weekNumber, setWeekNumber] = useState(1);
     const [title, setTitle] = useState('');
-    const [duration, setDuration] = useState(60);
-    const [difficulty, setDifficulty] = useState<'Easy' | 'Medium' | 'Hard'>('Medium');
-    const [attempts, setAttempts] = useState(1);
     const [dueDate, setDueDate] = useState('');
-    const [assignedTo, setAssignedTo] = useState('All');
+    const [assignedTo, setAssignedTo] = useState('All Students');
+    const [attempts, setAttempts] = useState(1);
 
-    // Mock Questions State
-    const [questions, setQuestions] = useState<any[]>([]);
-    const [isGenerating, setIsGenerating] = useState(false);
+    // Part Configurations (Fixed for Weekly Assessment)
+    const [parts, setParts] = useState<PartConfig[]>([
+        { id: 'A', name: 'Part A: Technical', type: 'Technical', icon: Code, color: 'bg-blue-50 text-blue-600 border-blue-200', questions: 15, duration: 20 },
+        { id: 'B', name: 'Part B: Aptitude', type: 'Aptitude', icon: Sigma, color: 'bg-purple-50 text-purple-600 border-purple-200', questions: 15, duration: 20 },
+        { id: 'C', name: 'Part C: Coding', type: 'Coding', icon: Layers, color: 'bg-orange-50 text-orange-600 border-orange-200', questions: 2, duration: 30 },
+        { id: 'D', name: 'Part D: Mock Interview', type: 'Interview', icon: MessageSquare, color: 'bg-green-50 text-green-600 border-green-200', questions: 5, duration: 15 },
+    ]);
 
-    // Step 1: Assessment Types
-    const assessmentTypes = [
-        { id: 'Technical', icon: BookOpen, desc: 'Subject knowledge (Java, Python, etc.)', color: 'bg-blue-50 text-blue-600' },
-        { id: 'Aptitude', icon: Sigma, desc: 'Numerical and reasoning ability', color: 'bg-emerald-50 text-emerald-600' },
-        { id: 'Logical', icon: BrainCircuit, desc: 'Problem solving and logic', color: 'bg-purple-50 text-purple-600' },
-        { id: 'Coding', icon: Code, desc: 'Programming challenges', color: 'bg-orange-50 text-orange-600' },
-    ];
-
-    const handlePdfUpload = () => {
-        setIsGenerating(true);
-        // Simulate AI Processing
-        setTimeout(() => {
-            setIsGenerating(false);
-            setQuestions([
-                { id: 1, text: "Explain the concept of Polymorphism in Java.", type: 'mcq', options: ['A', 'B', 'C', 'D'], answer: 'A' },
-                { id: 2, text: "What is the time complexity of QuickSort?", type: 'mcq', options: ['O(n)', 'O(n log n)', 'O(n^2)', 'O(log n)'], answer: 'B' },
-                { id: 3, text: "Difference between Interface and Abstract Class?", type: 'mcq', options: ['A', 'B', 'C', 'D'], answer: 'C' },
-            ]);
-        }, 2000);
+    const updatePart = (id: string, field: 'questions' | 'duration', value: number) => {
+        setParts(parts.map(p => p.id === id ? { ...p, [field]: value } : p));
     };
+
+    const getTotalDuration = () => parts.reduce((acc, p) => acc + p.duration, 0);
+    const getTotalQuestions = () => parts.reduce((acc, p) => acc + p.questions, 0);
 
     const handlePublish = () => {
         addAssessment({
-            title: title || `${type} Assessment`,
-            type: type,
-            source: source,
+            title: title || `Week ${weekNumber} - Weekly Assessment`,
+            type: 'Technical', // Primary type
+            source: 'Manual',
             purpose: 'Evaluation',
-            duration: duration,
-            questions: questions.length,
-            difficulty: difficulty,
+            duration: getTotalDuration(),
+            questions: getTotalQuestions(),
+            difficulty: 'Medium',
             attemptLimit: attempts,
             status: 'Active',
             dueDate: dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             assignedTo: [{ type: 'Batch', value: assignedTo }]
         });
+        alert('Weekly Assessment Published Successfully!');
         navigate('/staff/analysis');
     };
 
     // Render Steps
     const renderStep = () => {
         switch (currentStep) {
-            case 'Type':
-                return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
-                        {assessmentTypes.map((t) => (
-                            <button
-                                key={t.id}
-                                onClick={() => { setType(t.id as any); setCurrentStep('Source'); }}
-                                className={cn(
-                                    "p-6 rounded-2xl border-2 text-left transition-all hover:scale-[1.02]",
-                                    type === t.id ? "border-brand-500 bg-brand-50/30" : "border-slate-100 bg-white hover:border-slate-200"
-                                )}
-                            >
-                                <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center mb-4", t.color)}>
-                                    <t.icon className="w-6 h-6" />
-                                </div>
-                                <h3 className="text-lg font-bold text-slate-900">{t.id} Assessment</h3>
-                                <p className="text-slate-500 text-sm mt-1">{t.desc}</p>
-                            </button>
-                        ))}
-                    </div>
-                );
-
-            case 'Source':
+            case 'Configure':
                 return (
                     <div className="space-y-8 animate-fade-in">
-                        <div className="grid grid-cols-2 gap-4">
-                            <button
-                                onClick={() => setSource('Manual')}
-                                className={cn("p-4 rounded-xl border-2 font-bold text-center", source === 'Manual' ? "border-brand-500 text-brand-700 bg-brand-50" : "border-slate-200")}
-                            >
-                                Manual Entry
-                            </button>
-                            <button
-                                onClick={() => setSource('AI_PDF')}
-                                className={cn("p-4 rounded-xl border-2 font-bold text-center", source === 'AI_PDF' ? "border-brand-500 text-brand-700 bg-brand-50" : "border-slate-200")}
-                            >
-                                AI Question Generator (PDF)
-                            </button>
-                        </div>
-
-                        {source === 'AI_PDF' ? (
-                            <div className="bg-white border-2 border-dashed border-slate-300 rounded-2xl p-12 text-center hover:bg-slate-50 transition-colors cursor-pointer" onClick={handlePdfUpload}>
-                                {isGenerating ? (
-                                    <div className="flex flex-col items-center">
-                                        <Wand2 className="w-12 h-12 text-brand-600 animate-spin mb-4" />
-                                        <h3 className="text-lg font-bold text-slate-800">Analyze PDF & Generating Questions...</h3>
-                                        <p className="text-slate-500">Extracting topics, difficulty analysis, and answer key generation.</p>
-                                    </div>
-                                ) : (
-                                    questions.length > 0 ? (
-                                        <div className="flex flex-col items-center">
-                                            <CheckCircle2 className="w-12 h-12 text-green-500 mb-4" />
-                                            <h3 className="text-lg font-bold text-slate-800">questions generated successfully!</h3>
-                                            <p className="text-slate-500">30 questions extracted from "Java_Notes.pdf"</p>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); setCurrentStep('Parameters'); }}
-                                                className="mt-6 px-6 py-2 bg-brand-600 text-white rounded-lg font-bold"
-                                            >
-                                                Proceed to Settings
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col items-center pointer-events-none">
-                                            <Upload className="w-12 h-12 text-slate-400 mb-4" />
-                                            <h3 className="text-lg font-bold text-slate-800">Click to Upload Study Material (PDF)</h3>
-                                            <p className="text-slate-500">AI will automatically create placement-standard questions.</p>
-                                        </div>
-                                    )
-                                )}
-                            </div>
-                        ) : (
-                            <div className="bg-slate-50 p-8 rounded-2xl text-center">
-                                <FileText className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                                <p className="text-slate-600 font-medium">Manual Question Editor will be shown after settings.</p>
-                                <button onClick={() => setCurrentStep('Parameters')} className="mt-4 text-brand-600 font-bold hover:underline">Skip to Parameters</button>
-                            </div>
-                        )}
-                    </div>
-                );
-
-            case 'Parameters':
-                return (
-                    <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
+                        {/* Basic Info */}
                         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Assessment Title</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-4 py-2 rounded-lg border border-slate-200"
-                                    placeholder={`e.g. ${type} Evaluation - Batch 2024`}
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                />
-                            </div>
+                            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                                <BookOpen className="w-5 h-5 text-brand-600" />
+                                Weekly Assessment Details
+                            </h3>
 
-                            <div className="grid grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Duration (mins)</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Week Number</label>
+                                    <select
+                                        className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white"
+                                        value={weekNumber}
+                                        onChange={(e) => setWeekNumber(Number(e.target.value))}
+                                    >
+                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(w => (
+                                            <option key={w} value={w}>Week {w}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Assessment Title</label>
                                     <input
-                                        type="number"
+                                        type="text"
                                         className="w-full px-4 py-2 rounded-lg border border-slate-200"
-                                        value={duration}
-                                        onChange={(e) => setDuration(Number(e.target.value))}
+                                        placeholder={`Week ${weekNumber} - Placement Assessment`}
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Due Date</label>
+                                    <input
+                                        type="date"
+                                        className="w-full px-4 py-2 rounded-lg border border-slate-200"
+                                        value={dueDate}
+                                        onChange={(e) => setDueDate(e.target.value)}
                                     />
                                 </div>
                                 <div>
@@ -187,37 +120,66 @@ export const StaffAssignAssessment: React.FC = () => {
                                         <option value={1}>1 Attempt (Strict)</option>
                                         <option value={2}>2 Attempts</option>
                                         <option value={3}>3 Attempts</option>
-                                        <option value={99}>Unlimited (Practice)</option>
                                     </select>
                                 </div>
                             </div>
+                        </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Difficulty</label>
-                                <div className="flex gap-2">
-                                    {['Easy', 'Medium', 'Hard'].map(d => (
-                                        <button
-                                            key={d}
-                                            onClick={() => setDifficulty(d as any)}
-                                            className={cn(
-                                                "flex-1 py-2 rounded-lg border text-sm font-medium transition-colors",
-                                                difficulty === d ? "bg-slate-800 text-white border-slate-800" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-                                            )}
-                                        >
-                                            {d}
-                                        </button>
-                                    ))}
-                                </div>
+                        {/* Parts Configuration */}
+                        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                            <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2">
+                                <Layers className="w-5 h-5 text-brand-600" />
+                                Assessment Parts (All Included)
+                            </h3>
+
+                            <div className="space-y-4">
+                                {parts.map((part) => (
+                                    <div key={part.id} className={cn("p-4 rounded-xl border flex items-center gap-4", part.color)}>
+                                        <div className="w-12 h-12 rounded-xl bg-white/50 flex items-center justify-center shrink-0">
+                                            <part.icon className="w-6 h-6" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-bold text-sm">{part.name}</h4>
+                                            <p className="text-xs opacity-70">{part.type} Questions</p>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-center">
+                                                <label className="block text-xs font-medium opacity-70 mb-1">Questions</label>
+                                                <input
+                                                    type="number"
+                                                    min={1}
+                                                    max={50}
+                                                    value={part.questions}
+                                                    onChange={(e) => updatePart(part.id, 'questions', Number(e.target.value))}
+                                                    className="w-16 px-2 py-1 rounded border border-current/20 bg-white/50 text-center text-sm font-bold"
+                                                />
+                                            </div>
+                                            <div className="text-center">
+                                                <label className="block text-xs font-medium opacity-70 mb-1">Duration</label>
+                                                <input
+                                                    type="number"
+                                                    min={5}
+                                                    max={120}
+                                                    value={part.duration}
+                                                    onChange={(e) => updatePart(part.id, 'duration', Number(e.target.value))}
+                                                    className="w-16 px-2 py-1 rounded border border-current/20 bg-white/50 text-center text-sm font-bold"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Due Date</label>
-                                <input
-                                    type="date"
-                                    className="w-full px-4 py-2 rounded-lg border border-slate-200"
-                                    value={dueDate}
-                                    onChange={(e) => setDueDate(e.target.value)}
-                                />
+                            {/* Totals */}
+                            <div className="mt-6 flex gap-6 justify-end">
+                                <div className="text-right">
+                                    <p className="text-xs text-slate-500 font-medium">Total Questions</p>
+                                    <p className="text-2xl font-bold text-slate-800">{getTotalQuestions()}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs text-slate-500 font-medium">Total Duration</p>
+                                    <p className="text-2xl font-bold text-slate-800">{getTotalDuration()} mins</p>
+                                </div>
                             </div>
                         </div>
 
@@ -261,21 +223,100 @@ export const StaffAssignAssessment: React.FC = () => {
                             </div>
                         </div>
 
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => setCurrentStep('Configure')}
+                                className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200"
+                            >
+                                Back
+                            </button>
+                            <button
+                                onClick={() => setCurrentStep('Review')}
+                                className="flex-1 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700"
+                            >
+                                Review
+                            </button>
+                        </div>
+                    </div>
+                );
+
+            case 'Review':
+                return (
+                    <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
+                        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                            <h3 className="font-bold text-slate-800 mb-6">Assessment Summary</h3>
+
+                            <div className="space-y-4">
+                                <div className="flex justify-between py-2 border-b border-slate-100">
+                                    <span className="text-slate-500">Title</span>
+                                    <span className="font-bold text-slate-800">{title || `Week ${weekNumber} - Weekly Assessment`}</span>
+                                </div>
+                                <div className="flex justify-between py-2 border-b border-slate-100">
+                                    <span className="text-slate-500">Week</span>
+                                    <span className="font-bold text-slate-800">Week {weekNumber}</span>
+                                </div>
+                                <div className="flex justify-between py-2 border-b border-slate-100">
+                                    <span className="text-slate-500">Total Questions</span>
+                                    <span className="font-bold text-slate-800">{getTotalQuestions()}</span>
+                                </div>
+                                <div className="flex justify-between py-2 border-b border-slate-100">
+                                    <span className="text-slate-500">Total Duration</span>
+                                    <span className="font-bold text-slate-800">{getTotalDuration()} minutes</span>
+                                </div>
+                                <div className="flex justify-between py-2 border-b border-slate-100">
+                                    <span className="text-slate-500">Due Date</span>
+                                    <span className="font-bold text-slate-800">{dueDate || 'Not Set'}</span>
+                                </div>
+                                <div className="flex justify-between py-2 border-b border-slate-100">
+                                    <span className="text-slate-500">Assigned To</span>
+                                    <span className="font-bold text-slate-800">{assignedTo}</span>
+                                </div>
+                                <div className="flex justify-between py-2">
+                                    <span className="text-slate-500">Attempts</span>
+                                    <span className="font-bold text-slate-800">{attempts}</span>
+                                </div>
+                            </div>
+
+                            {/* Parts Preview */}
+                            <div className="mt-6 pt-6 border-t border-slate-100">
+                                <h4 className="font-bold text-slate-700 mb-4">Parts Breakdown</h4>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {parts.map(p => (
+                                        <div key={p.id} className={cn("p-3 rounded-lg border text-sm", p.color)}>
+                                            <div className="flex items-center gap-2">
+                                                <p.icon className="w-4 h-4" />
+                                                <span className="font-bold">{p.name}</span>
+                                            </div>
+                                            <p className="text-xs opacity-70 mt-1">{p.questions} Qs • {p.duration} mins</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="bg-blue-50 p-4 rounded-xl flex gap-3 border border-blue-100">
                             <AlertCircle className="w-5 h-5 text-blue-600 shrink-0" />
                             <p className="text-sm text-blue-700">
-                                This assessment will be visible to <strong>{assignedTo}</strong> immediately after publishing.
-                                Students will receive a notification.
+                                This weekly assessment includes <strong>Mock Interview (Part D)</strong> which will be self-evaluated by students.
+                                All parts contribute to the weekly score.
                             </p>
                         </div>
 
-                        <button
-                            onClick={handlePublish}
-                            className="w-full py-4 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-500/30 flex items-center justify-center gap-2"
-                        >
-                            <Save className="w-5 h-5" />
-                            Publish Assessment
-                        </button>
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => setCurrentStep('Assign')}
+                                className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200"
+                            >
+                                Back
+                            </button>
+                            <button
+                                onClick={handlePublish}
+                                className="flex-1 py-4 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-500/30 flex items-center justify-center gap-2"
+                            >
+                                <Save className="w-5 h-5" />
+                                Publish Weekly Assessment
+                            </button>
+                        </div>
                     </div>
                 );
         }
@@ -284,30 +325,33 @@ export const StaffAssignAssessment: React.FC = () => {
     return (
         <div className="space-y-8 animate-fade-in">
             <PageHeader
-                title="Assessment Workflow"
-                description="Create, structure, and assign placement assessments."
+                title="Weekly Assessment"
+                description="Create and assign weekly placement assessments with Technical, Aptitude, Coding & Mock Interview."
             />
 
             {/* Stepper */}
-            <div className="flex items-center justify-between relative max-w-3xl mx-auto mb-12">
-                <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-200 -z-10"></div>
-                {['Type', 'Source', 'Parameters', 'Assign'].map((step, idx) => {
-                    const isCompleted = ['Type', 'Source', 'Parameters', 'Assign'].indexOf(currentStep) > idx;
+            <div className="flex items-center justify-center gap-4 mb-8">
+                {(['Configure', 'Assign', 'Review'] as AssessmentStep[]).map((step, idx) => {
+                    const stepOrder = ['Configure', 'Assign', 'Review'];
+                    const isCompleted = stepOrder.indexOf(currentStep) > idx;
                     const isCurrent = currentStep === step;
 
                     return (
-                        <div key={step} className="flex flex-col items-center gap-2 bg-[#fafafa] px-2">
-                            <div className={cn(
-                                "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all border-4",
-                                isCompleted ? "bg-brand-600 text-white border-brand-600" :
-                                    isCurrent ? "bg-white text-brand-600 border-brand-600" : "bg-white text-slate-400 border-slate-200"
-                            )}>
-                                {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : idx + 1}
+                        <React.Fragment key={step}>
+                            <div className="flex items-center gap-2">
+                                <div className={cn(
+                                    "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all",
+                                    isCompleted ? "bg-brand-600 text-white" :
+                                        isCurrent ? "bg-brand-100 text-brand-700 border-2 border-brand-600" : "bg-slate-100 text-slate-400"
+                                )}>
+                                    {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
+                                </div>
+                                <span className={cn("text-sm font-medium", isCurrent ? "text-brand-700" : "text-slate-400")}>
+                                    {step}
+                                </span>
                             </div>
-                            <span className={cn("text-xs font-bold uppercase tracking-wider", isCurrent ? "text-brand-700" : "text-slate-400")}>
-                                {step}
-                            </span>
-                        </div>
+                            {idx < 2 && <div className={cn("w-12 h-0.5", isCompleted ? "bg-brand-600" : "bg-slate-200")} />}
+                        </React.Fragment>
                     );
                 })}
             </div>

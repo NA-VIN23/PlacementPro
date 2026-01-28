@@ -26,6 +26,7 @@ export interface Assessment {
     id: string;
     title: string;
     type: 'Aptitude' | 'Logical' | 'Technical' | 'Coding';
+    category?: 'Technical' | 'Aptitude' | 'Coding'; // For filter compatibility
     source: 'Manual' | 'QuestionBank' | 'AI_PDF';
     purpose: 'Practice' | 'Evaluation';
 
