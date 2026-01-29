@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { User, Mail, Lock, BookOpen, Hash, Building2, Save, X } from 'lucide-react';
 import { cn } from '../../utils/cn';
-import { useData } from '../../context/DataContext';
+import { adminService } from '../../services/api';
 
 export const AdminAddUser: React.FC = () => {
     const navigate = useNavigate();
-    const { addUser } = useData();
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [role, setRole] = useState<'Student' | 'Staff' | 'Admin'>('Student');
     const [formData, setFormData] = useState({
         firstName: '',
@@ -28,21 +28,34 @@ export const AdminAddUser: React.FC = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Mock Add User
-        addUser({
-            name: `${formData.firstName} ${formData.lastName}`,
-            email: formData.email,
-            role: role.toUpperCase() as any,
-            batch: role === 'Student' ? formData.batch : undefined,
-            department: role === 'Student' ? formData.branch : (role === 'Staff' ? formData.department : undefined),
-            status: 'Active'
-        });
+        if (formData.password !== formData.confirmPassword) {
+            alert("Passwords do not match");
+            return;
+        }
 
-        alert(`${role} created successfully!`);
-        navigate('/admin/users');
+        setIsSubmitting(true);
+        try {
+            await adminService.addUser({
+                name: `${formData.firstName} ${formData.lastName}`,
+                email: formData.email,
+                password: formData.password,
+                role: role.toUpperCase() as any,
+                registration_number: role === 'Student' ? formData.rollNumber : undefined,
+                batch: role === 'Student' ? formData.batch : undefined,
+                department: role === 'Student' ? formData.branch : (role === 'Staff' ? formData.department : undefined),
+            });
+
+            alert(`${role} created successfully!`);
+            navigate('/admin/users');
+        } catch (error: any) {
+            console.error("Failed to add user", error);
+            alert(error.response?.data?.message || "Failed to create user. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -259,10 +272,11 @@ export const AdminAddUser: React.FC = () => {
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-2 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/30 flex items-center gap-2"
+                            disabled={isSubmitting}
+                            className="px-6 py-2 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/30 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Save className="w-5 h-5" />
-                            Create User
+                            {isSubmitting ? 'Creating...' : 'Create User'}
                         </button>
                     </div>
                 </form>

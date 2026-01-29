@@ -1,14 +1,19 @@
 import { Router } from 'express';
-import { addUser, listUsers, toggleUserParams } from '../controllers/userController';
+import { addUser, listUsers, toggleUserParams, updateProfile, getStaffActivityLogs } from '../controllers/userController';
 import { authenticate, authorize } from '../middleware/authMiddleware';
 
 const router = Router();
 
-// Protect all routes: Admin only
-router.use(authenticate, authorize(['ADMIN']));
+// Base authentication for all routes
+router.use(authenticate);
 
-router.post('/add', addUser);
-router.get('/', listUsers);
-router.patch('/:id/toggle-active', toggleUserParams);
+// Profile and Logs - Accessible by Admin and Staff
+router.patch('/profile', authorize(['ADMIN', 'STAFF']), updateProfile);
+router.get('/logs', authorize(['ADMIN', 'STAFF']), getStaffActivityLogs);
+
+// Admin Only Routes
+router.post('/add', authorize(['ADMIN']), addUser);
+router.get('/', authorize(['ADMIN']), listUsers);
+router.patch('/:id/toggle-active', authorize(['ADMIN']), toggleUserParams);
 
 export default router;

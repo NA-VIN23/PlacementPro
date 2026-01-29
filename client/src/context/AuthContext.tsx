@@ -1,17 +1,21 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { User, UserRole } from '../types';
+import { authService } from '../services/api';
+import type { User } from '../types';
 
 interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
-    login: (role: UserRole) => void;
+    isLoading: boolean;
+    login: (identifier: string, password: string) => Promise<boolean>;
     logout: () => void;
+    updateUser: (updates: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
 
     // Check local storage on mount (simulated persistence)
     useEffect(() => {
@@ -19,52 +23,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (storedUser) {
             setUser(JSON.parse(storedUser));
         }
+        setLoading(false);
     }, []);
 
-    const login = (role: UserRole) => {
-        let mockUser: User;
+    const login = async (identifier: string, password: string) => {
+        try {
+            const data = await authService.login(identifier, password);
 
-        switch (role) {
-            case 'STUDENT':
-                mockUser = {
-                    id: 's1',
-                    name: 'Rahul Kumar',
-                    role: 'STUDENT',
-                    email: 'rahul@college.edu',
-                    rollNumber: 'CS2024001'
-                };
-                break;
-            case 'STAFF':
-                mockUser = {
-                    id: 'st1',
-                    name: 'Prof. Sharma',
-                    role: 'STAFF',
-                    email: 'sharma@college.edu'
-                };
-                break;
-            case 'ADMIN':
-                mockUser = {
-                    id: 'a1',
-                    name: 'Administrator',
-                    role: 'ADMIN',
-                    email: 'admin@college.edu'
-                };
-                break;
-            default:
-                return;
+            // Decode user info from token (or just store minimal info)
+            // For now, we manually reconstruct user object or fetch profile if needed
+            // But backend validates token, so we just need valid token.
+            const user: User = {
+                id: data.id || 'sub-from-token',
+                role: data.role,
+                name: data.name,
+                email: data.email || identifier,
+                department: data.department,
+                batch: data.batch,
+                registration_number: data.registration_number,
+                is_active: true
+            };
+
+            setUser(user);
+            localStorage.setItem('placement_token', data.token);
+            localStorage.setItem('placement_user', JSON.stringify(user));
+            return true;
+        } catch (error) {
+            console.error('Login failed:', error);
+            throw error;
         }
-
-        setUser(mockUser);
-        localStorage.setItem('placement_user', JSON.stringify(mockUser));
     };
 
     const logout = () => {
         setUser(null);
         localStorage.removeItem('placement_user');
+        localStorage.removeItem('placement_token');
+        // Force full page reload to clear memory/state and prevent "back" button navigation
+        window.location.replace('/');
+    };
+
+    const updateUser = (updates: Partial<User>) => {
+        if (!user) return;
+        const updatedUser = { ...user, ...updates };
+        setUser(updatedUser);
+        localStorage.setItem('placement_user', JSON.stringify(updatedUser));
     };
 
     return (
-        <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
+        <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading: loading, login, logout, updateUser }}>
             {children}
         </AuthContext.Provider>
     );

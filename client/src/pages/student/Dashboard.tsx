@@ -1,21 +1,64 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StatsCard } from '../../components/ui/StatsCard';
-import { CheckCircle, Clock, Trophy, Target, PlayCircle, Star, ChevronRight, Play } from 'lucide-react';
+import { CheckCircle, Clock, Trophy, Target, PlayCircle, Star, Calendar, RefreshCw, AlertCircle, Play } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { cn } from '../../utils/cn';
+import { studentService } from '../../services/api';
+import type { Exam } from '../../types';
 
 export const StudentDashboard: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const [exams, setExams] = useState<Exam[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchExams = async () => {
+        setLoading(true);
+        try {
+            const data = await studentService.getAvailableExams();
+            setExams(data);
+            setError(null);
+        } catch (err) {
+            console.error('Failed to fetch exams', err);
+            setError('Could not load exams. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchExams();
+    }, []);
+
+    const isExamActive = (exam: Exam) => {
+        const now = new Date();
+        const start = new Date(exam.start_time);
+        const end = new Date(exam.end_time);
+        return now >= start && now <= end;
+    };
+
+    const getStatusText = (exam: Exam) => {
+        if (isExamActive(exam)) return 'Active Now';
+        const now = new Date();
+        if (now < new Date(exam.start_time)) return 'Upcoming';
+        return 'Expired';
+    };
+
+    const getStatusColor = (exam: Exam) => {
+        if (isExamActive(exam)) return 'text-emerald-600 bg-emerald-50 border-emerald-100';
+        const now = new Date();
+        if (now < new Date(exam.start_time)) return 'text-blue-600 bg-blue-50 border-blue-100';
+        return 'text-slate-500 bg-slate-50 border-slate-100';
+    };
 
     return (
-        <div className="space-y-8">
-            {/* Header Section with personalized greeting */}
+        <div className="space-y-8 animate-fade-in">
+            {/* Header Section */}
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-600 to-indigo-700 p-8 md:p-12 text-white shadow-xl">
                 <div className="relative z-10 max-w-2xl">
                     <h1 className="text-3xl md:text-4xl font-bold mb-4">
-                        Welcome back, {user?.name.split(' ')[0]}! 👋
+                        Welcome back, {user?.name?.split(' ')[0] || 'Student'}! 👋
                     </h1>
                     <p className="text-brand-100 text-lg mb-8 opacity-90">
                         You're on a 5-day streak! Keep up the momentum to reach your placement goals.
@@ -25,93 +68,91 @@ export const StudentDashboard: React.FC = () => {
                         Resume Preparation
                     </button>
                 </div>
-
-                {/* Decorative Background Elements */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
                 <div className="absolute bottom-0 right-20 w-32 h-32 bg-purple-500/20 rounded-full translate-y-1/2 blur-xl"></div>
             </div>
 
-            {/* Quick Stats */}
+            {/* Quick Stats (Mock for now) */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatsCard
-                    label="Assessments Passed"
-                    value="12"
-                    icon={CheckCircle}
-                    color="brand"
-                    trend="2 this week"
-                    trendUp={true}
-                />
-                <StatsCard
-                    label="Pending Tasks"
-                    value="3"
-                    icon={Clock}
-                    color="orange"
-                />
-                <StatsCard
-                    label="Your Rank"
-                    value="#42"
-                    icon={Trophy}
-                    color="purple"
-                    trend="Top 5%"
-                    trendUp={true}
-                />
-                <StatsCard
-                    label="Avg Score"
-                    value="85%"
-                    icon={Target}
-                    color="emerald"
-                    trend="+5% improvement"
-                    trendUp={true}
-                />
+                <StatsCard label="Assessments Passed" value="12" icon={CheckCircle} color="brand" trend="2 this week" trendUp={true} />
+                <StatsCard label="Pending Tasks" value="3" icon={Clock} color="orange" />
+                <StatsCard label="Your Rank" value="#42" icon={Trophy} color="purple" trend="Top 5%" trendUp={true} />
+                <StatsCard label="Avg Score" value="85%" icon={Target} color="emerald" trend="+5% improvement" trendUp={true} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Main Content Area */}
                 <div className="lg:col-span-2 space-y-8">
-                    {/* Upcoming Schedule */}
-                    <section>
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold text-slate-800">Upcoming Schedule</h2>
-                            <button className="text-brand-600 font-medium text-sm hover:underline">View Calendar</button>
-                        </div>
-
-                        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden divide-y divide-slate-50">
-                            {[
-                                { title: "Data Structures Mock Test", date: "Tomorrow, 10:00 AM", tag: "Technical", color: "text-brand-600 bg-brand-50" },
-                                { title: "Verbal Ability Quiz", date: "Jan 30, 02:00 PM", tag: "Aptitude", color: "text-purple-600 bg-purple-50" },
-                                { title: "HR Interview Practice", date: "Feb 02, 11:00 AM", tag: "Soft Skills", color: "text-emerald-600 bg-emerald-50" },
-                            ].map((item, idx) => (
-                                <div key={idx} className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group">
-                                    <div className="flex items-center gap-5">
-                                        <div className="flex flex-col items-center justify-center w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 font-semibold text-xs leading-tight">
-                                            <span>{item.date.split(',')[0].substr(0, 3)}</span>
-                                            <span className="text-lg text-slate-900">{idx + 29}</span>
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-slate-800 group-hover:text-brand-600 transition-colors text-base">{item.title}</h4>
-                                            <p className="text-sm text-slate-400 mt-1">{item.date.split(',')[1]}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <span className={cn("px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider", item.color)}>
-                                            {item.tag}
-                                        </span>
-                                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-brand-600 transition-colors" />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-
-                    {/* Performance Chart Placeholder */}
-                    <section>
-                        <h2 className="text-xl font-bold text-slate-800 mb-6">Performance Analysis</h2>
-                        <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm h-80 flex items-center justify-center bg-[url('https://cdn.dribbble.com/users/1387534/screenshots/16603708/media/a96f30a9051fb264f5146f328f416c14.png?resize=800x600&vertical=center')] bg-cover bg-center opacity-90 grayscale hover:grayscale-0 transition-all duration-500">
-                            <div className="bg-white/90 backdrop-blur text-brand-900 px-6 py-3 rounded-lg font-medium shadow-lg">
-                                Detailed Analysis Chart Coming Soon
+                    {/* Available Assessments */}
+                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-900">Available Assessments</h2>
+                                <p className="text-sm text-slate-500">Exams assigned to your batch</p>
                             </div>
+                            <button
+                                onClick={fetchExams}
+                                className="p-2 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+                                title="Refresh List"
+                            >
+                                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                            </button>
                         </div>
-                    </section>
+
+                        <div className="p-6">
+                            {loading ? (
+                                <div className="text-center py-12">
+                                    <div className="animate-spin w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                                    <p className="text-slate-400">Loading assessments...</p>
+                                </div>
+                            ) : error ? (
+                                <div className="text-center py-8 bg-red-50 rounded-xl border border-red-100">
+                                    <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+                                    <p className="text-red-700 font-medium">{error}</p>
+                                    <button onClick={fetchExams} className="mt-2 text-sm text-red-600 underline">Try Again</button>
+                                </div>
+                            ) : exams.length === 0 ? (
+                                <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                                    <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                                    <h3 className="text-lg font-medium text-slate-900 mb-1">No Assessments Available</h3>
+                                    <p className="text-slate-500">You're all caught up! Check back later.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-4">
+                                    {exams.map((exam) => (
+                                        <div key={exam.id} className="group relative bg-white border border-slate-200 rounded-xl p-5 hover:border-brand-200 hover:shadow-lg hover:shadow-brand-500/5 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                            <div>
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <div className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getStatusColor(exam)}`}>
+                                                        {getStatusText(exam)}
+                                                    </div>
+                                                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-brand-600 transition-colors">
+                                                        {exam.title}
+                                                    </h3>
+                                                </div>
+                                                <div className="flex items-center gap-4 text-sm text-slate-500">
+                                                    <span className="flex items-center"><Clock className="w-4 h-4 mr-1.5" /> {exam.duration} Mins</span>
+                                                    <span className="flex items-center"><Calendar className="w-4 h-4 mr-1.5" /> {new Date(exam.start_time).toLocaleDateString()}</span>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => navigate(`/student/assessment/${exam.id}`)}
+                                                disabled={!isExamActive(exam)}
+                                                className={`px-6 py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${isExamActive(exam)
+                                                    ? 'bg-slate-900 text-white hover:bg-brand-600 shadow-lg shadow-slate-900/20 hover:shadow-brand-600/20 active:scale-95'
+                                                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                                    }`}
+                                            >
+                                                <Play className="w-4 h-4" />
+                                                {isExamActive(exam) ? 'Start' : 'Locked'}
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Sidebar: Leaderboard & Challenges */}
@@ -133,57 +174,10 @@ export const StudentDashboard: React.FC = () => {
                                 Resume Practice
                             </button>
                         </div>
-
-                        {/* Decor */}
                         <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-brand-500 rounded-full blur-3xl opacity-20"></div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 text-white text-center">
-                        <h3 className="text-2xl font-bold mb-2">Weekly Mock Test</h3>
-                        <p className="text-indigo-100 mb-6">Complete the weekly challenge to boost your global rank.</p>
-                        <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm mb-6 inline-block">
-                            <div className="text-3xl font-bold font-mono">23:59:12</div>
-                            <div className="text-xs text-indigo-200 mt-1 uppercase tracking-wider">Time Remaining</div>
-                        </div>
-                        <button
-                            onClick={() => navigate('/student/assessment/weekly-challenge')}
-                            className="w-full py-3 bg-white text-indigo-600 font-bold rounded-xl hover:bg-indigo-50 transition-colors"
-                        >
-                            Start Assessment
-                        </button>
-                    </div>
-
-                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="font-bold text-slate-800">Top Performers</h3>
-                            <span className="text-xs font-bold text-brand-600 uppercase">This Week</span>
-                        </div>
-
-                        <div className="space-y-4">
-                            {[
-                                { name: "Sarah J.", score: "980 pts", img: "SJ" },
-                                { name: "Mike R.", score: "945 pts", img: "MR" },
-                                { name: "Jessica T.", score: "920 pts", img: "JT" },
-                            ].map((p, i) => (
-                                <div key={i} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className={cn(
-                                            "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white",
-                                            i === 0 ? "bg-yellow-400 shadow-yellow-200" :
-                                                i === 1 ? "bg-slate-300" : "bg-orange-300"
-                                        )}>
-                                            {i + 1}
-                                        </div>
-                                        <span className="font-medium text-slate-700 text-sm">{p.name}</span>
-                                    </div>
-                                    <span className="font-bold text-slate-900 text-sm">{p.score}</span>
-                                </div>
-                            ))}
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
     );
 };
-

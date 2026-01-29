@@ -1,10 +1,21 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Briefcase, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { cn } from '../utils/cn';
 
 export const RoleSelection: React.FC = () => {
     const navigate = useNavigate();
+    const { user, isAuthenticated } = useAuth();
+
+    React.useEffect(() => {
+        if (isAuthenticated && user) {
+            const dashboard = user.role === 'STUDENT' ? '/student/dashboard' :
+                user.role === 'STAFF' ? '/staff/dashboard' :
+                    '/admin/dashboard';
+            navigate(dashboard, { replace: true });
+        }
+    }, [isAuthenticated, user, navigate]);
 
     const roles = [
         {

@@ -1,39 +1,101 @@
-/**
- * API Service Placeholder
- * 
- * Future integration points:
- * - Axios instance configuration
- * - Request interceptors for attaching tokens
- * - Response interceptors for handling errors (401, 403)
- */
+import axios from 'axios';
+import type { Exam, Question } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// Example generic fetcher
-export const apiClient = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
-    const method = options.method || 'GET';
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+export const api = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+        'Content-Type': 'application/json'
+    }
+});
 
-    // Return mock data for now
-    console.log(`[API Call] ${method} ${endpoint}`);
-    return {} as T;
-};
+// Request Interceptor: Attach Token
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('placement_token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+// Response Interceptor: Handle Errors
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            // Token expired or invalid
+            localStorage.removeItem('placement_token');
+            localStorage.removeItem('placement_user');
+            // Optional: Redirect to login
+            // window.location.href = '/'; 
+        }
+        return Promise.reject(error);
+    }
+);
 
 export const authService = {
-    login: async (credentials: any) => {
-        // Post to /auth/login
-    },
-    logout: async () => {
-        // Post to /auth/logout
+    login: async (identifier: string, password: string) => {
+        const response = await api.post('/auth/login', { identifier, password });
+        return response.data; // { token, role }
     }
 };
 
+
+
 export const studentService = {
-    getDashboardStats: async () => {
-        // Get /student/stats
+    getAvailableExams: async (): Promise<Exam[]> => {
+        const response = await api.get('/exams');
+        return response.data;
     },
-    getAssessments: async () => {
-        // Get /assessments/student
+    getExamQuestions: async (examId: string): Promise<{ exam: Exam, questions: Question[] }> => {
+        const response = await api.get(`/exams/${examId}/take`);
+        return response.data;
+    },
+    submitExam: async (examId: string, answers: Record<string, string>): Promise<{ message: string, score: number }> => {
+        const response = await api.post(`/exams/${examId}/submit`, { answers });
+        return response.data;
+    },
+    getStudentResults: async (): Promise<any[]> => {
+        const response = await api.get('/exams/student/results');
+        return response.data;
+    }
+};
+
+export const staffService = {
+    createExam: async (examData: Partial<Exam> & { questions: any[] }) => {
+        const response = await api.post('/exams', examData);
+        return response.data;
+    },
+    getStats: async () => {
+        const response = await api.get('/exams/stats/dashboard');
+        return response.data;
+    },
+    getAllSubmissions: async (): Promise<any[]> => {
+        const response = await api.get('/exams/staff/submissions');
+        return response.data;
+    }
+};
+
+export const adminService = {
+    getUsers: async () => {
+        const response = await api.get('/users');
+        return response.data;
+    },
+    addUser: async (userData: any) => {
+        const response = await api.post('/users/add', userData);
+        return response.data;
+    },
+    toggleUserStatus: async (userId: string, isActive: boolean) => {
+        const response = await api.patch(`/users/${userId}/toggle-active`, { isActive });
+        return response.data;
+    },
+    updateProfile: async (data: { email: string; name?: string; department?: string }) => {
+        const response = await api.patch('/users/profile', data);
+        return response.data;
+    },
+    getLogs: async () => {
+        const response = await api.get('/users/logs');
+        return response.data;
     }
 };

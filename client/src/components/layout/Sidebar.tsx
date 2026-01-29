@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LogOut, ChevronRight, UserCircle } from 'lucide-react';
+import { LogOut, UserCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { STUDENT_NAV, STAFF_NAV, ADMIN_NAV } from '../../constants/navigation';
 import { cn } from '../../utils/cn';
@@ -10,7 +10,7 @@ export const Sidebar: React.FC = () => {
 
     if (!user) return null;
 
-    let navItems = [];
+    let navItems: any[] = [];
     let roleColor = "";
 
     switch (user.role) {
