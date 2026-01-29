@@ -69,7 +69,7 @@ export const LoginForm: React.FC = () => {
 
         // Simulate network delay
         try {
-            await login(identifier, password);
+            await login(identifier, password, currentRole);
             setLoading(false);
 
             navigate(
@@ -77,10 +77,10 @@ export const LoginForm: React.FC = () => {
                     currentRole === 'STAFF' ? '/staff/dashboard' :
                         '/admin/dashboard'
             );
-        } catch (error) {
-            console.error('Login failed during component submit:', error);
+        } catch (error: any) {
+            console.error('Login failed:', error);
             setLoading(false);
-            alert('Login failed. Please check your credentials.');
+            alert(error.message || 'Login failed. Please check your credentials.');
         }
     };
 
@@ -179,7 +179,7 @@ export const LoginForm: React.FC = () => {
 
                     <div className="mt-8 pt-6 border-t border-slate-100 text-center">
                         <p className="text-xs text-slate-400">
-                            Protected by PlacementPro Secure Login System
+                            Protected by PlacementPrePro Secure Login System
                         </p>
                     </div>
                 </div>

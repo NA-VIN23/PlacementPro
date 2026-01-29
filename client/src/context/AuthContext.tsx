@@ -6,7 +6,7 @@ interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (identifier: string, password: string) => Promise<boolean>;
+    login: (identifier: string, password: string, requiredRole?: string) => Promise<boolean>;
     logout: () => void;
     updateUser: (updates: Partial<User>) => void;
 }
@@ -26,9 +26,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
     }, []);
 
-    const login = async (identifier: string, password: string) => {
+    const login = async (identifier: string, password: string, requiredRole?: string) => {
         try {
             const data = await authService.login(identifier, password);
+
+            // Validate Role if specified
+            if (requiredRole && data.role !== requiredRole) {
+                throw new Error(`Access Denied: You must be a ${requiredRole} to login here.`);
+            }
 
             // Decode user info from token (or just store minimal info)
             // For now, we manually reconstruct user object or fetch profile if needed

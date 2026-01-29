@@ -57,7 +57,7 @@ export const RoleSelection: React.FC = () => {
 
                 <div className="relative z-10 max-w-lg text-white space-y-8">
                     <div className="inline-block px-4 py-1.5 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-sm font-medium tracking-wide">
-                        🚀 PlacementPro v2.0
+                        🚀 PlacementPrePro v2.0
                     </div>
                     <h1 className="text-6xl font-extrabold leading-tight tracking-tight">
                         Shape Your <br />

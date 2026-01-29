@@ -18,6 +18,9 @@ export interface Exam {
     duration: number;
     start_time: string; // ISO Date String
     end_time: string;
+    type?: 'DAILY' | 'WEEKLY';
+    mode?: 'MANUAL' | 'PDF';
+    pdf_url?: string;
 }
 
 export interface Question {

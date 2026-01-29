@@ -24,6 +24,7 @@ export const AssessmentRunner: React.FC = () => {
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [score, setScore] = useState<number | null>(null);
+    const [reviewDetails, setReviewDetails] = useState<any[]>([]);
 
     // Core Assessment State
     const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -206,6 +207,7 @@ export const AssessmentRunner: React.FC = () => {
             if (!id) return;
             const result = await studentService.submitExam(id, answers);
             setScore(result.score);
+            setReviewDetails(result.reviewDetails || []);
             setSubmitted(true);
         } catch (err) {
             console.error('Submission failed', err);
@@ -247,27 +249,81 @@ export const AssessmentRunner: React.FC = () => {
 
     if (submitted) {
         return (
-            <div className="fixed inset-0 flex items-center justify-center bg-slate-50 p-4 animate-fade-in">
-                <div className="bg-white p-12 rounded-3xl shadow-2xl max-w-lg w-full text-center">
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle className="w-10 h-10 text-green-600" />
-                    </div>
-                    <h2 className="text-3xl font-bold text-slate-900 mb-2">Assessment Submitted!</h2>
-                    <p className="text-slate-500 mb-8">Your answers have been recorded successfully.</p>
+            <div className="fixed inset-0 bg-slate-50 overflow-y-auto animate-fade-in z-50">
+                <div className="max-w-4xl mx-auto py-12 px-4">
+                    {/* Score Card */}
+                    <div className="bg-white p-8 rounded-3xl shadow-xl text-center mb-8 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-green-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
-                    <div className="bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100">
-                        <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Your Score</p>
-                        <div className="text-5xl font-bold text-brand-600">
-                            {score} <span className="text-2xl text-slate-400 font-medium">/ {questions.length}</span>
+                        <div className="relative z-10">
+                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <CheckCircle className="w-8 h-8 text-green-600" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-slate-900 mb-2">Assessment Completed</h2>
+                            <div className="my-6">
+                                <span className="text-6xl font-black text-brand-600">{score}</span>
+                                <span className="text-2xl text-slate-400 font-medium ml-2">/ {questions.length}</span>
+                            </div>
+                            <button
+                                onClick={() => navigate('/student/dashboard')}
+                                className="px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all"
+                            >
+                                Return to Dashboard
+                            </button>
                         </div>
                     </div>
 
-                    <button
-                        onClick={() => navigate('/student/dashboard')}
-                        className="w-full px-8 py-4 bg-brand-600 text-white font-bold rounded-xl text-lg hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all hover:scale-105"
-                    >
-                        Return to Dashboard
-                    </button>
+                    {/* Detailed Review */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3 mb-6">
+                            <Eye className="w-6 h-6 text-brand-600" />
+                            <h3 className="text-2xl font-bold text-slate-800">Detailed Review</h3>
+                        </div>
+
+                        {questions.map((q, idx) => {
+                            const correctDetail = reviewDetails?.find((r: any) => r.id === q.id);
+                            const correctAnswer = correctDetail?.correct_answer;
+                            const explanation = correctDetail?.explanation;
+                            const userAnswer = answers[q.id];
+                            const isCorrect = userAnswer === correctAnswer;
+
+                            return (
+                                <div key={q.id} className={`p-6 rounded-2xl border ${isCorrect ? 'border-green-200 bg-green-50/30' : 'border-red-200 bg-red-50/30'} shadow-sm bg-white`}>
+                                    <div className="flex items-start gap-4 mb-4">
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-bold ${isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                            {idx + 1}
+                                        </div>
+                                        <p className="text-lg font-medium text-slate-900">{q.question_text}</p>
+                                    </div>
+
+                                    <div className="space-y-3 pl-12">
+                                        {q.options.map((opt, optIdx) => {
+                                            const isSelected = userAnswer === opt;
+                                            const isTheCorrectAnswer = correctAnswer === opt;
+
+                                            let optionClass = "border-slate-200 bg-white text-slate-700";
+                                            if (isTheCorrectAnswer) optionClass = "border-green-500 bg-green-50 text-green-900 font-bold";
+                                            else if (isSelected && !isCorrect) optionClass = "border-red-500 bg-red-50 text-red-900 font-medium";
+
+                                            return (
+                                                <div key={optIdx} className={`flex items-center justify-between p-3 rounded-lg border ${optionClass}`}>
+                                                    <span>{opt}</span>
+                                                    {isTheCorrectAnswer && <CheckCircle className="w-5 h-5 text-green-600" />}
+                                                    {isSelected && !isCorrect && <X className="w-5 h-5 text-red-500" />}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {explanation && (
+                                        <div className="mt-4 ml-12 p-4 bg-blue-50 rounded-xl text-sm border border-blue-100 text-blue-800">
+                                            <strong>Explanation:</strong> {explanation}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
         );

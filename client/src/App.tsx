@@ -12,12 +12,14 @@ import { StudentCommunication } from './pages/student/Communication';
 import { StudentLeaderboard } from './pages/student/Leaderboard';
 import { StudentProfile } from './pages/student/Profile';
 import { StudentLearning } from './pages/student/Learning';
+import { ResumeBuilder } from './pages/student/resume/ResumeBuilder';
 
 import { StaffAssignAssessment } from './pages/staff/AssignAssessment';
 import { StaffDashboard } from './pages/staff/Dashboard';
 import { AdminDashboard } from './pages/admin/Dashboard';
 import { StaffStudentAnalysis } from './pages/staff/StudentAnalysis';
 import { StaffProfile } from './pages/staff/Profile';
+import { StudentList } from './pages/staff/StudentList';
 
 import { AssessmentRunner } from './pages/student/AssessmentRunner';
 import { InterviewSession } from './pages/student/InterviewSession';
@@ -49,6 +51,7 @@ function App() {
               <Route path="learning" element={<StudentLearning />} />
               <Route path="communication" element={<StudentCommunication />} />
               <Route path="leaderboard" element={<StudentLeaderboard />} />
+              <Route path="resume-builder" element={<ResumeBuilder />} />
               <Route path="profile" element={<StudentProfile />} />
               <Route index element={<Navigate to="dashboard" replace />} />
             </Route>
@@ -59,6 +62,7 @@ function App() {
             <Route path="/staff" element={<MainLayout />}>
               <Route path="dashboard" element={<StaffDashboard />} />
               <Route path="assign-assessment" element={<StaffAssignAssessment />} />
+              <Route path="students" element={<StudentList />} />
               <Route path="analysis" element={<StaffStudentAnalysis />} />
               <Route path="profile" element={<StaffProfile />} />
               <Route path="assessment/:id/grade" element={<StaffGradingConsole />} />

@@ -35,11 +35,13 @@ export const Sidebar: React.FC = () => {
             {/* Brand Header */}
             <div className="p-8 pb-6">
                 <div className="flex items-center gap-3 mb-8">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-500/30">
-                        P
-                    </div>
+                    <img
+                        src="/logo.jpg"
+                        alt="Logo"
+                        className="w-12 h-12 object-contain"
+                    />
                     <div>
-                        <h1 className="text-xl font-bold text-slate-900 tracking-tight">PlacementPro</h1>
+                        <h1 className="text-xl font-bold text-slate-900 tracking-tight">PlacementPrePro</h1>
                         <p className="text-xs text-slate-500 font-medium">Career Excellence</p>
                     </div>
                 </div>
