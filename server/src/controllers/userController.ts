@@ -151,3 +151,18 @@ export const getStaffActivityLogs = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Failed to fetch logs' });
     }
 };
+
+export const getStudents = async (req: Request, res: Response) => {
+    try {
+        const { data: students, error } = await supabase
+            .from('users')
+            .select('id, role, email, registration_number, department, batch, name, created_at')
+            .eq('role', 'STUDENT')
+            .order('registration_number', { ascending: true });
+
+        if (error) throw error;
+        res.json(students);
+    } catch (err: any) {
+        res.status(500).json({ message: 'Failed to fetch students', error: err.message });
+    }
+};

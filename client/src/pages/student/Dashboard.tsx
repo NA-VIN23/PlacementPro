@@ -13,6 +13,13 @@ export const StudentDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const [stats, setStats] = useState({
+        assessmentsPassed: 0,
+        pendingTasks: 0,
+        rank: '-',
+        avgScore: '0%'
+    });
+
     const fetchExams = async () => {
         setLoading(true);
         try {
@@ -27,8 +34,18 @@ export const StudentDashboard: React.FC = () => {
         }
     };
 
+    const fetchStats = async () => {
+        try {
+            const data = await studentService.getDashboardStats();
+            setStats(data);
+        } catch (err) {
+            console.error('Failed to fetch stats', err);
+        }
+    };
+
     useEffect(() => {
         fetchExams();
+        fetchStats();
     }, []);
 
     const isExamActive = (exam: Exam) => {
@@ -63,7 +80,10 @@ export const StudentDashboard: React.FC = () => {
                     <p className="text-brand-100 text-lg mb-8 opacity-90">
                         You're on a 5-day streak! Keep up the momentum to reach your placement goals.
                     </p>
-                    <button className="px-6 py-3 bg-white text-brand-700 font-bold rounded-xl hover:bg-brand-50 transition-colors shadow-lg shadow-black/10 inline-flex items-center gap-2">
+                    <button
+                        onClick={() => navigate('/student/learning')}
+                        className="px-6 py-3 bg-white text-brand-700 font-bold rounded-xl hover:bg-brand-50 transition-colors shadow-lg shadow-black/10 inline-flex items-center gap-2"
+                    >
                         <PlayCircle className="w-5 h-5" />
                         Resume Preparation
                     </button>
@@ -72,12 +92,12 @@ export const StudentDashboard: React.FC = () => {
                 <div className="absolute bottom-0 right-20 w-32 h-32 bg-purple-500/20 rounded-full translate-y-1/2 blur-xl"></div>
             </div>
 
-            {/* Quick Stats (Mock for now) */}
+            {/* Quick Stats (Real Data) */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatsCard label="Assessments Passed" value="12" icon={CheckCircle} color="brand" trend="2 this week" trendUp={true} />
-                <StatsCard label="Pending Tasks" value="3" icon={Clock} color="orange" />
-                <StatsCard label="Your Rank" value="#42" icon={Trophy} color="purple" trend="Top 5%" trendUp={true} />
-                <StatsCard label="Avg Score" value="85%" icon={Target} color="emerald" trend="+5% improvement" trendUp={true} />
+                <StatsCard label="Assessments Passed" value={stats.assessmentsPassed.toString()} icon={CheckCircle} color="brand" trend="Lifetime" trendUp={true} />
+                <StatsCard label="Pending Tasks" value={stats.pendingTasks.toString()} icon={Clock} color="orange" trend="Due soon" />
+                <StatsCard label="Your Rank" value={stats.rank} icon={Trophy} color="purple" trend="Overall" trendUp={true} />
+                <StatsCard label="Avg Score" value={stats.avgScore} icon={Target} color="emerald" trend="Performance" trendUp={true} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -161,17 +181,17 @@ export const StudentDashboard: React.FC = () => {
                         <div className="relative z-10">
                             <div className="flex items-center gap-2 text-yellow-400 mb-2">
                                 <Star className="w-5 h-5 fill-current" />
-                                <span className="font-bold uppercase tracking-wider text-xs">Daily Challenge</span>
+                                <span className="font-bold uppercase tracking-wider text-xs">Learning</span>
                             </div>
-                            <h3 className="text-2xl font-bold mb-4">Code Debugging Master</h3>
-                            <p className="text-slate-300 text-sm mb-6">Find and fix the bugs in the given java snippet within 15 minutes.</p>
+                            <h3 className="text-2xl font-bold mb-4">Start Learning</h3>
+                            <p className="text-slate-300 text-sm mb-6">Explore concepts across multiple topics with structured lessons and hands-on practice.</p>
 
                             <button
-                                onClick={() => navigate('/student/assessment')}
+                                onClick={() => navigate('/student/learning')}
                                 className="w-full py-3 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand-500/30"
                             >
                                 <Play className="w-4 h-4 fill-current" />
-                                Resume Practice
+                                Let's Start
                             </button>
                         </div>
                         <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-brand-500 rounded-full blur-3xl opacity-20"></div>

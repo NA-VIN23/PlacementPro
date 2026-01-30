@@ -52,12 +52,20 @@ export const studentService = {
         const response = await api.get(`/exams/${examId}/take`);
         return response.data;
     },
-    submitExam: async (examId: string, answers: Record<string, string>): Promise<{ message: string, score: number }> => {
+    submitExam: async (examId: string, answers: Record<string, string>): Promise<{ message: string, score: number, total: number, reviewDetails: any[] }> => {
         const response = await api.post(`/exams/${examId}/submit`, { answers });
         return response.data;
     },
     getStudentResults: async (): Promise<any[]> => {
         const response = await api.get('/exams/student/results');
+        return response.data;
+    },
+    getDashboardStats: async () => {
+        const response = await api.get('/exams/student/dashboard-stats');
+        return response.data;
+    },
+    getAssessmentPageData: async () => {
+        const response = await api.get('/exams/student/assessment-page');
         return response.data;
     }
 };
@@ -73,6 +81,18 @@ export const staffService = {
     },
     getAllSubmissions: async (): Promise<any[]> => {
         const response = await api.get('/exams/staff/submissions');
+        return response.data;
+    },
+    extractPdf: async (file: File) => {
+        const formData = new FormData();
+        formData.append('pdf', file);
+        const response = await api.post('/exams/extract-pdf', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
+    getStudents: async () => {
+        const response = await api.get('/users/students');
         return response.data;
     }
 };
