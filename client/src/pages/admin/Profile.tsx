@@ -12,7 +12,7 @@ export const AdminProfile: React.FC = () => {
     const handleUpdate = async () => {
         setLoading(true);
         try {
-            await adminService.updateProfile(email);
+            await adminService.updateProfile({ email });
             setIsEditing(false);
             alert('Profile updated successfully!');
             // Ideally update local user context here if needed, or force reload
