@@ -49,7 +49,9 @@ export interface MockInterview {
     id: string; // UUID
     student_id: string;
     interview_type: 'HR' | 'TECHNICAL';
-    score: number;
-    feedback: string;
+    score?: number;
+    feedback?: string;
+    history?: any[]; // Chat history
+    status: 'IN_PROGRESS' | 'COMPLETED';
     created_at?: Date;
 }

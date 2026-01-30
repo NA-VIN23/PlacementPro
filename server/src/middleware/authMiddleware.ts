@@ -4,7 +4,7 @@ import { UserRole } from '../models/types';
 
 interface AuthRequest extends Request {
     user?: {
-        userId: string;
+        id: string;
         role: UserRole;
     };
 }
@@ -18,7 +18,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key') as { userId: string; role: UserRole };
-        req.user = decoded;
+        req.user = { id: decoded.userId, role: decoded.role };
         next();
     } catch (error) {
         res.status(400).json({ message: 'Invalid token.' });

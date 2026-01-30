@@ -67,6 +67,26 @@ export const studentService = {
     getAssessmentPageData: async () => {
         const response = await api.get('/exams/student/assessment-page');
         return response.data;
+    },
+    async startInterview(type: 'HR' | 'TECHNICAL') {
+        const response = await api.post('/mock-interviews/start', { type });
+        return response.data;
+    },
+    async chatInterview(interviewId: string, message: string) {
+        const response = await api.post('/mock-interviews/chat', { interviewId, message });
+        return response.data;
+    },
+    async endInterview(interviewId: string) {
+        const response = await api.post('/mock-interviews/end', { interviewId });
+        return response.data;
+    },
+    async getProfile() {
+        const response = await api.get('/student/profile');
+        return response.data;
+    },
+    async updateProfile(profileData: any) {
+        const response = await api.post('/student/profile', profileData);
+        return response.data;
     }
 };
 

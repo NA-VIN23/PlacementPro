@@ -7,8 +7,7 @@ export const StudentCommunication: React.FC = () => {
     const navigate = useNavigate();
 
     const startSession = (type: string) => {
-        const sessionId = Math.random().toString(36).substring(7);
-        navigate(`/student/interview/${sessionId}?type=${type}`);
+        navigate('/student/interview', { state: { type } });
     };
 
     return (
