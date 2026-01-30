@@ -342,7 +342,7 @@ export const StudentProfile: React.FC = () => {
                                             </div>
                                             <p className="text-sm text-slate-600 mb-3 flex-1 line-clamp-3" title={proj.description}>{proj.description}</p>
                                             <div className="flex flex-wrap gap-1 mt-auto">
-                                                {proj.techStack.split(',').map((tech, idx) => (
+                                                {(proj.techStack || '').split(',').map((tech, idx) => (
                                                     <span key={idx} className="text-[10px] bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded">{tech.trim()}</span>
                                                 ))}
                                             </div>
