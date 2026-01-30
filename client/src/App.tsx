@@ -37,14 +37,14 @@ function App() {
           <Route path="/" element={<RoleSelection />} />
           <Route path="/login/:role" element={<LoginForm />} />
 
-          {/* Student Routes - Exam Pages (No Sidebar) */}
+
+          {/* Student Routes */}
           <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
+            {/* Exam Pages (No Sidebar) */}
             <Route path="/student/assessment/:id" element={<AssessmentRunner />} />
             <Route path="/student/interview/:id" element={<InterviewSession />} />
-          </Route>
 
-          {/* Student Routes - Normal Pages (With Sidebar) */}
-          <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
+            {/* Normal Pages (With Sidebar) */}
             <Route path="/student" element={<MainLayout />}>
               <Route path="dashboard" element={<StudentDashboard />} />
               <Route path="assessment" element={<StudentAssessment />} />
