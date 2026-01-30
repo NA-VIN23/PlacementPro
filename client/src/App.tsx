@@ -11,7 +11,7 @@ import { StudentAssessment } from './pages/student/Assessment';
 import { StudentCommunication } from './pages/student/Communication';
 import { StudentLeaderboard } from './pages/student/Leaderboard';
 import { StudentProfile } from './pages/student/Profile';
-import { StudentLearning } from './pages/student/Learning';
+import { StudentLearning } from './pages/student/StudentLearning';
 import { ResumeBuilder } from './pages/student/resume/ResumeBuilder';
 
 import { StaffAssignAssessment } from './pages/staff/AssignAssessment';

@@ -1,6 +1,10 @@
 import { Router } from 'express';
-import { addUser, listUsers, toggleUserParams, updateProfile, getStaffActivityLogs, getStudents } from '../controllers/userController';
+import { addUser, listUsers, toggleUserParams, updateProfile, getStaffActivityLogs, getStudents, bulkImportUsers, deleteUser } from '../controllers/userController';
 import { authenticate, authorize } from '../middleware/authMiddleware';
+import multer from 'multer';
+
+// Multer config for file uploads
+const upload = multer({ storage: multer.memoryStorage() });
 
 const router = Router();
 
@@ -14,6 +18,8 @@ router.get('/students', authorize(['ADMIN', 'STAFF']), getStudents);
 
 // Admin Only Routes
 router.post('/add', authorize(['ADMIN']), addUser);
+router.post('/import-bulk', authorize(['ADMIN']), upload.single('file'), bulkImportUsers);
+router.delete('/:id', authorize(['ADMIN']), deleteUser);
 router.get('/', authorize(['ADMIN']), listUsers);
 router.patch('/:id/toggle-active', authorize(['ADMIN']), toggleUserParams);
 

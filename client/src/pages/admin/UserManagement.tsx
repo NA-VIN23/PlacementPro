@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
-import { Plus, Search, Shield, Mail, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, Shield, Mail, CheckCircle, XCircle, FileInput, Trash2 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { adminService } from '../../services/api';
+import { BulkImportModal } from '../../components/admin/BulkImportModal';
 
 export const AdminUserManagement: React.FC = () => {
     const navigate = useNavigate();
@@ -11,6 +12,7 @@ export const AdminUserManagement: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [roleFilter, setRoleFilter] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
     const fetchUsers = async () => {
         try {
@@ -47,19 +49,41 @@ export const AdminUserManagement: React.FC = () => {
         }
     };
 
+    const handleDeleteUser = async (user: any) => {
+        const confirmMessage = `Deleting ${user.name} will permanently remove:\n\n• All exam data\n• All submissions\n• All scores and history\n\nThis action CANNOT be undone.\nDo you want to continue?`;
+        if (!confirm(confirmMessage)) return;
+
+        try {
+            await adminService.deleteUser(user.id);
+            setUsers(users.filter(u => u.id !== user.id));
+        } catch (error: any) {
+            console.error("Delete failed", error);
+            alert(error.response?.data?.message || 'Failed to delete user');
+        }
+    };
+
     return (
         <div className="space-y-8 animate-fade-in">
             <PageHeader
                 title="User Management"
                 description="Manage students, faculty, and administrative accounts."
                 action={
-                    <button
-                        onClick={() => navigate('/admin/users/add')}
-                        className="px-4 py-2 bg-brand-600 text-white font-bold rounded-lg hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/30 flex items-center gap-2"
-                    >
-                        <Plus className="w-5 h-5" />
-                        Add User
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setIsImportModalOpen(true)}
+                            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm"
+                        >
+                            <FileInput className="w-5 h-5 text-brand-600" />
+                            Bulk Import
+                        </button>
+                        <button
+                            onClick={() => navigate('/admin/users/add')}
+                            className="px-4 py-2 bg-brand-600 text-white font-bold rounded-lg hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/30 flex items-center gap-2"
+                        >
+                            <Plus className="w-5 h-5" />
+                            Add User
+                        </button>
+                    </div>
                 }
             />
 
@@ -150,6 +174,16 @@ export const AdminUserManagement: React.FC = () => {
                                                 >
                                                     {user.is_active ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
                                                 </button>
+
+                                                {user.role === 'STUDENT' && (
+                                                    <button
+                                                        onClick={() => handleDeleteUser(user)}
+                                                        className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                                        title="Delete Student"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -163,6 +197,14 @@ export const AdminUserManagement: React.FC = () => {
                     <span>Showing {filteredUsers.length} users</span>
                 </div>
             </div>
+
+            <BulkImportModal
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                onSuccess={() => {
+                    fetchUsers();
+                }}
+            />
         </div>
     );
 };
