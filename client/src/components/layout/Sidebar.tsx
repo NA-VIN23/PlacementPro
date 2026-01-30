@@ -36,7 +36,7 @@ export const Sidebar: React.FC = () => {
             <div className="p-8 pb-6">
                 <div className="flex items-center gap-3 mb-8">
                     <img
-                        src="/logo.jpg"
+                        src="/logo.png"
                         alt="Logo"
                         className="w-12 h-12 object-contain"
                     />
