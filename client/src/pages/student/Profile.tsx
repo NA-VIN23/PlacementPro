@@ -1,13 +1,23 @@
-import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Linkedin, Github, Download, Edit2, Calendar, Award, X, Save, User, Building, BookOpen, Camera } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Mail, Linkedin, Github, Edit2, Calendar, Award, X, Save, User, BookOpen, Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { cn } from '../../utils/cn';
+
+interface Education {
+    degree: string;
+    school: string;
+    year: string;
+    score: string;
+}
+
+interface Certification {
+    title: string;
+    issuer: string; // Used as 'year' in the bullet point request "Title and which year"
+}
 
 interface ProfileData {
     name: string;
     email: string;
-    phone: string;
-    location: string;
     bio: string;
     department: string;
     batch: string;
@@ -15,6 +25,8 @@ interface ProfileData {
     linkedin: string;
     github: string;
     skills: string[];
+    education: Education[];
+    certifications: Certification[];
 }
 
 export const StudentProfile: React.FC = () => {
@@ -24,29 +36,63 @@ export const StudentProfile: React.FC = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
+    // Results Data State
+    const [results, setResults] = useState<any[]>([]);
+
     // Profile Data State
     const [profileData, setProfileData] = useState<ProfileData>({
-        name: user?.name || 'Rahul Kumar',
-        email: user?.email || 'rahul@college.edu',
-        phone: '+91 98765 43210',
-        location: 'Mumbai, India',
-        bio: 'Aspiring Software Engineer with a strong foundation in Java and Web Technologies. Passionate about solving complex problems and building user-centric applications. Currently looking for Full Stack Developer roles.',
-        department: 'Computer Science Engineering',
-        batch: '2024',
-        rollNumber: (user as any)?.rollNumber || 'CS2024001',
-        linkedin: 'linkedin.com/in/rahulkumar',
-        github: 'github.com/rahulkumar',
-        skills: ['Java', 'Python', 'React', 'SQL', 'Data Structures', 'Communication', 'Problem Solving']
+        name: user?.name || '',
+        email: user?.email || '',
+        bio: '',
+        department: (user as any)?.department || '',
+        batch: (user as any)?.batch || '',
+        rollNumber: (user as any)?.registration_number || '',
+        linkedin: '',
+        github: '',
+        skills: [],
+        education: [],
+        certifications: []
     });
 
     const [newSkill, setNewSkill] = useState('');
 
+    useEffect(() => {
+        // Load persisted data for this user
+        // Load persisted data for this user
+        if (user?.id) {
+            const savedProfile = localStorage.getItem(`student_profile_${user.id}`);
+            const parsed = savedProfile ? JSON.parse(savedProfile) : {};
+
+            setProfileData(prev => ({
+                ...prev,
+                ...parsed,
+                // Ensure core fields are always from Auth Context/DB
+                name: user.name || prev.name,
+                email: user.email || prev.email,
+                department: (user as any)?.department || prev.department,
+                batch: (user as any)?.batch || prev.batch,
+                rollNumber: (user as any)?.registration_number || prev.rollNumber,
+            }));
+        }
+
+        const fetchResults = async () => {
+            try {
+                const { studentService } = await import('../../services/api');
+                const data = await studentService.getStudentResults();
+                setResults(data);
+            } catch (error) {
+                console.error("Failed to fetch results", error);
+            }
+        };
+        fetchResults();
+    }, [user]);
+
     // Handle Input Change
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setProfileData({ ...profileData, [e.target.name]: e.target.value });
     };
 
-    // Add Skill
+    // Skills Management
     const addSkill = () => {
         if (newSkill.trim() && !profileData.skills.includes(newSkill.trim())) {
             setProfileData({ ...profileData, skills: [...profileData.skills, newSkill.trim()] });
@@ -54,20 +100,71 @@ export const StudentProfile: React.FC = () => {
         }
     };
 
-    // Remove Skill
     const removeSkill = (skill: string) => {
         setProfileData({ ...profileData, skills: profileData.skills.filter(s => s !== skill) });
+    };
+
+    // Education Management
+    const addEducation = () => {
+        setProfileData({
+            ...profileData,
+            education: [...profileData.education, { degree: '', school: '', year: '', score: '' }]
+        });
+    };
+
+    const updateEducation = (index: number, field: keyof Education, value: string) => {
+        const updatedEdu = [...profileData.education];
+        updatedEdu[index] = { ...updatedEdu[index], [field]: value };
+        setProfileData({ ...profileData, education: updatedEdu });
+    };
+
+    const removeEducation = (index: number) => {
+        setProfileData({
+            ...profileData,
+            education: profileData.education.filter((_, i) => i !== index)
+        });
+    };
+
+    // Certification Management
+    const addCertification = () => {
+        setProfileData({
+            ...profileData,
+            certifications: [...profileData.certifications, { title: '', issuer: '' }]
+        });
+    };
+
+    const updateCertification = (index: number, field: keyof Certification, value: string) => {
+        const updatedCert = [...profileData.certifications];
+        updatedCert[index] = { ...updatedCert[index], [field]: value };
+        setProfileData({ ...profileData, certifications: updatedCert });
+    };
+
+    const removeCertification = (index: number) => {
+        setProfileData({
+            ...profileData,
+            certifications: profileData.certifications.filter((_, i) => i !== index)
+        });
     };
 
     // Save Profile
     const handleSave = () => {
         setIsSaving(true);
-        // Simulate API call
+        // Persist to localStorage
+        if (user?.id) {
+            localStorage.setItem(`student_profile_${user.id}`, JSON.stringify({
+                bio: profileData.bio,
+                linkedin: profileData.linkedin,
+                github: profileData.github,
+                skills: profileData.skills,
+                education: profileData.education,
+                certifications: profileData.certifications
+            }));
+        }
+
         setTimeout(() => {
             setIsSaving(false);
             setIsEditing(false);
-            alert('Profile updated successfully!');
-        }, 1000);
+        }, 800);
     };
 
     return (
@@ -78,13 +175,6 @@ export const StudentProfile: React.FC = () => {
                     <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1557683311-eac922347aa1?q=80&w=2929&auto=format&fit=crop')] bg-cover bg-center opacity-20"></div>
                 </div>
 
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-lg text-sm font-medium hover:bg-white/20 flex items-center gap-2">
-                        <Camera className="w-4 h-4" />
-                        Edit Cover
-                    </button>
-                </div>
-
                 <div className="relative px-8 pb-4 flex flex-col md:flex-row items-end -mt-12 gap-6">
                     <div className="w-32 h-32 rounded-2xl border-4 border-white bg-white shadow-lg overflow-hidden relative group/avatar">
                         <img
@@ -92,31 +182,16 @@ export const StudentProfile: React.FC = () => {
                             alt={profileData.name}
                             className="w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity cursor-pointer">
-                            <Camera className="w-6 h-6 text-white" />
-                        </div>
                     </div>
 
                     <div className="flex-1 text-slate-900 pb-2">
-                        {isEditing ? (
-                            <input
-                                type="text"
-                                name="name"
-                                value={profileData.name}
-                                onChange={handleChange}
-                                className="text-3xl font-bold bg-white border border-slate-200 rounded-lg px-3 py-1 w-full max-w-md"
-                            />
-                        ) : (
-                            <h1 className="text-3xl font-bold">{profileData.name}</h1>
-                        )}
-                        <p className="text-slate-500 font-medium">{profileData.department} • Class of {profileData.batch}</p>
+                        <h1 className="text-3xl font-bold">{profileData.name}</h1>
+                        <p className="text-slate-500 font-medium">
+                            {profileData.department} • {profileData.batch}
+                        </p>
                     </div>
 
                     <div className="flex gap-3 pb-2">
-                        <button className="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-50 shadow-sm flex items-center gap-2">
-                            <Download className="w-4 h-4" />
-                            Resume
-                        </button>
                         {isEditing ? (
                             <>
                                 <button
@@ -151,52 +226,14 @@ export const StudentProfile: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Info & Stats */}
                 <div className="space-y-6">
-                    {/* Contact Info */}
+                    {/* Contact Info (Read Only: Email) & Socials */}
                     <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-4">
                         <h3 className="font-bold text-slate-800 text-lg">Contact Information</h3>
 
                         <div className="space-y-3">
                             <div className="flex items-center gap-3 text-slate-600">
                                 <Mail className="w-5 h-5 text-slate-400 shrink-0" />
-                                {isEditing ? (
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={profileData.email}
-                                        onChange={handleChange}
-                                        className="flex-1 text-sm px-3 py-1.5 border border-slate-200 rounded-lg"
-                                    />
-                                ) : (
-                                    <span className="text-sm">{profileData.email}</span>
-                                )}
-                            </div>
-                            <div className="flex items-center gap-3 text-slate-600">
-                                <Phone className="w-5 h-5 text-slate-400 shrink-0" />
-                                {isEditing ? (
-                                    <input
-                                        type="tel"
-                                        name="phone"
-                                        value={profileData.phone}
-                                        onChange={handleChange}
-                                        className="flex-1 text-sm px-3 py-1.5 border border-slate-200 rounded-lg"
-                                    />
-                                ) : (
-                                    <span className="text-sm">{profileData.phone}</span>
-                                )}
-                            </div>
-                            <div className="flex items-center gap-3 text-slate-600">
-                                <MapPin className="w-5 h-5 text-slate-400 shrink-0" />
-                                {isEditing ? (
-                                    <input
-                                        type="text"
-                                        name="location"
-                                        value={profileData.location}
-                                        onChange={handleChange}
-                                        className="flex-1 text-sm px-3 py-1.5 border border-slate-200 rounded-lg"
-                                    />
-                                ) : (
-                                    <span className="text-sm">{profileData.location}</span>
-                                )}
+                                <span className="text-sm">{profileData.email}</span>
                             </div>
                         </div>
 
@@ -231,18 +268,23 @@ export const StudentProfile: React.FC = () => {
                                 </div>
                             ) : (
                                 <div className="flex gap-4">
-                                    <a href={`https://${profileData.linkedin}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
-                                        <Linkedin className="w-5 h-5" />
-                                    </a>
-                                    <a href={`https://${profileData.github}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-100 text-slate-800 rounded-lg hover:bg-slate-200 transition-colors">
-                                        <Github className="w-5 h-5" />
-                                    </a>
+                                    {profileData.linkedin && (
+                                        <a href={`https://${profileData.linkedin}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+                                            <Linkedin className="w-5 h-5" />
+                                        </a>
+                                    )}
+                                    {profileData.github && (
+                                        <a href={`https://${profileData.github}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-100 text-slate-800 rounded-lg hover:bg-slate-200 transition-colors">
+                                            <Github className="w-5 h-5" />
+                                        </a>
+                                    )}
+                                    {!profileData.linkedin && !profileData.github && <p className="text-sm text-slate-400">No links added.</p>}
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Academic Info */}
+                    {/* Academic Info (Read Only) */}
                     <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-4">
                         <h3 className="font-bold text-slate-800 text-lg">Academic Details</h3>
                         <div className="space-y-3">
@@ -250,17 +292,7 @@ export const StudentProfile: React.FC = () => {
                                 <BookOpen className="w-5 h-5 text-slate-400" />
                                 <div className="flex-1">
                                     <p className="text-xs text-slate-400 font-medium">Department</p>
-                                    {isEditing ? (
-                                        <input
-                                            type="text"
-                                            name="department"
-                                            value={profileData.department}
-                                            onChange={handleChange}
-                                            className="w-full text-sm px-3 py-1.5 border border-slate-200 rounded-lg mt-1"
-                                        />
-                                    ) : (
-                                        <p className="text-sm text-slate-700 font-medium">{profileData.department}</p>
-                                    )}
+                                    <p className="text-sm text-slate-700 font-medium">{profileData.department}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -274,21 +306,7 @@ export const StudentProfile: React.FC = () => {
                                 <Calendar className="w-5 h-5 text-slate-400" />
                                 <div className="flex-1">
                                     <p className="text-xs text-slate-400 font-medium">Batch</p>
-                                    {isEditing ? (
-                                        <select
-                                            name="batch"
-                                            value={profileData.batch}
-                                            onChange={(e) => setProfileData({ ...profileData, batch: e.target.value })}
-                                            className="w-full text-sm px-3 py-1.5 border border-slate-200 rounded-lg mt-1 bg-white"
-                                        >
-                                            <option>2023</option>
-                                            <option>2024</option>
-                                            <option>2025</option>
-                                            <option>2026</option>
-                                        </select>
-                                    ) : (
-                                        <p className="text-sm text-slate-700 font-medium">Class of {profileData.batch}</p>
-                                    )}
+                                    <p className="text-sm text-slate-700 font-medium">{profileData.batch}</p>
                                 </div>
                             </div>
                         </div>
@@ -349,61 +367,150 @@ export const StudentProfile: React.FC = () => {
                             />
                         ) : (
                             <p className="text-slate-600 leading-relaxed text-sm">
-                                {profileData.bio}
+                                {profileData.bio || "No bio added yet."}
                             </p>
+                        )}
+                    </div>
+
+                    {/* Recent Performance / Results */}
+                    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
+                        <h3 className="font-bold text-slate-800 text-lg mb-6">Recent Performance</h3>
+                        {results.length > 0 ? (
+                            <div className="space-y-4">
+                                {results.slice(0, 3).map((res, i) => (
+                                    <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                                        <div>
+                                            <h4 className="font-bold text-slate-800">{res.exams?.title || 'Unknown Exam'}</h4>
+                                            <p className="text-xs text-slate-500">Submitted on {new Date(res.submitted_at).toLocaleDateString()}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className={cn(
+                                                "px-3 py-1 rounded-full text-sm font-bold",
+                                                res.score >= 4 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                                            )}>
+                                                {res.score} / {res.total || 5}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-slate-500 italic text-sm">No exam results available yet.</p>
                         )}
                     </div>
 
                     {/* Education */}
                     <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-                        <h3 className="font-bold text-slate-800 text-lg mb-6">Education</h3>
-                        <div className="space-y-6 relative before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
-                            {[
-                                { degree: "B.Tech in Computer Science", school: "Institute of Technology", year: "2020 - 2024", score: "CGPA: 8.5/10" },
-                                { degree: "Higher Secondary (12th)", school: "City Public School", year: "2018 - 2020", score: "92%" },
-                            ].map((edu, i) => (
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="font-bold text-slate-800 text-lg">Education</h3>
+                            {isEditing && (
+                                <button onClick={addEducation} className="text-sm text-brand-600 font-medium hover:underline flex items-center gap-1">
+                                    <Plus className="w-4 h-4" /> Add
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="space-y-6 relative ml-2 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
+                            {profileData.education.map((edu, i) => (
                                 <div key={i} className="relative pl-8">
                                     <div className="absolute left-0 top-1.5 w-4.5 h-4.5 rounded-full border-4 border-white bg-brand-500 shadow-sm"></div>
-                                    <h4 className="font-bold text-slate-800">{edu.degree}</h4>
-                                    <p className="text-slate-600 text-sm">{edu.school}</p>
-                                    <div className="flex items-center gap-4 mt-2 text-xs text-slate-500 font-medium">
-                                        <span className="flex items-center gap-1">
-                                            <Calendar className="w-3 h-3" />
-                                            {edu.year}
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <Award className="w-3 h-3" />
-                                            {edu.score}
-                                        </span>
-                                    </div>
+                                    {isEditing ? (
+                                        <div className="grid grid-cols-1 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                            <input
+                                                placeholder="Degree"
+                                                value={edu.degree}
+                                                onChange={(e) => updateEducation(i, 'degree', e.target.value)}
+                                                className="text-sm font-bold bg-transparent border-b border-slate-300 focus:border-brand-500 outline-none w-full"
+                                            />
+                                            <input
+                                                placeholder="School/University"
+                                                value={edu.school}
+                                                onChange={(e) => updateEducation(i, 'school', e.target.value)}
+                                                className="text-xs text-slate-600 bg-transparent border-b border-slate-300 focus:border-brand-500 outline-none w-full"
+                                            />
+                                            <div className="flex gap-2">
+                                                <input
+                                                    placeholder="Year (e.g. 2020-2024)"
+                                                    value={edu.year}
+                                                    onChange={(e) => updateEducation(i, 'year', e.target.value)}
+                                                    className="text-xs bg-transparent border-b border-slate-300 focus:border-brand-500 outline-none w-1/2"
+                                                />
+                                                <input
+                                                    placeholder="Score (e.g. 90%)"
+                                                    value={edu.score}
+                                                    onChange={(e) => updateEducation(i, 'score', e.target.value)}
+                                                    className="text-xs bg-transparent border-b border-slate-300 focus:border-brand-500 outline-none w-1/2"
+                                                />
+                                            </div>
+                                            <button onClick={() => removeEducation(i)} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 mt-1">
+                                                <Trash2 className="w-3 h-3" /> Remove
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <h4 className="font-bold text-slate-800">{edu.degree}</h4>
+                                            <p className="text-slate-600 text-sm">{edu.school}</p>
+                                            <div className="flex items-center gap-4 mt-2 text-xs text-slate-500 font-medium">
+                                                <span className="flex items-center gap-1">
+                                                    <Calendar className="w-3 h-3" />
+                                                    {edu.year}
+                                                </span>
+                                                <span className="flex items-center gap-1">
+                                                    <Award className="w-3 h-3" />
+                                                    {edu.score}
+                                                </span>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* Certifications */}
+                    {/* Certifications - Bullet Points */}
                     <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-                        <h3 className="font-bold text-slate-800 text-lg mb-4">Certifications</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="p-4 rounded-lg border border-slate-100 bg-slate-50/50 flex items-start gap-4">
-                                <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
-                                    <Award className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h5 className="font-bold text-slate-800 text-sm">AWS Certified Cloud Practitioner</h5>
-                                    <p className="text-xs text-slate-500 mt-1">Amazon Web Services • Issued Dec 2023</p>
-                                </div>
-                            </div>
-                            <div className="p-4 rounded-lg border border-slate-100 bg-slate-50/50 flex items-start gap-4">
-                                <div className="w-10 h-10 bg-yellow-100 text-yellow-600 rounded-lg flex items-center justify-center shrink-0">
-                                    <Award className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h5 className="font-bold text-slate-800 text-sm">Java Programming Masterclass</h5>
-                                    <p className="text-xs text-slate-500 mt-1">Udemy • Issued Aug 2023</p>
-                                </div>
-                            </div>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-bold text-slate-800 text-lg">Certifications</h3>
+                            {isEditing && (
+                                <button onClick={addCertification} className="text-sm text-brand-600 font-medium hover:underline flex items-center gap-1">
+                                    <Plus className="w-4 h-4" /> Add
+                                </button>
+                            )}
                         </div>
+
+                        <ul className="list-disc list-inside space-y-2">
+                            {profileData.certifications.map((cert, i) => (
+                                <li key={i} className="text-sm text-slate-700">
+                                    {isEditing ? (
+                                        <div className="inline-flex flex-col gap-1 align-top ml-2 w-full max-w-md bg-slate-50 p-2 rounded border border-slate-200">
+                                            <input
+                                                placeholder="Certification Title"
+                                                value={cert.title}
+                                                onChange={(e) => updateCertification(i, 'title', e.target.value)}
+                                                className="font-medium bg-transparent border-b border-slate-300 outline-none"
+                                            />
+                                            <input
+                                                placeholder="Year / Issuer"
+                                                value={cert.issuer}
+                                                onChange={(e) => updateCertification(i, 'issuer', e.target.value)}
+                                                className="text-xs text-slate-500 bg-transparent border-b border-slate-300 outline-none"
+                                            />
+                                            <button onClick={() => removeCertification(i)} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 mt-1 w-fit">
+                                                <Trash2 className="w-3 h-3" /> Remove
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <span>
+                                            <span className="font-medium">{cert.title}</span>
+                                            <span className="text-slate-500"> - {cert.issuer}</span>
+                                        </span>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                        {!isEditing && profileData.certifications.length === 0 && (
+                            <p className="text-slate-500 text-sm italic">No certifications added.</p>
+                        )}
                     </div>
                 </div>
             </div>

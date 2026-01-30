@@ -16,11 +16,13 @@ export const STUDENT_NAV = [
     { label: 'Learning', icon: BookOpen, path: '/student/learning' },
     { label: 'Communication AI', icon: MessageSquare, path: '/student/communication' },
     { label: 'Leaderboard', icon: Trophy, path: '/student/leaderboard' },
+    { label: 'Resume Builder (ATS)', icon: ClipboardList, path: '/student/resume-builder' },
 ];
 
 export const STAFF_NAV = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/staff/dashboard' },
     { label: 'Assign Assessment', icon: ClipboardList, path: '/staff/assign-assessment' },
+    { label: 'Student Database', icon: Users, path: '/staff/students' },
     { label: 'Student Analysis', icon: BarChart, path: '/staff/analysis' },
     { label: 'Profile', icon: User, path: '/staff/profile' },
 ];

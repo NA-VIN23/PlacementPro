@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { startInterview, chatInterview, endInterview } from '../controllers/mockInterviewController';
-import { authenticate } from '../middleware/authMiddleware';
+import { authenticate, authorize } from '../middleware/authMiddleware';
 
 const router = Router();
 
 router.use(authenticate);
+router.use(authorize(['STUDENT'])); // Only students can access interviews
 
 router.post('/start', startInterview);
 router.post('/chat', chatInterview);

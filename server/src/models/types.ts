@@ -20,6 +20,9 @@ export interface Exam {
     end_time: Date;
     created_by: string; // User ID (Staff)
     created_at?: Date;
+    type?: 'DAILY' | 'WEEKLY';
+    mode?: 'MANUAL' | 'PDF';
+    pdf_url?: string;
 }
 
 export interface Question {
@@ -29,6 +32,7 @@ export interface Question {
     options: string[]; // JSON array of options
     correct_answer: string; // The correct option content or index
     explanation?: string;
+    section?: string;
 }
 
 export interface Submission {

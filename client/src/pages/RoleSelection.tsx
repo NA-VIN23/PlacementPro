@@ -1,10 +1,21 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Briefcase, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { cn } from '../utils/cn';
 
 export const RoleSelection: React.FC = () => {
     const navigate = useNavigate();
+    const { user, isAuthenticated } = useAuth();
+
+    React.useEffect(() => {
+        if (isAuthenticated && user) {
+            const dashboard = user.role === 'STUDENT' ? '/student/dashboard' :
+                user.role === 'STAFF' ? '/staff/dashboard' :
+                    '/admin/dashboard';
+            navigate(dashboard, { replace: true });
+        }
+    }, [isAuthenticated, user, navigate]);
 
     const roles = [
         {
@@ -46,7 +57,7 @@ export const RoleSelection: React.FC = () => {
 
                 <div className="relative z-10 max-w-lg text-white space-y-8">
                     <div className="inline-block px-4 py-1.5 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-sm font-medium tracking-wide">
-                        🚀 PlacementPro v2.0
+                        🚀 PlacementPrePro v2.0
                     </div>
                     <h1 className="text-6xl font-extrabold leading-tight tracking-tight">
                         Shape Your <br />

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Clock, ChevronLeft, ChevronRight, Flag, AlertTriangle, Shield, Eye, Monitor, X } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Clock, ChevronLeft, ChevronRight, Flag, AlertTriangle, Shield, Eye, Monitor, X, CheckCircle } from 'lucide-react';
 import { cn } from '../../utils/cn';
+import { studentService } from '../../services/api';
+import type { Exam, Question } from '../../types';
 
 type ViolationType = 'tab_switch' | 'fullscreen_exit' | 'copy_paste' | 'right_click';
 
@@ -11,66 +13,64 @@ interface Violation {
 }
 
 export const AssessmentRunner: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+
+    // Data State
+    const [exam, setExam] = useState<Exam | null>(null);
+    const [questions, setQuestions] = useState<Question[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
+    const [score, setScore] = useState<number | null>(null);
+    const [reviewDetails, setReviewDetails] = useState<any[]>([]);
 
     // Core Assessment State
     const [currentQuestion, setCurrentQuestion] = useState(0);
-    const [timeLeft, setTimeLeft] = useState(45 * 60); // 45 minutes
-    const [answers, setAnswers] = useState<Record<number, string>>({});
-    const [flags, setFlags] = useState<number[]>([]);
+    const [timeLeft, setTimeLeft] = useState(0);
+    const [answers, setAnswers] = useState<Record<string, string>>({});
+    const [flags, setFlags] = useState<string[]>([]);
 
     // Proctoring State
-    const [isFullscreen, setIsFullscreen] = useState(false);
+
     const [violations, setViolations] = useState<Violation[]>([]);
     const [showWarning, setShowWarning] = useState(false);
     const [warningMessage, setWarningMessage] = useState('');
     const [examStarted, setExamStarted] = useState(false);
     const MAX_VIOLATIONS = 3;
 
-    // Questions Data
-    const questions = [
-        {
-            id: 1,
-            text: "What is the output of the following Java snippet?\n\nint x = 5;\nSystem.out.println(x++ + ++x);",
-            options: ["10", "11", "12", "13"],
-            type: "mcq"
-        },
-        {
-            id: 2,
-            text: "Which of the following is NOT a principle of Object-Oriented Programming?",
-            options: ["Encapsulation", "Polymorphism", "Compilation", "Inheritance"],
-            type: "mcq"
-        },
-        {
-            id: 3,
-            text: "In React, which hook is used to perform side effects in functional components?",
-            options: ["useState", "useEffect", "useContext", "useReducer"],
-            type: "mcq"
-        },
-        {
-            id: 4,
-            text: "What is the time complexity of searching in a balanced Binary Search Tree (BST)?",
-            options: ["O(n)", "O(log n)", "O(n log n)", "O(1)"],
-            type: "mcq"
-        },
-        {
-            id: 5,
-            text: "Which SQL command is used to remove all records from a table but keep the structure?",
-            options: ["DROP", "DELETE", "TRUNCATE", "REMOVE"],
-            type: "mcq"
-        }
-    ];
+    // Fetch Exam Data
+    useEffect(() => {
+        const loadExam = async () => {
+            if (!id) return;
+            try {
+                const data = await studentService.getExamQuestions(id);
+                setExam(data.exam);
+                setQuestions(data.questions);
+                setTimeLeft(data.exam.duration * 60); // Set timer based on exam duration
+            } catch (err) {
+                console.error('Failed to load exam:', err);
+                setError('Failed to load assessment. It might be expired or invalid.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadExam();
+    }, [id]);
 
     // ========== PROCTORING FUNCTIONS ==========
 
     const addViolation = useCallback((type: ViolationType) => {
+        if (submitted) return; // Don't track if already submitted
+
         const newViolation: Violation = { type, timestamp: new Date() };
         setViolations(prev => {
             const updated = [...prev, newViolation];
             if (updated.length >= MAX_VIOLATIONS) {
                 // Auto-submit on max violations
                 alert('EXAM TERMINATED: Maximum violations exceeded. Your test has been auto-submitted.');
-                navigate('/student/assessment');
+                handleSubmit(true); // Force submit
             }
             return updated;
         });
@@ -85,58 +85,53 @@ export const AssessmentRunner: React.FC = () => {
         setWarningMessage(messages[type]);
         setShowWarning(true);
         setTimeout(() => setShowWarning(false), 4000);
-    }, [navigate]);
+    }, [submitted]); // Added dependency to avoid stale closure if submitted changes, though mostly handles via check
 
     // Fullscreen Management
     const enterFullscreen = async () => {
         try {
-            await document.documentElement.requestFullscreen();
-            setIsFullscreen(true);
+            if (document.documentElement.requestFullscreen) {
+                await document.documentElement.requestFullscreen();
+            }
+
             setExamStarted(true);
         } catch (err) {
             console.error('Fullscreen failed:', err);
+            // Fallback for demo/dev if fullscreen fails (e.g. inside iframe)
+            setExamStarted(true);
         }
     };
 
     // ========== PROCTORING EVENT LISTENERS ==========
 
     useEffect(() => {
-        if (!examStarted) return;
+        if (!examStarted || submitted) return;
 
-        // Visibility Change (Tab Switch Detection)
         const handleVisibilityChange = () => {
-            if (document.hidden) {
-                addViolation('tab_switch');
-            }
+            if (document.hidden) addViolation('tab_switch');
         };
 
-        // Fullscreen Change Detection
         const handleFullscreenChange = () => {
             if (!document.fullscreenElement && examStarted) {
-                setIsFullscreen(false);
+
                 addViolation('fullscreen_exit');
             }
         };
 
-        // Disable Right Click
         const handleContextMenu = (e: MouseEvent) => {
             e.preventDefault();
             addViolation('right_click');
         };
 
-        // Disable Copy/Paste
         const handleCopyPaste = (e: ClipboardEvent) => {
             e.preventDefault();
             addViolation('copy_paste');
         };
 
-        // Disable keyboard shortcuts
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Block Ctrl+C, Ctrl+V, Ctrl+P, F12, etc.
             if (
-                (e.ctrlKey && ['c', 'v', 'p', 'u', 's'].includes(e.key.toLowerCase())) ||
-                e.key === 'F12' ||
-                (e.ctrlKey && e.shiftKey && e.key === 'I')
+                (e.ctrlKey && ['c', 'v', 'p', 's'].includes(e.key.toLowerCase())) ||
+                e.key === 'F12'
             ) {
                 e.preventDefault();
                 addViolation('copy_paste');
@@ -158,24 +153,24 @@ export const AssessmentRunner: React.FC = () => {
             document.removeEventListener('paste', handleCopyPaste);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [examStarted, addViolation]);
+    }, [examStarted, submitted, addViolation]);
 
     // Timer
     useEffect(() => {
-        if (!examStarted) return;
+        if (!examStarted || submitted) return;
         const timer = setInterval(() => {
             setTimeLeft((prev) => {
                 if (prev <= 1) {
                     clearInterval(timer);
                     alert('Time is up! Your test has been auto-submitted.');
-                    navigate('/student/assessment');
+                    handleSubmit(true);
                     return 0;
                 }
                 return prev - 1;
             });
         }, 1000);
         return () => clearInterval(timer);
-    }, [examStarted, navigate]);
+    }, [examStarted, submitted]);
 
     // ========== HELPER FUNCTIONS ==========
 
@@ -190,23 +185,149 @@ export const AssessmentRunner: React.FC = () => {
     };
 
     const toggleFlag = () => {
+        const qId = questions[currentQuestion].id;
         setFlags(prev =>
-            prev.includes(questions[currentQuestion].id)
-                ? prev.filter(id => id !== questions[currentQuestion].id)
-                : [...prev, questions[currentQuestion].id]
+            prev.includes(qId)
+                ? prev.filter(id => id !== qId)
+                : [...prev, qId]
         );
     };
 
-    const handleSubmit = () => {
-        if (confirm("Are you sure you want to submit the assessment? This action cannot be undone.")) {
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            }
-            navigate('/student/assessment');
+    const handleSubmit = async (force = false) => {
+        if (!force && !confirm("Are you sure you want to submit the assessment? This action cannot be undone.")) {
+            return;
+        }
+
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => { });
+        }
+
+        setSubmitting(true);
+        try {
+            if (!id) return;
+            const result = await studentService.submitExam(id, answers);
+            setScore(result.score);
+            setReviewDetails(result.reviewDetails || []);
+            setSubmitted(true);
+        } catch (err) {
+            console.error('Submission failed', err);
+            alert('Failed to submit exam. Please try again or contact support.');
+            setSubmitting(false);
         }
     };
 
-    // ========== PRE-EXAM SCREEN ==========
+    // ========== RENDER STATES ==========
+
+    if (loading) {
+        return (
+            <div className="fixed inset-0 flex items-center justify-center bg-slate-50">
+                <div className="text-center">
+                    <div className="animate-spin w-12 h-12 border-4 border-brand-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p className="text-slate-500 font-medium">Loading Assessment Environment...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !exam) {
+        return (
+            <div className="fixed inset-0 flex items-center justify-center bg-slate-50 p-4">
+                <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
+                    <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                    <h2 className="text-xl font-bold text-slate-900 mb-2">Access Denied</h2>
+                    <p className="text-slate-500 mb-6">{error || 'Exam not found.'}</p>
+                    <button
+                        onClick={() => navigate('/student/dashboard')}
+                        className="px-6 py-2 bg-slate-900 text-white rounded-lg font-bold hover:bg-slate-800"
+                    >
+                        Return to Dashboard
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (submitted) {
+        return (
+            <div className="fixed inset-0 bg-slate-50 overflow-y-auto animate-fade-in z-50">
+                <div className="max-w-4xl mx-auto py-12 px-4">
+                    {/* Score Card */}
+                    <div className="bg-white p-8 rounded-3xl shadow-xl text-center mb-8 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-green-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+
+                        <div className="relative z-10">
+                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <CheckCircle className="w-8 h-8 text-green-600" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-slate-900 mb-2">Assessment Completed</h2>
+                            <div className="my-6">
+                                <span className="text-6xl font-black text-brand-600">{score}</span>
+                                <span className="text-2xl text-slate-400 font-medium ml-2">/ {questions.length}</span>
+                            </div>
+                            <button
+                                onClick={() => navigate('/student/dashboard')}
+                                className="px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all"
+                            >
+                                Return to Dashboard
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Detailed Review */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3 mb-6">
+                            <Eye className="w-6 h-6 text-brand-600" />
+                            <h3 className="text-2xl font-bold text-slate-800">Detailed Review</h3>
+                        </div>
+
+                        {questions.map((q, idx) => {
+                            const correctDetail = reviewDetails?.find((r: any) => r.id === q.id);
+                            const correctAnswer = correctDetail?.correct_answer;
+                            const explanation = correctDetail?.explanation;
+                            const userAnswer = answers[q.id];
+                            const isCorrect = userAnswer === correctAnswer;
+
+                            return (
+                                <div key={q.id} className={`p-6 rounded-2xl border ${isCorrect ? 'border-green-200 bg-green-50/30' : 'border-red-200 bg-red-50/30'} shadow-sm bg-white`}>
+                                    <div className="flex items-start gap-4 mb-4">
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-bold ${isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                            {idx + 1}
+                                        </div>
+                                        <p className="text-lg font-medium text-slate-900">{q.question_text}</p>
+                                    </div>
+
+                                    <div className="space-y-3 pl-12">
+                                        {q.options.map((opt, optIdx) => {
+                                            const isSelected = userAnswer === opt;
+                                            const isTheCorrectAnswer = correctAnswer === opt;
+
+                                            let optionClass = "border-slate-200 bg-white text-slate-700";
+                                            if (isTheCorrectAnswer) optionClass = "border-green-500 bg-green-50 text-green-900 font-bold";
+                                            else if (isSelected && !isCorrect) optionClass = "border-red-500 bg-red-50 text-red-900 font-medium";
+
+                                            return (
+                                                <div key={optIdx} className={`flex items-center justify-between p-3 rounded-lg border ${optionClass}`}>
+                                                    <span>{opt}</span>
+                                                    {isTheCorrectAnswer && <CheckCircle className="w-5 h-5 text-green-600" />}
+                                                    {isSelected && !isCorrect && <X className="w-5 h-5 text-red-500" />}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {explanation && (
+                                        <div className="mt-4 ml-12 p-4 bg-blue-50 rounded-xl text-sm border border-blue-100 text-blue-800">
+                                            <strong>Explanation:</strong> {explanation}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (!examStarted) {
         return (
@@ -217,7 +338,7 @@ export const AssessmentRunner: React.FC = () => {
                             <Shield className="w-8 h-8" />
                             <h1 className="text-2xl font-bold">Proctored Assessment</h1>
                         </div>
-                        <p className="text-white/80">Technical Assessment CA-1 • 45 Minutes • 5 Questions</p>
+                        <p className="text-white/80">{exam.title} • {exam.duration} Minutes • {questions.length} Questions</p>
                     </div>
 
                     <div className="p-8 space-y-6">
@@ -229,23 +350,17 @@ export const AssessmentRunner: React.FC = () => {
                             <ul className="text-sm text-red-700 space-y-2">
                                 <li className="flex items-start gap-2">
                                     <Monitor className="w-4 h-4 mt-0.5 shrink-0" />
-                                    <span>Exam will run in <strong>fullscreen mode only</strong>. Exiting fullscreen is a violation.</span>
+                                    <span>Exam will run in <strong>fullscreen mode only</strong>. Exiting is a violation.</span>
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <Eye className="w-4 h-4 mt-0.5 shrink-0" />
-                                    <span><strong>Tab switching is monitored</strong>. Changing tabs will be recorded as a violation.</span>
+                                    <span><strong>Tab switching is monitored</strong>. Changing tabs will be recorded.</span>
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <X className="w-4 h-4 mt-0.5 shrink-0" />
-                                    <span><strong>Copy, Paste, Right-Click</strong> are disabled during assessment.</span>
+                                    <span><strong>Copy, Paste, Right-Click</strong> are disabled.</span>
                                 </li>
                             </ul>
-                        </div>
-
-                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                            <p className="text-amber-800 text-sm font-medium">
-                                🚨 After <strong>{MAX_VIOLATIONS} violations</strong>, your exam will be <strong>automatically terminated and submitted</strong>.
-                            </p>
                         </div>
 
                         <div className="text-center pt-4">
@@ -265,9 +380,11 @@ export const AssessmentRunner: React.FC = () => {
 
     // ========== MAIN EXAM UI ==========
 
+    const currentQ = questions[currentQuestion];
+
     return (
         <div className="fixed inset-0 bg-slate-100 flex flex-col select-none">
-            {/* Violation Warning Toast */}
+            {/* Violation Toast */}
             {showWarning && (
                 <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-bounce">
                     <div className="bg-red-600 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 font-bold">
@@ -288,8 +405,7 @@ export const AssessmentRunner: React.FC = () => {
                         PROCTORED
                     </div>
                     <div>
-                        <h2 className="font-bold text-slate-800 text-lg">Technical Assessment CA-1</h2>
-                        <p className="text-xs text-slate-500">Section 1: Core Concepts</p>
+                        <h2 className="font-bold text-slate-800 text-lg">{exam.title}</h2>
                     </div>
                 </div>
                 <div className="flex items-center gap-6">
@@ -307,10 +423,11 @@ export const AssessmentRunner: React.FC = () => {
                         {formatTime(timeLeft)}
                     </div>
                     <button
-                        onClick={handleSubmit}
-                        className="px-6 py-2 bg-brand-600 text-white font-bold rounded-lg hover:bg-brand-700 transition-colors"
+                        onClick={() => handleSubmit(false)}
+                        disabled={submitting}
+                        className="px-6 py-2 bg-brand-600 text-white font-bold rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50"
                     >
-                        Submit Test
+                        {submitting ? 'Submitting...' : 'Submit Test'}
                     </button>
                 </div>
             </div>
@@ -328,47 +445,45 @@ export const AssessmentRunner: React.FC = () => {
                                 onClick={toggleFlag}
                                 className={cn(
                                     "flex items-center gap-2 text-sm font-medium transition-colors",
-                                    flags.includes(questions[currentQuestion].id)
-                                        ? "text-orange-500"
-                                        : "text-slate-400 hover:text-slate-600"
+                                    flags.includes(currentQ.id) ? "text-orange-500" : "text-slate-400 hover:text-slate-600"
                                 )}
                             >
-                                <Flag className={cn("w-4 h-4", flags.includes(questions[currentQuestion].id) && "fill-current")} />
-                                {flags.includes(questions[currentQuestion].id) ? "Flagged" : "Flag"}
+                                <Flag className={cn("w-4 h-4", flags.includes(currentQ.id) && "fill-current")} />
+                                {flags.includes(currentQ.id) ? "Flagged" : "Flag"}
                             </button>
                         </div>
 
                         <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                             <p className="text-xl text-slate-900 font-medium leading-relaxed whitespace-pre-wrap">
-                                {questions[currentQuestion].text}
+                                {currentQ.question_text}
                             </p>
                         </div>
 
                         <div className="space-y-4">
-                            {questions[currentQuestion].options.map((option, idx) => (
+                            {currentQ.options.map((option, idx) => (
                                 <div
                                     key={idx}
                                     onClick={() => handleOptionSelect(option)}
                                     className={cn(
                                         "flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 group",
-                                        answers[questions[currentQuestion].id] === option
+                                        answers[currentQ.id] === option
                                             ? "border-brand-500 bg-brand-50"
                                             : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                                     )}
                                 >
                                     <div className={cn(
                                         "w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4 transition-colors",
-                                        answers[questions[currentQuestion].id] === option
+                                        answers[currentQ.id] === option
                                             ? "border-brand-500 bg-brand-500"
                                             : "border-slate-300 group-hover:border-slate-400"
                                     )}>
-                                        {answers[questions[currentQuestion].id] === option && (
+                                        {answers[currentQ.id] === option && (
                                             <div className="w-2 h-2 rounded-full bg-white" />
                                         )}
                                     </div>
                                     <span className={cn(
                                         "text-lg",
-                                        answers[questions[currentQuestion].id] === option ? "font-medium text-brand-900" : "text-slate-700"
+                                        answers[currentQ.id] === option ? "font-medium text-brand-900" : "text-slate-700"
                                     )}>
                                         {option}
                                     </span>

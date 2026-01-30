@@ -16,6 +16,18 @@ export const LoginForm: React.FC = () => {
 
     // Validate role
     const validRoles = ['student', 'staff', 'admin'];
+
+    const { user, isAuthenticated } = useAuth();
+
+    React.useEffect(() => {
+        if (isAuthenticated && user) {
+            const dashboard = user.role === 'STUDENT' ? '/student/dashboard' :
+                user.role === 'STAFF' ? '/staff/dashboard' :
+                    '/admin/dashboard';
+            navigate(dashboard, { replace: true });
+        }
+    }, [isAuthenticated, user, navigate]);
+
     if (!role || !validRoles.includes(role)) {
         return <div className="p-8 text-center">Invalid Role selected. <button onClick={() => navigate('/')} className="text-blue-600 underline">Go Back</button></div>;
     }
@@ -51,24 +63,25 @@ export const LoginForm: React.FC = () => {
 
     const config = roleConfig[currentRole];
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
         // Simulate network delay
-        setTimeout(() => {
-            login(currentRole);
+        try {
+            await login(identifier, password, currentRole);
             setLoading(false);
-            // Navigation handled by AuthContext/App redirection or useEffect in parent
-            // But we can also manually navigate if needed, but Login page had useEffect. 
-            // Since we are changing the flow, we might need a useEffect here or in App to redirect if authenticated.
 
             navigate(
                 currentRole === 'STUDENT' ? '/student/dashboard' :
                     currentRole === 'STAFF' ? '/staff/dashboard' :
                         '/admin/dashboard'
             );
-        }, 1000);
+        } catch (error: any) {
+            console.error('Login failed:', error);
+            setLoading(false);
+            alert(error.message || 'Login failed. Please check your credentials.');
+        }
     };
 
     return (
@@ -166,7 +179,7 @@ export const LoginForm: React.FC = () => {
 
                     <div className="mt-8 pt-6 border-t border-slate-100 text-center">
                         <p className="text-xs text-slate-400">
-                            Protected by PlacementPro Secure Login System
+                            Protected by PlacementPrePro Secure Login System
                         </p>
                     </div>
                 </div>
