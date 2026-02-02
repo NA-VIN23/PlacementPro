@@ -10,6 +10,11 @@ interface QuestionDraft {
     correct_answer: string;
     explanation: string;
     section?: string;
+    question_type?: 'MCQ' | 'CODING' | 'TEXT';
+    code_template?: string;
+    constraints?: string;
+    test_cases?: { input: string; output: string; hidden: boolean }[];
+    function_name?: string;
 }
 
 export const StaffAssignAssessment: React.FC = () => {
@@ -37,7 +42,11 @@ export const StaffAssignAssessment: React.FC = () => {
         options: ['', '', '', ''],
         correct_answer: '',
         explanation: '',
-        section: 'Part A'
+        section: 'Part A',
+        question_type: 'MCQ',
+        code_template: '',
+        constraints: '',
+        test_cases: []
     });
 
     // FIX 1: Auto Calculate Duration
@@ -97,7 +106,7 @@ export const StaffAssignAssessment: React.FC = () => {
 
     const addQuestion = () => {
         // Validation for Manual Mode
-        const isMCQ = !examType || examType === 'DAILY' || (currentQ.section && ['Part A', 'Part B'].includes(currentQ.section));
+        const isMCQ = currentQ.question_type === 'MCQ';
 
         if (!currentQ.question_text) {
             alert('Please enter question text');
@@ -115,7 +124,11 @@ export const StaffAssignAssessment: React.FC = () => {
             options: ['', '', '', ''],
             correct_answer: '',
             explanation: '',
-            section: currentQ.section // Keep last section selected
+            section: currentQ.section,
+            question_type: examType === 'WEEKLY' && currentQ.section === 'Part C' ? 'CODING' : 'MCQ',
+            code_template: '',
+            constraints: '',
+            test_cases: []
         });
     };
 
@@ -364,13 +377,37 @@ export const StaffAssignAssessment: React.FC = () => {
                                 </h3>
 
                                 <div className="space-y-4">
-                                    {/* Weekly Part Selector */}
+                                    {/* Question Type Selector (For Daily) */}
+                                    {examType === 'DAILY' && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Question Type</label>
+                                            <div className="flex gap-2">
+                                                {['MCQ', 'CODING', 'TEXT'].map(type => (
+                                                    <button
+                                                        key={type}
+                                                        onClick={() => setCurrentQ({ ...currentQ, question_type: type as any })}
+                                                        className={`px-3 py-1 rounded-md text-sm font-medium border ${currentQ.question_type === type ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-600'}`}
+                                                    >
+                                                        {type === 'TEXT' ? 'Interview/Text' : type}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Weekly Section Auto-Selector Logic */}
                                     {examType === 'WEEKLY' && (
                                         <div>
                                             <label className="block text-sm font-medium text-slate-700 mb-1">Section</label>
                                             <select
                                                 value={currentQ.section}
-                                                onChange={(e) => setCurrentQ({ ...currentQ, section: e.target.value })}
+                                                onChange={(e) => {
+                                                    const sec = e.target.value;
+                                                    let type: any = 'MCQ';
+                                                    if (sec === 'Part C') type = 'CODING';
+                                                    if (sec === 'Part D') type = 'TEXT';
+                                                    setCurrentQ({ ...currentQ, section: sec, question_type: type });
+                                                }}
                                                 className="w-full px-4 py-2 rounded-lg border border-slate-200"
                                             >
                                                 <option value="Part A">Part A - Technical (MCQ)</option>
@@ -388,8 +425,8 @@ export const StaffAssignAssessment: React.FC = () => {
                                         className="w-full px-4 py-3 rounded-lg border border-slate-200 min-h-[100px]"
                                     />
 
-                                    {/* FIX 2: Correct Option Selection Logic */}
-                                    {(!examType || examType === 'DAILY' || (currentQ.section && ['Part A', 'Part B'].includes(currentQ.section))) && (
+                                    {/* MCQ UI */}
+                                    {currentQ.question_type === 'MCQ' && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {currentQ.options.map((opt, idx) => (
                                                 <div key={idx} className="flex items-center gap-2">
@@ -414,6 +451,81 @@ export const StaffAssignAssessment: React.FC = () => {
                                                     />
                                                 </div>
                                             ))}
+                                        </div>
+                                    )}
+
+                                    {/* Coding UI */}
+                                    {currentQ.question_type === 'CODING' && (
+                                        <div className="space-y-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 mb-1">Constraints</label>
+                                                <textarea
+                                                    value={currentQ.constraints || ''}
+                                                    onChange={e => setCurrentQ({ ...currentQ, constraints: e.target.value })}
+                                                    placeholder="e.g. 1 <= N <= 1000"
+                                                    className="w-full px-3 py-2 rounded-md border border-slate-200 text-sm h-20"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 mb-2">Test Cases</label>
+                                                {/* Test Case List */}
+                                                {(currentQ.test_cases || []).map((tc, i) => (
+                                                    <div key={i} className="flex gap-2 mb-2 items-start">
+                                                        <div className="flex-1 space-y-1">
+                                                            <input
+                                                                placeholder="Input"
+                                                                value={tc.input}
+                                                                onChange={e => {
+                                                                    const cases = [...(currentQ.test_cases || [])];
+                                                                    cases[i].input = e.target.value;
+                                                                    setCurrentQ({ ...currentQ, test_cases: cases });
+                                                                }}
+                                                                className="w-full px-2 py-1 text-sm border rounded"
+                                                            />
+                                                            <input
+                                                                placeholder="Output"
+                                                                value={tc.output}
+                                                                onChange={e => {
+                                                                    const cases = [...(currentQ.test_cases || [])];
+                                                                    cases[i].output = e.target.value;
+                                                                    setCurrentQ({ ...currentQ, test_cases: cases });
+                                                                }}
+                                                                className="w-full px-2 py-1 text-sm border rounded"
+                                                            />
+                                                        </div>
+                                                        <div className="flex flex-col items-center pt-2">
+                                                            <label className="text-xs text-slate-500 mb-1">Hidden</label>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={tc.hidden}
+                                                                onChange={e => {
+                                                                    const cases = [...(currentQ.test_cases || [])];
+                                                                    cases[i].hidden = e.target.checked;
+                                                                    setCurrentQ({ ...currentQ, test_cases: cases });
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <button
+                                                            onClick={() => {
+                                                                const cases = (currentQ.test_cases || []).filter((_, idx) => idx !== i);
+                                                                setCurrentQ({ ...currentQ, test_cases: cases });
+                                                            }}
+                                                            className="text-red-400 hover:text-red-500 p-2"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <button
+                                                    onClick={() => {
+                                                        const cases = [...(currentQ.test_cases || []), { input: '', output: '', hidden: false }];
+                                                        setCurrentQ({ ...currentQ, test_cases: cases });
+                                                    }}
+                                                    className="text-sm text-indigo-600 font-medium hover:underline flex items-center gap-1"
+                                                >
+                                                    <Plus className="w-3 h-3" /> Add Test Case
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
 
@@ -452,8 +564,14 @@ export const StaffAssignAssessment: React.FC = () => {
                                         <div key={idx} className="bg-white p-4 rounded-xl border border-slate-200 hover:border-brand-200 transition-colors group relative">
                                             {/* Show Section Badge */}
                                             {q.section && examType === 'WEEKLY' && (
-                                                <span className="inline-block bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded mb-2 font-bold uppercase">
+                                                <span className="inline-block bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded mb-2 font-bold uppercase mr-2">
                                                     {q.section}
+                                                </span>
+                                            )}
+                                            {/* Show Type Badge */}
+                                            {q.question_type && q.question_type !== 'MCQ' && (
+                                                <span className={`inline-block text-xs px-2 py-1 rounded mb-2 font-bold uppercase mr-2 ${q.question_type === 'CODING' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                    {q.question_type}
                                                 </span>
                                             )}
                                             <div className="pr-8">

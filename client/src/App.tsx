@@ -42,7 +42,7 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
             {/* Exam Pages (No Sidebar) */}
             <Route path="/student/assessment/:id" element={<AssessmentRunner />} />
-            <Route path="/student/interview/:id" element={<InterviewSession />} />
+            <Route path="/student/interview" element={<InterviewSession />} />
 
             {/* Normal Pages (With Sidebar) */}
             <Route path="/student" element={<MainLayout />}>

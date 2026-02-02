@@ -4,6 +4,7 @@ import { Clock, ChevronLeft, ChevronRight, Flag, AlertTriangle, Shield, Eye, Mon
 import { cn } from '../../utils/cn';
 import { studentService } from '../../services/api';
 import type { Exam, Question } from '../../types';
+import { CodingEnvironment } from '../../components/assessment/CodingEnvironment';
 
 type ViolationType = 'tab_switch' | 'fullscreen_exit' | 'copy_paste' | 'right_click';
 
@@ -24,7 +25,9 @@ export const AssessmentRunner: React.FC = () => {
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [score, setScore] = useState<number | null>(null);
+    const [maxScore, setMaxScore] = useState<number | null>(null);
     const [reviewDetails, setReviewDetails] = useState<any[]>([]);
+    const [gradingDetails, setGradingDetails] = useState<any>(null);
 
     // Core Assessment State
     const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -70,7 +73,7 @@ export const AssessmentRunner: React.FC = () => {
             if (updated.length >= MAX_VIOLATIONS) {
                 // Auto-submit on max violations
                 alert('EXAM TERMINATED: Maximum violations exceeded. Your test has been auto-submitted.');
-                handleSubmit(true); // Force submit
+                handleSubmit(true, true); // Force submit and TERMINATE
             }
             return updated;
         });
@@ -138,12 +141,19 @@ export const AssessmentRunner: React.FC = () => {
             }
         };
 
+        const handleDragDrop = (e: DragEvent) => {
+            e.preventDefault();
+            addViolation('copy_paste'); // Treat as copy/paste violation
+        };
+
         document.addEventListener('visibilitychange', handleVisibilityChange);
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         document.addEventListener('contextmenu', handleContextMenu);
         document.addEventListener('copy', handleCopyPaste);
         document.addEventListener('paste', handleCopyPaste);
         document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('dragstart', handleDragDrop);
+        document.addEventListener('drop', handleDragDrop);
 
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -152,6 +162,8 @@ export const AssessmentRunner: React.FC = () => {
             document.removeEventListener('copy', handleCopyPaste);
             document.removeEventListener('paste', handleCopyPaste);
             document.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('dragstart', handleDragDrop);
+            document.removeEventListener('drop', handleDragDrop);
         };
     }, [examStarted, submitted, addViolation]);
 
@@ -193,7 +205,7 @@ export const AssessmentRunner: React.FC = () => {
         );
     };
 
-    const handleSubmit = async (force = false) => {
+    const handleSubmit = async (force = false, terminated = false) => {
         if (!force && !confirm("Are you sure you want to submit the assessment? This action cannot be undone.")) {
             return;
         }
@@ -205,9 +217,11 @@ export const AssessmentRunner: React.FC = () => {
         setSubmitting(true);
         try {
             if (!id) return;
-            const result = await studentService.submitExam(id, answers);
+            const result = await studentService.submitExam(id, answers, terminated);
             setScore(result.score);
+            setMaxScore(result.maxScore || questions.length); // Fallback if no maxScore
             setReviewDetails(result.reviewDetails || []);
+            setGradingDetails(result.gradingDetails || {});
             setSubmitted(true);
         } catch (err) {
             console.error('Submission failed', err);
@@ -261,8 +275,8 @@ export const AssessmentRunner: React.FC = () => {
                             </div>
                             <h2 className="text-3xl font-bold text-slate-900 mb-2">Assessment Completed</h2>
                             <div className="my-6">
-                                <span className="text-6xl font-black text-brand-600">{score}</span>
-                                <span className="text-2xl text-slate-400 font-medium ml-2">/ {questions.length}</span>
+                                <span className="text-6xl font-black text-brand-600">{Math.round((score || 0) * 10) / 10}</span>
+                                <span className="text-2xl text-slate-400 font-medium ml-2">/ {maxScore}</span>
                             </div>
                             <button
                                 onClick={() => navigate('/student/dashboard')}
@@ -281,39 +295,73 @@ export const AssessmentRunner: React.FC = () => {
                         </div>
 
                         {questions.map((q, idx) => {
+                            const grade = gradingDetails?.[q.id];
                             const correctDetail = reviewDetails?.find((r: any) => r.id === q.id);
                             const correctAnswer = correctDetail?.correct_answer;
                             const explanation = correctDetail?.explanation;
                             const userAnswer = answers[q.id];
-                            const isCorrect = userAnswer === correctAnswer;
+
+                            // Determine correctness based on Score for flexibility
+                            const isCorrect = grade?.score === (grade?.maxScore || 1);
+                            const isPartial = grade?.score > 0 && grade?.score < (grade?.maxScore || 1);
 
                             return (
-                                <div key={q.id} className={`p-6 rounded-2xl border ${isCorrect ? 'border-green-200 bg-green-50/30' : 'border-red-200 bg-red-50/30'} shadow-sm bg-white`}>
+                                <div key={q.id} className={`p-6 rounded-2xl border ${isCorrect ? 'border-green-200 bg-green-50/30' : isPartial ? 'border-orange-200 bg-orange-50/30' : 'border-red-200 bg-red-50/30'} shadow-sm bg-white`}>
                                     <div className="flex items-start gap-4 mb-4">
-                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-bold ${isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-bold ${isCorrect ? 'bg-green-100 text-green-700' : isPartial ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
                                             {idx + 1}
                                         </div>
-                                        <p className="text-lg font-medium text-slate-900">{q.question_text}</p>
-                                    </div>
-
-                                    <div className="space-y-3 pl-12">
-                                        {q.options.map((opt, optIdx) => {
-                                            const isSelected = userAnswer === opt;
-                                            const isTheCorrectAnswer = correctAnswer === opt;
-
-                                            let optionClass = "border-slate-200 bg-white text-slate-700";
-                                            if (isTheCorrectAnswer) optionClass = "border-green-500 bg-green-50 text-green-900 font-bold";
-                                            else if (isSelected && !isCorrect) optionClass = "border-red-500 bg-red-50 text-red-900 font-medium";
-
-                                            return (
-                                                <div key={optIdx} className={`flex items-center justify-between p-3 rounded-lg border ${optionClass}`}>
-                                                    <span>{opt}</span>
-                                                    {isTheCorrectAnswer && <CheckCircle className="w-5 h-5 text-green-600" />}
-                                                    {isSelected && !isCorrect && <X className="w-5 h-5 text-red-500" />}
+                                        <div className="flex-1">
+                                            <div className="flex justify-between items-start">
+                                                <p className="text-lg font-medium text-slate-900">{q.question_text}</p>
+                                                <div className="text-sm font-bold text-slate-500">
+                                                    {grade?.score !== undefined ? `${Math.round(grade.score * 10) / 10} / ${grade.maxScore || 1}` : 'N/A'} Pts
                                                 </div>
-                                            );
-                                        })}
+                                            </div>
+
+                                            {/* CODING Specific Review */}
+                                            {q.question_type === 'CODING' && grade && (
+                                                <div className="mt-4 p-4 bg-slate-50 rounded-lg text-sm font-mono border border-slate-200">
+                                                    <div className="flex gap-4 mb-2 border-b border-slate-200 pb-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className={`w-2 h-2 rounded-full ${grade.passed === grade.total ? 'bg-green-500' : 'bg-orange-500'}`}></div>
+                                                            <span className="text-slate-600">Test Cases: {grade.passed} / {grade.total} Passed</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                                            <span className="text-slate-600">Language: {grade.language}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="mt-2">
+                                                        <p className="text-xs text-slate-400 uppercase mb-1">Your Solution:</p>
+                                                        <pre className="overflow-x-auto text-slate-800">{grade.code}</pre>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
+
+                                    {/* MCQ / TEXT Options Review */}
+                                    {(!q.question_type || q.question_type === 'MCQ') && (
+                                        <div className="space-y-3 pl-12">
+                                            {q.options.map((opt, optIdx) => {
+                                                const isSelected = userAnswer === opt;
+                                                const isTheCorrectAnswer = correctAnswer === opt;
+
+                                                let optionClass = "border-slate-200 bg-white text-slate-700";
+                                                if (isTheCorrectAnswer) optionClass = "border-green-500 bg-green-50 text-green-900 font-bold";
+                                                else if (isSelected && !isCorrect) optionClass = "border-red-500 bg-red-50 text-red-900 font-medium";
+
+                                                return (
+                                                    <div key={optIdx} className={`flex items-center justify-between p-3 rounded-lg border ${optionClass}`}>
+                                                        <span>{opt}</span>
+                                                        {isTheCorrectAnswer && <CheckCircle className="w-5 h-5 text-green-600" />}
+                                                        {isSelected && !isCorrect && <X className="w-5 h-5 text-red-500" />}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
 
                                     {explanation && (
                                         <div className="mt-4 ml-12 p-4 bg-blue-50 rounded-xl text-sm border border-blue-100 text-blue-800">
@@ -435,81 +483,106 @@ export const AssessmentRunner: React.FC = () => {
             {/* Main Content */}
             <div className="flex flex-1 overflow-hidden">
                 {/* Question Area */}
-                <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
-                    <div className="max-w-3xl mx-auto space-y-8">
-                        <div className="flex items-start justify-between">
-                            <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-                                Question {currentQuestion + 1} of {questions.length}
-                            </span>
-                            <button
-                                onClick={toggleFlag}
-                                className={cn(
-                                    "flex items-center gap-2 text-sm font-medium transition-colors",
-                                    flags.includes(currentQ.id) ? "text-orange-500" : "text-slate-400 hover:text-slate-600"
-                                )}
-                            >
-                                <Flag className={cn("w-4 h-4", flags.includes(currentQ.id) && "fill-current")} />
-                                {flags.includes(currentQ.id) ? "Flagged" : "Flag"}
-                            </button>
-                        </div>
-
-                        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                            <p className="text-xl text-slate-900 font-medium leading-relaxed whitespace-pre-wrap">
-                                {currentQ.question_text}
-                            </p>
-                        </div>
-
-                        <div className="space-y-4">
-                            {currentQ.options.map((option, idx) => (
-                                <div
-                                    key={idx}
-                                    onClick={() => handleOptionSelect(option)}
+                {/* Question Area */}
+                <div className="flex-1 overflow-y-auto bg-slate-50/50">
+                    {/* Render Coding Environment if CODING type */}
+                    {questions[currentQuestion].question_type === 'CODING' ? (
+                        <CodingEnvironment
+                            question={questions[currentQuestion]}
+                            currentCode={answers[questions[currentQuestion].id] || questions[currentQuestion].code_template || ''}
+                            onCodeChange={(code) => setAnswers(prev => ({ ...prev, [questions[currentQuestion].id]: code }))}
+                            onRunCode={(lang, ver, code) => studentService.runCode(lang, ver, code, questions[currentQuestion].id)}
+                        />
+                    ) : (
+                        // Standard MCQ / Text UI
+                        <div className="p-8 max-w-3xl mx-auto space-y-8">
+                            <div className="flex items-start justify-between">
+                                <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">
+                                    Question {currentQuestion + 1} of {questions.length}
+                                </span>
+                                <button
+                                    onClick={toggleFlag}
                                     className={cn(
-                                        "flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 group",
-                                        answers[currentQ.id] === option
-                                            ? "border-brand-500 bg-brand-50"
-                                            : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                                        "flex items-center gap-2 text-sm font-medium transition-colors",
+                                        flags.includes(currentQ.id) ? "text-orange-500" : "text-slate-400 hover:text-slate-600"
                                     )}
                                 >
-                                    <div className={cn(
-                                        "w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4 transition-colors",
-                                        answers[currentQ.id] === option
-                                            ? "border-brand-500 bg-brand-500"
-                                            : "border-slate-300 group-hover:border-slate-400"
-                                    )}>
-                                        {answers[currentQ.id] === option && (
-                                            <div className="w-2 h-2 rounded-full bg-white" />
-                                        )}
-                                    </div>
-                                    <span className={cn(
-                                        "text-lg",
-                                        answers[currentQ.id] === option ? "font-medium text-brand-900" : "text-slate-700"
-                                    )}>
-                                        {option}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
+                                    <Flag className={cn("w-4 h-4", flags.includes(currentQ.id) && "fill-current")} />
+                                    {flags.includes(currentQ.id) ? "Flagged" : "Flag"}
+                                </button>
+                            </div>
 
-                        <div className="flex justify-between pt-8">
-                            <button
-                                onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
-                                disabled={currentQuestion === 0}
-                                className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-slate-600 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                                Previous
-                            </button>
-                            <button
-                                onClick={() => setCurrentQuestion(prev => Math.min(questions.length - 1, prev + 1))}
-                                disabled={currentQuestion === questions.length - 1}
-                                className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                Next Question
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
+                            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                                <p className="text-xl text-slate-900 font-medium leading-relaxed whitespace-pre-wrap">
+                                    {currentQ.question_text}
+                                </p>
+                            </div>
+
+                            {/* Render Options for MCQ */}
+                            {(!currentQ.question_type || currentQ.question_type === 'MCQ') && (
+                                <div className="space-y-4">
+                                    {currentQ.options.map((option, idx) => (
+                                        <div
+                                            key={idx}
+                                            onClick={() => handleOptionSelect(option)}
+                                            className={cn(
+                                                "flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 group",
+                                                answers[currentQ.id] === option
+                                                    ? "border-brand-500 bg-brand-50"
+                                                    : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4 transition-colors",
+                                                answers[currentQ.id] === option
+                                                    ? "border-brand-500 bg-brand-500"
+                                                    : "border-slate-300 group-hover:border-slate-400"
+                                            )}>
+                                                {answers[currentQ.id] === option && (
+                                                    <div className="w-2 h-2 rounded-full bg-white" />
+                                                )}
+                                            </div>
+                                            <span className={cn(
+                                                "text-lg",
+                                                answers[currentQ.id] === option ? "font-medium text-brand-900" : "text-slate-700"
+                                            )}>
+                                                {option}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Render Text Area for Interview/Text Questions */}
+                            {currentQ.question_type === 'TEXT' && (
+                                <textarea
+                                    value={answers[currentQ.id] || ''}
+                                    onChange={(e) => setAnswers(prev => ({ ...prev, [currentQ.id]: e.target.value }))}
+                                    placeholder="Type your answer here..."
+                                    className="w-full h-48 p-4 rounded-xl border-2 border-slate-200 focus:border-brand-500 focus:outline-none text-lg"
+                                />
+                            )}
+
+                            <div className="flex justify-between pt-8">
+                                <button
+                                    onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
+                                    disabled={currentQuestion === 0}
+                                    className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-slate-600 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                    Previous
+                                </button>
+                                <button
+                                    onClick={() => setCurrentQuestion(prev => Math.min(questions.length - 1, prev + 1))}
+                                    disabled={currentQuestion === questions.length - 1}
+                                    className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Next Question
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Sidebar */}
