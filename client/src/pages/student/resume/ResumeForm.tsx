@@ -301,10 +301,7 @@ export const ResumeForm: React.FC<ResumeFormProps> = ({ data, onChange, onGenera
                     Additional Details (Optional)
                 </h3>
                 <div className="space-y-6">
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Profile Photo URL</label>
-                        <input type="text" placeholder="https://..." value={data.profilePhoto || ''} onChange={e => updateField('profilePhoto', e.target.value)} className="p-3 border border-slate-200 rounded-xl outline-none w-full" />
-                    </div>
+
                     <div>
                         <label className="block text-sm font-bold text-slate-700 mb-2">Career Objective</label>
                         <textarea placeholder="Briefly describe your career goals..." value={data.objective || ''} onChange={e => updateField('objective', e.target.value)} className="p-3 border border-slate-200 rounded-xl outline-none w-full h-24 resize-none" />
