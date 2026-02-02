@@ -11,11 +11,14 @@
   },
   "dependencies": {
     "@livekit/components-react": "^2.9.19",
+    "@monaco-editor/react": "^4.7.0",
+    "ace-builds": "^1.43.6",
     "axios": "^1.13.4",
     "clsx": "^2.1.0",
     "livekit-client": "^2.17.0",
     "lucide-react": "^0.344.0",
     "react": "^19.2.0",
+    "react-ace": "^14.0.1",
     "react-dom": "^19.2.0",
     "react-router-dom": "^6.22.0",
     "tailwind-merge": "^2.2.1"

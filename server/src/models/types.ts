@@ -33,6 +33,11 @@ export interface Question {
     correct_answer: string; // The correct option content or index
     explanation?: string;
     section?: string;
+    question_type?: 'MCQ' | 'CODING' | 'TEXT';
+    code_template?: string;
+    constraints?: string;
+    function_name?: string;
+    test_cases?: { input: string; output: string; hidden: boolean }[];
 }
 
 export interface Submission {

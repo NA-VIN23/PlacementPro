@@ -48,6 +48,73 @@ export const ResumeForm: React.FC<ResumeFormProps> = ({ data, onChange, onGenera
         updateField('projects', newProj);
     };
 
+    // Experience Handlers
+    const addExperience = () => {
+        const newExp = { company: '', role: '', duration: '', description: '' };
+        updateField('experience', [...(data.experience || []), newExp]);
+    };
+    const updateExperience = (index: number, field: string, value: string) => {
+        const newExp = [...(data.experience || [])];
+        newExp[index] = { ...newExp[index], [field]: value };
+        updateField('experience', newExp);
+    };
+    const removeExperience = (index: number) => {
+        const newExp = data.experience.filter((_: any, i: number) => i !== index);
+        updateField('experience', newExp);
+    };
+
+    // Certification Handlers
+    const addCertification = () => {
+        updateField('certifications', [...(data.certifications || []), { name: '', organization: '', year: '', url: '' }]);
+    };
+    const updateCertification = (index: number, field: string, value: string) => {
+        const newCert = [...(data.certifications || [])];
+        newCert[index] = { ...newCert[index], [field]: value };
+        updateField('certifications', newCert);
+    };
+    const removeCertification = (index: number) => {
+        updateField('certifications', data.certifications.filter((_: any, i: number) => i !== index));
+    };
+
+    // Achievement Handlers (String Array)
+    const addAchievement = () => {
+        updateField('achievements', [...(data.achievements || []), '']);
+    };
+    const updateAchievement = (index: number, value: string) => {
+        const newAch = [...(data.achievements || [])];
+        newAch[index] = value;
+        updateField('achievements', newAch);
+    };
+    const removeAchievement = (index: number) => {
+        updateField('achievements', data.achievements.filter((_: any, i: number) => i !== index));
+    };
+
+    // Languages Handlers
+    const addLanguage = () => {
+        updateField('languages', [...(data.languages || []), { language: '', proficiency: 'Intermediate' }]);
+    };
+    const updateLanguage = (index: number, field: string, value: string) => {
+        const newLang = [...(data.languages || [])];
+        newLang[index] = { ...newLang[index], [field]: value };
+        updateField('languages', newLang);
+    };
+    const removeLanguage = (index: number) => {
+        updateField('languages', data.languages.filter((_: any, i: number) => i !== index));
+    };
+
+    // Co-Curricular Handlers (String Array)
+    const addCoCurricular = () => {
+        updateField('coCurricularActivities', [...(data.coCurricularActivities || []), '']);
+    };
+    const updateCoCurricular = (index: number, value: string) => {
+        const newCo = [...(data.coCurricularActivities || [])];
+        newCo[index] = value;
+        updateField('coCurricularActivities', newCo);
+    };
+    const removeCoCurricular = (index: number) => {
+        updateField('coCurricularActivities', data.coCurricularActivities.filter((_: any, i: number) => i !== index));
+    };
+
     return (
         <div className="space-y-8 animate-fade-in">
             {/* Basic Info */}
@@ -196,6 +263,139 @@ export const ResumeForm: React.FC<ResumeFormProps> = ({ data, onChange, onGenera
                             </div>
                         </div>
                     ))}
+                </div>
+            </div>
+
+            {/* Work Experience */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <span className="w-8 h-8 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center text-sm">5</span>
+                        Work Experience / Internships (Optional)
+                    </h3>
+                    <button onClick={addExperience} className="text-sm font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                        <Plus className="w-4 h-4" /> Add
+                    </button>
+                </div>
+                <div className="space-y-6">
+                    {(data.experience || []).map((exp: any, index: number) => (
+                        <div key={index} className="p-4 bg-slate-50 rounded-xl border border-slate-100 relative group">
+                            <button onClick={() => removeExperience(index)} className="absolute top-4 right-4 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-5 h-5" /></button>
+                            <div className="space-y-4 pr-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <input type="text" placeholder="Company / Organization" value={exp.company} onChange={e => updateExperience(index, 'company', e.target.value)} className="p-3 bg-white border border-slate-200 rounded-lg outline-none w-full font-bold" />
+                                    <input type="text" placeholder="Role (e.g. SDE Intern)" value={exp.role} onChange={e => updateExperience(index, 'role', e.target.value)} className="p-3 bg-white border border-slate-200 rounded-lg outline-none w-full" />
+                                </div>
+                                <input type="text" placeholder="Duration (e.g. Jan 2024 - Present)" value={exp.duration} onChange={e => updateExperience(index, 'duration', e.target.value)} className="p-3 bg-white border border-slate-200 rounded-lg outline-none w-full" />
+                                <textarea placeholder="Responsibilities & Achievements" value={exp.description} onChange={e => updateExperience(index, 'description', e.target.value)} className="p-3 bg-white border border-slate-200 rounded-lg outline-none w-full h-24 resize-none" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Additional Details (Objective, Photo, etc) */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-lg bg-gray-50 text-gray-600 flex items-center justify-center text-sm">6</span>
+                    Additional Details (Optional)
+                </h3>
+                <div className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Profile Photo URL</label>
+                        <input type="text" placeholder="https://..." value={data.profilePhoto || ''} onChange={e => updateField('profilePhoto', e.target.value)} className="p-3 border border-slate-200 rounded-xl outline-none w-full" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Career Objective</label>
+                        <textarea placeholder="Briefly describe your career goals..." value={data.objective || ''} onChange={e => updateField('objective', e.target.value)} className="p-3 border border-slate-200 rounded-xl outline-none w-full h-24 resize-none" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Checkbox-style Lists & Misc */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Certifications */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <div className="flex justify-between items-center mb-4">
+                        <h4 className="font-bold text-slate-800">Certifications</h4>
+                        <button onClick={addCertification} className="text-xs font-bold text-brand-600"><Plus className="w-3 h-3 inline" /> Add</button>
+                    </div>
+                    <div className="space-y-3">
+                        {(data.certifications || []).map((cert: any, i: number) => (
+                            <div key={i} className="flex gap-2">
+                                <div className="space-y-2 flex-1">
+                                    <input type="text" placeholder="Name" value={cert.name} onChange={e => updateCertification(i, 'name', e.target.value)} className="p-2 border rounded-lg w-full text-sm" />
+                                    <input type="text" placeholder="Org" value={cert.organization} onChange={e => updateCertification(i, 'organization', e.target.value)} className="p-2 border rounded-lg w-full text-sm" />
+                                </div>
+                                <button onClick={() => removeCertification(i)} className="text-red-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Achievements */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <div className="flex justify-between items-center mb-4">
+                        <h4 className="font-bold text-slate-800">Achievements</h4>
+                        <button onClick={addAchievement} className="text-xs font-bold text-brand-600"><Plus className="w-3 h-3 inline" /> Add</button>
+                    </div>
+                    <div className="space-y-2">
+                        {(data.achievements || []).map((ach: string, i: number) => (
+                            <div key={i} className="flex gap-2">
+                                <input type="text" placeholder="Achievement..." value={ach} onChange={e => updateAchievement(i, e.target.value)} className="p-2 border rounded-lg w-full text-sm" />
+                                <button onClick={() => removeAchievement(i)} className="text-red-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Technical Tools */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <h4 className="font-bold text-slate-800 mb-2">Technical Tools</h4>
+                    <textarea placeholder="Git, Docker, Postman..." value={data.technicalTools || ''} onChange={e => updateField('technicalTools', e.target.value)} className="p-3 border rounded-lg w-full h-24 text-sm" />
+                </div>
+                {/* Soft Skills */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <h4 className="font-bold text-slate-800 mb-2">Soft Skills</h4>
+                    <textarea placeholder="Communication, Leadership..." value={data.softSkills || ''} onChange={e => updateField('softSkills', e.target.value)} className="p-3 border rounded-lg w-full h-24 text-sm" />
+                </div>
+
+                {/* Languages */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <div className="flex justify-between items-center mb-4">
+                        <h4 className="font-bold text-slate-800">Languages</h4>
+                        <button onClick={addLanguage} className="text-xs font-bold text-brand-600"><Plus className="w-3 h-3 inline" /> Add</button>
+                    </div>
+                    <div className="space-y-2">
+                        {(data.languages || []).map((l: any, i: number) => (
+                            <div key={i} className="flex gap-2">
+                                <input type="text" placeholder="Language" value={l.language} onChange={e => updateLanguage(i, 'language', e.target.value)} className="p-2 border rounded-lg flex-1 text-sm" />
+                                <select value={l.proficiency} onChange={e => updateLanguage(i, 'proficiency', e.target.value)} className="p-2 border rounded-lg text-sm bg-white">
+                                    <option>Basic</option>
+                                    <option>Intermediate</option>
+                                    <option>Fluent</option>
+                                    <option>Native</option>
+                                </select>
+                                <button onClick={() => removeLanguage(i)} className="text-red-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Extra-Curricular */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <div className="flex justify-between items-center mb-4">
+                        <h4 className="font-bold text-slate-800">Extra-Curricular</h4>
+                        <button onClick={addCoCurricular} className="text-xs font-bold text-brand-600"><Plus className="w-3 h-3 inline" /> Add</button>
+                    </div>
+                    <div className="space-y-2">
+                        {(data.coCurricularActivities || []).map((act: string, i: number) => (
+                            <div key={i} className="flex gap-2">
+                                <input type="text" placeholder="Activity..." value={act} onChange={e => updateCoCurricular(i, e.target.value)} className="p-2 border rounded-lg w-full text-sm" />
+                                <button onClick={() => removeCoCurricular(i)} className="text-red-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 

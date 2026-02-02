@@ -3,7 +3,7 @@ import { supabase } from '../config/supabase';
 
 export const getStudentProfile = async (req: Request, res: Response) => {
     try {
-        const studentId = (req as any).user.id;
+        const studentId = (req as any).user.userId;
 
         // Fetch all data in parallel
         const [profile, internships, projects, education, certifications] = await Promise.all([
@@ -18,7 +18,10 @@ export const getStudentProfile = async (req: Request, res: Response) => {
         const fullProfile = {
             ...(profile.data || {}),
             internships: internships.data || [],
-            projects: projects.data || [],
+            projects: (projects.data || []).map((p: any) => ({
+                ...p,
+                techStack: p.tech_stack // Fix mapping
+            })),
             education: education.data || [],
             certifications: certifications.data || []
         };
@@ -33,7 +36,7 @@ export const getStudentProfile = async (req: Request, res: Response) => {
 
 export const updateStudentProfile = async (req: Request, res: Response) => {
     try {
-        const studentId = (req as any).user.id;
+        const studentId = (req as any).user.userId;
         const { bio, linkedin, github, skills, internships, projects, education, certifications } = req.body;
 
         // 1. Upsert Main Profile

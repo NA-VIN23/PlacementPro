@@ -6,15 +6,28 @@ import PDFDocument from 'pdfkit';
 // HTML TEMPLATES (PREVIEW)
 // ==========================================
 
+// ==========================================
+// HTML TEMPLATES (PREVIEW)
+// ==========================================
+
 const getClassicHTML = (data: any) => `
     <div style="font-family: 'Times New Roman', Times, serif; color: #000; padding: 40px; background: white; line-height: 1.4;">
         <div style="text-align: center; margin-bottom: 25px;">
+            ${data.profilePhoto ? `<img src="${data.profilePhoto}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;" />` : ''}
             <h1 style="font-size: 24px; text-transform: uppercase; margin: 0 0 5px 0; font-weight: bold;">${data.fullName || 'YOUR NAME'}</h1>
             <p style="font-size: 11px; margin: 0;">
                 ${data.email || ''} ${data.phone ? ` • ${data.phone}` : ''}
                 ${data.linkedin ? ` • <a href="${data.linkedin}" style="color: #000; text-decoration: none;">LinkedIn</a>` : ''}
+                ${data.github ? ` • <a href="${data.github}" style="color: #000; text-decoration: none;">GitHub</a>` : ''}
             </p>
         </div>
+
+        ${data.objective ? `
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 12px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #000; margin-bottom: 8px; padding-bottom: 2px;">Career Objective</h2>
+                <p style="font-size: 12px; margin: 0;">${data.objective}</p>
+            </div>
+        ` : ''}
 
         ${data.education?.length ? `
             <div style="margin-bottom: 20px;">
@@ -40,6 +53,30 @@ const getClassicHTML = (data: any) => `
             </div>
         ` : ''}
 
+        ${(data.technicalTools || data.softSkills) ? `
+             <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 12px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #000; margin-bottom: 8px; padding-bottom: 2px;">Tools & Soft Skills</h2>
+                ${data.technicalTools ? `<p style="font-size: 12px; margin: 0 0 4px 0;"><strong>Technical Tools:</strong> ${data.technicalTools}</p>` : ''}
+                ${data.softSkills ? `<p style="font-size: 12px; margin: 0;"><strong>Soft Skills:</strong> ${data.softSkills}</p>` : ''}
+            </div>
+        ` : ''}
+
+        ${(data.experience && data.experience.length) ? `
+             <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 12px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #000; margin-bottom: 10px; padding-bottom: 2px;">Experience</h2>
+                ${data.experience.map((exp: any) => `
+                    <div style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                            <strong style="font-size: 12px;">${exp.role}</strong>
+                            <span style="font-size: 11px;">${exp.duration}</span>
+                        </div>
+                        <div style="font-size: 11px; font-style: italic; margin-bottom: 2px;">${exp.company}</div>
+                        <div style="font-size: 12px;">${exp.responsibilities || exp.description}</div>
+                    </div>
+                `).join('')}
+            </div>
+        ` : ''}
+        
         ${data.projects?.length ? `
             <div style="margin-bottom: 20px;">
                 <h2 style="font-size: 12px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #000; margin-bottom: 10px; padding-bottom: 2px;">Projects</h2>
@@ -54,19 +91,72 @@ const getClassicHTML = (data: any) => `
                 `).join('')}
             </div>
         ` : ''}
+
+        ${data.certifications?.length ? `
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 12px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #000; margin-bottom: 10px; padding-bottom: 2px;">Certifications</h2>
+                ${data.certifications.map((cert: any) => `
+                    <div style="margin-bottom: 4px; font-size: 12px;">
+                       <strong>${cert.name}</strong> - ${cert.organization} ${cert.year ? `(${cert.year})` : ''}
+                       ${cert.url ? `<br/><a href="${cert.url}" style="color: #666; font-size: 11px;">View Certificate</a>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        ` : ''}
+
+        ${data.achievements?.length ? `
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 12px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #000; margin-bottom: 10px; padding-bottom: 2px;">Achievements</h2>
+                <ul style="padding-left: 20px; font-size: 12px; margin: 0;">
+                ${data.achievements.map((ach: any) => `
+                    <li style="margin-bottom: 4px;">${ach}</li>
+                `).join('')}
+                </ul>
+            </div>
+        ` : ''}
+
+        ${data.coCurricularActivities?.length ? `
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 12px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #000; margin-bottom: 10px; padding-bottom: 2px;">Extra-Curricular</h2>
+                <ul style="padding-left: 20px; font-size: 12px; margin: 0;">
+                ${data.coCurricularActivities.map((act: any) => `
+                    <li style="margin-bottom: 4px;">${act}</li>
+                `).join('')}
+                </ul>
+            </div>
+        ` : ''}
+
+        ${data.languages?.length ? `
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 12px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #000; margin-bottom: 8px; padding-bottom: 2px;">Languages</h2>
+                 <p style="font-size: 12px; margin: 0;">
+                 ${data.languages.map((l: any) => `${l.language} (${l.proficiency})`).join(' • ')}
+                 </p>
+            </div>
+        ` : ''}
     </div>
 `;
 
 const getModernHTML = (data: any) => `
     <div style="font-family: Helvetica, Arial, sans-serif; color: #333; padding: 40px; background: white; line-height: 1.5;">
-        <div style="margin-bottom: 30px;">
-            <h1 style="font-size: 32px; font-weight: bold; margin: 0 0 5px 0; color: #111;">${(data.fullName || 'Your Name').toUpperCase()}</h1>
-            <p style="font-size: 10px; margin: 0; color: #666; letter-spacing: 0.5px;">
-                ${data.email || ''} 
-                ${data.phone ? ` | ${data.phone}` : ''}
-                ${data.linkedin ? ` | <a href="${data.linkedin}" style="color: #666; text-decoration: none;">LINKEDIN</a>` : ''}
-            </p>
+        <div style="margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <h1 style="font-size: 32px; font-weight: bold; margin: 0 0 5px 0; color: #111;">${(data.fullName || 'Your Name').toUpperCase()}</h1>
+                <p style="font-size: 10px; margin: 0; color: #666; letter-spacing: 0.5px;">
+                    ${data.email || ''} 
+                    ${data.phone ? ` | ${data.phone}` : ''}
+                    ${data.linkedin ? ` | <a href="${data.linkedin}" style="color: #666; text-decoration: none;">LINKEDIN</a>` : ''}
+                    ${data.github ? ` | <a href="${data.github}" style="color: #666; text-decoration: none;">GITHUB</a>` : ''}
+                </p>
+            </div>
+            ${data.profilePhoto ? `<img src="${data.profilePhoto}" style="width: 80px; height: 80px; border-radius: 8px; object-fit: cover;" />` : ''}
         </div>
+
+        ${data.objective ? `
+            <div style="margin-bottom: 25px;">
+                <p style="font-size: 12px; color: #333; font-style: italic;">${data.objective}</p>
+            </div>
+        ` : ''}
 
         ${data.education?.length ? `
             <div style="margin-bottom: 25px;">
@@ -90,9 +180,32 @@ const getModernHTML = (data: any) => `
             </div>
         ` : ''}
 
+        ${(data.technicalTools || data.softSkills) ? `
+            <div style="margin-bottom: 25px;">
+                <h2 style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #444; letter-spacing: 1px; margin-bottom: 10px;">Additional Skills</h2>
+                 ${data.technicalTools ? `<p style="font-size: 12px; color: #333; margin-bottom: 4px;"><strong>Tools:</strong> ${data.technicalTools}</p>` : ''}
+                 ${data.softSkills ? `<p style="font-size: 12px; color: #333;"><strong>Soft Skills:</strong> ${data.softSkills}</p>` : ''}
+            </div>
+        ` : ''}
+        
+        ${(data.experience && data.experience.length) ? `
+             <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #444; letter-spacing: 1px; margin-bottom: 15px;">Experience</h2>
+                ${data.experience.map((exp: any) => `
+                    <div style="margin-bottom: 15px;">
+                        <div style="margin-bottom: 4px;">
+                            <span style="font-size: 13px; font-weight: bold; color: #000;">${exp.role}</span>
+                            <span style="font-size: 11px; color: #666; margin-left: 8px;">${exp.company} | ${exp.duration}</span>
+                        </div>
+                        <div style="font-size: 12px; color: #333;">${exp.responsibilities || exp.description}</div>
+                    </div>
+                `).join('')}
+            </div>
+        ` : ''}
+
         ${data.projects?.length ? `
             <div style="margin-bottom: 20px;">
-                <h2 style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #444; letter-spacing: 1px; margin-bottom: 15px;">Experience & Projects</h2>
+                <h2 style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #444; letter-spacing: 1px; margin-bottom: 15px;">Projects</h2>
                 ${data.projects.map((proj: any) => `
                     <div style="margin-bottom: 15px;">
                         <div style="margin-bottom: 4px;">
@@ -102,6 +215,25 @@ const getModernHTML = (data: any) => `
                         <div style="font-size: 12px; color: #333;">${proj.description}</div>
                     </div>
                 `).join('')}
+            </div>
+        ` : ''}
+
+        ${(data.certifications?.length || data.achievements?.length) ? `
+             <div style="margin-bottom: 25px;">
+                <h2 style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #444; letter-spacing: 1px; margin-bottom: 15px;">Achievements & Certifications</h2>
+                <ul style="padding-left: 20px; font-size: 12px; color: #333; margin: 0;">
+                    ${data.certifications?.map((c: any) => `<li><strong>${c.name}</strong> - ${c.organization}</li>`).join('') || ''}
+                    ${data.achievements?.map((a: any) => `<li>${a}</li>`).join('') || ''}
+                </ul>
+            </div>
+        ` : ''}
+
+         ${data.languages?.length ? `
+            <div style="margin-bottom: 25px;">
+                <h2 style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #444; letter-spacing: 1px; margin-bottom: 10px;">Languages</h2>
+                 <p style="font-size: 12px; color: #333;">
+                 ${data.languages.map((l: any) => `${l.language} <span style="color:#777; font-size:10px;">(${l.proficiency})</span>`).join(' • ')}
+                 </p>
             </div>
         ` : ''}
     </div>
@@ -116,6 +248,12 @@ const getCompactHTML = (data: any) => `
                 ${data.linkedin ? ` • <a href="${data.linkedin}" style="color: #000;">LinkedIn</a>` : ''}
             </p>
         </div>
+
+        ${data.objective ? `
+            <div style="margin-bottom: 10px;">
+                 <p style="font-size: 10px; font-style: italic; margin: 0;">${data.objective}</p>
+            </div>
+        ` : ''}
 
         ${data.education?.length ? `
             <div style="margin-bottom: 12px;">
@@ -139,6 +277,22 @@ const getCompactHTML = (data: any) => `
             </div>
         ` : ''}
 
+         ${(data.experience && data.experience.length) ? `
+             <div style="margin-bottom: 12px;">
+                 <h2 style="font-size: 10px; font-weight: bold; text-transform: uppercase; margin: 0 0 4px 0;">Experience</h2>
+                ${data.experience.map((exp: any) => `
+                    <div style="margin-bottom: 6px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 1px;">
+                             <strong>${exp.role}</strong>
+                             <span style="font-size: 9px;">${exp.duration}</span>
+                        </div>
+                        <div style="font-size: 9px; font-style: italic;">${exp.company}</div>
+                        <div style="font-size: 10px;">${exp.responsibilities || exp.description}</div>
+                    </div>
+                `).join('')}
+            </div>
+        ` : ''}
+
         ${data.projects?.length ? `
             <div style="margin-bottom: 12px;">
                 <h2 style="font-size: 10px; font-weight: bold; text-transform: uppercase; margin: 0 0 4px 0;">Projects</h2>
@@ -151,6 +305,16 @@ const getCompactHTML = (data: any) => `
                         <div style="font-size: 10px;">${proj.description}</div>
                     </div>
                 `).join('')}
+            </div>
+        ` : ''}
+        
+        ${(data.achievements?.length || data.certifications?.length) ? `
+             <div style="margin-bottom: 12px;">
+                <h2 style="font-size: 10px; font-weight: bold; text-transform: uppercase; margin: 0 0 4px 0;">Achievements</h2>
+                <ul style="margin: 0; padding-left: 15px; font-size: 10px;">
+                     ${data.achievements?.map((a: any) => `<li>${a}</li>`).join('') || ''}
+                     ${data.certifications?.map((c: any) => `<li>${c.name} (${c.year})</li>`).join('') || ''}
+                </ul>
             </div>
         ` : ''}
     </div>
@@ -170,7 +334,7 @@ const renderClassicPDF = (doc: PDFKit.PDFDocument, data: any) => {
     if (data.phone) contact += ` • ${data.phone}`;
     doc.text(contact, { align: 'center' });
 
-    // Link Helper (Basic text for now to avoid complexity)
+    // Link Helper
     const links = [];
     if (data.linkedin) links.push(data.linkedin);
     if (data.github) links.push(data.github);
@@ -183,6 +347,12 @@ const renderClassicPDF = (doc: PDFKit.PDFDocument, data: any) => {
         doc.moveTo(doc.x, doc.y + 2).lineTo(550, doc.y + 2).lineWidth(1).stroke();
         doc.moveDown(0.6);
     };
+
+    if (data.objective) {
+        drawSection('Career Objective');
+        doc.font('Times-Roman').fontSize(10.5).text(data.objective, { align: 'justify' });
+        doc.moveDown();
+    }
 
     if (data.education?.length) {
         drawSection('Education');
@@ -200,6 +370,30 @@ const renderClassicPDF = (doc: PDFKit.PDFDocument, data: any) => {
         doc.moveDown();
     }
 
+    if (data.technicalTools || data.softSkills) {
+        drawSection('Tools & Soft Skills');
+        if (data.technicalTools) {
+            doc.font('Times-Bold').fontSize(10.5).text('Tools: ', { continued: true });
+            doc.font('Times-Roman').text(data.technicalTools);
+        }
+        if (data.softSkills) {
+            doc.font('Times-Bold').fontSize(10.5).text('Soft Skills: ', { continued: true });
+            doc.font('Times-Roman').text(data.softSkills);
+        }
+        doc.moveDown();
+    }
+
+    if (data.experience?.length) {
+        drawSection('Experience');
+        data.experience.forEach((exp: any) => {
+            doc.font('Times-Bold').fontSize(11).text(exp.role);
+            doc.font('Times-Italic').fontSize(10).text(`${exp.company} (${exp.duration})`);
+            doc.font('Times-Roman').fontSize(10.5).text(exp.responsibilities || exp.description, { align: 'justify' });
+            doc.moveDown(0.8);
+        });
+        doc.moveDown();
+    }
+
     if (data.projects?.length) {
         drawSection('Key Projects');
         data.projects.forEach((proj: any) => {
@@ -209,6 +403,30 @@ const renderClassicPDF = (doc: PDFKit.PDFDocument, data: any) => {
             doc.font('Times-Roman').fontSize(10.5).text(proj.description, { align: 'justify' });
             doc.moveDown(0.8);
         });
+    }
+
+    if (data.certifications?.length) {
+        doc.moveDown();
+        drawSection('Certifications');
+        data.certifications.forEach((cert: any) => {
+            doc.font('Times-Bold').fontSize(10.5).text(cert.name, { continued: true });
+            doc.font('Times-Roman').text(` - ${cert.organization} ${cert.year ? `(${cert.year})` : ''}`);
+        });
+    }
+
+    if (data.achievements?.length) {
+        doc.moveDown();
+        drawSection('Achievements');
+        data.achievements.forEach((ach: string) => {
+            doc.font('Times-Roman').fontSize(10.5).text(`• ${ach}`);
+        });
+    }
+
+    if (data.languages?.length) {
+        doc.moveDown();
+        drawSection('Languages');
+        const langs = data.languages.map((l: any) => `${l.language} (${l.proficiency})`).join(' • ');
+        doc.font('Times-Roman').fontSize(10.5).text(langs);
     }
 };
 
@@ -221,6 +439,7 @@ const renderModernPDF = (doc: PDFKit.PDFDocument, data: any) => {
     let contact = data.email || '';
     if (data.phone) contact += ` | ${data.phone}`;
     if (data.linkedin) contact += ` | ${data.linkedin}`;
+    if (data.github) contact += ` | ${data.github}`;
     doc.text(contact);
     doc.fillColor('black');
 
@@ -230,6 +449,11 @@ const renderModernPDF = (doc: PDFKit.PDFDocument, data: any) => {
         doc.font('Helvetica-Bold').fontSize(10).fillColor('#333').text(title.toUpperCase(), { characterSpacing: 1 });
         doc.moveDown(0.5);
     };
+
+    if (data.objective) {
+        doc.font('Helvetica-Oblique').fontSize(10).text(data.objective);
+        doc.moveDown(1);
+    }
 
     if (data.education?.length) {
         drawSection('Education');
@@ -247,13 +471,48 @@ const renderModernPDF = (doc: PDFKit.PDFDocument, data: any) => {
         doc.moveDown(1);
     }
 
+    if (data.technicalTools || data.softSkills) {
+        drawSection('Additional Skills');
+        if (data.technicalTools) {
+            doc.font('Helvetica-Bold').fontSize(10).text('Tools: ', { continued: true });
+            doc.font('Helvetica').text(data.technicalTools);
+        }
+        if (data.softSkills) {
+            doc.font('Helvetica-Bold').fontSize(10).text('Soft Skills: ', { continued: true });
+            doc.font('Helvetica').text(data.softSkills);
+        }
+        doc.moveDown(1);
+    }
+
+    if (data.experience?.length) {
+        drawSection('Experience');
+        data.experience.forEach((exp: any) => {
+            doc.font('Helvetica-Bold').fontSize(11).text(exp.role);
+            doc.font('Helvetica-Oblique').fontSize(9).fillColor('#555').text(`${exp.company} | ${exp.duration}`);
+            doc.font('Helvetica').fontSize(10).fillColor('black').text(exp.responsibilities || exp.description, { align: 'justify' });
+            doc.moveDown(0.8);
+        });
+        doc.moveDown(1);
+    }
+
     if (data.projects?.length) {
-        drawSection('Experience & Projects');
+        drawSection('Projects');
         data.projects.forEach((proj: any) => {
             doc.font('Helvetica-Bold').fontSize(11).text(proj.title);
             doc.font('Helvetica-Oblique').fontSize(9).fillColor('#555').text(proj.technologies);
             doc.font('Helvetica').fontSize(10).fillColor('black').text(proj.description, { align: 'justify' });
             doc.moveDown(0.8);
+        });
+    }
+
+    if (data.certifications?.length || data.achievements?.length) {
+        doc.moveDown(1);
+        drawSection('Achievements & Certifications');
+        data.certifications?.forEach((c: any) => {
+            doc.font('Helvetica').fontSize(10).text(`• ${c.name} - ${c.organization}`);
+        });
+        data.achievements?.forEach((a: string) => {
+            doc.font('Helvetica').fontSize(10).text(`• ${a}`);
         });
     }
 };
@@ -276,6 +535,11 @@ const renderCompactPDF = (doc: PDFKit.PDFDocument, data: any) => {
         doc.font('Times-Bold').fontSize(10).text(title.toUpperCase());
         doc.moveDown(0.2);
     };
+
+    if (data.objective) {
+        doc.font('Times-Italic').fontSize(9).text(data.objective);
+        doc.moveDown(0.5);
+    }
 
     if (data.education?.length) {
         drawSection('Education');
@@ -302,6 +566,16 @@ const renderCompactPDF = (doc: PDFKit.PDFDocument, data: any) => {
             doc.font('Times-Bold').fontSize(10).text(proj.title);
             doc.font('Times-Italic').fontSize(9).text(proj.technologies);
             doc.font('Times-Roman').fontSize(10).text(proj.description, { align: 'justify' });
+            doc.moveDown(0.4);
+        });
+    }
+
+    if (data.experience?.length) {
+        drawSection('Experience');
+        data.experience.forEach((exp: any) => {
+            doc.font('Times-Bold').fontSize(10).text(exp.role, { continued: true });
+            doc.font('Times-Italic').fontSize(9).text(`  ${exp.company}`, { align: 'right' });
+            doc.font('Times-Roman').fontSize(10).text(exp.responsibilities || exp.description);
             doc.moveDown(0.4);
         });
     }

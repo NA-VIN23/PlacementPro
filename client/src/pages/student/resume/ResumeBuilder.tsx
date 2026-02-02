@@ -18,7 +18,17 @@ export const ResumeBuilder: React.FC = () => {
         education: [{ degree: '', college: '', cgpa: '' }],
         skills: '',
         projects: [{ title: '', description: '', technologies: '' }],
-        experience: []
+        experience: [],
+
+        // Extended Fields
+        profilePhoto: '',
+        objective: '',
+        achievements: [], // Array of strings
+        certifications: [], // Array of { name, organization, year, url }
+        technicalTools: '',
+        softSkills: '',
+        coCurricularActivities: [], // Array of strings
+        languages: [] // Array of { language, proficiency }
     });
 
     // Template State
