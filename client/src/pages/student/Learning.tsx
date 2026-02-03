@@ -129,9 +129,9 @@ export const StudentLearning: React.FC = () => {
     ];
 
     const TopicCard: React.FC<{ topic: Topic }> = ({ topic }) => (
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-all hover:border-slate-200 group h-full flex flex-col">
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-all hover:border-slate-200 group h-full flex flex-col">
             <div className="flex items-start gap-4 mb-4">
-                <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border", topic.color)}>
+                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border", topic.color)}>
                     <topic.icon className="w-6 h-6" />
                 </div>
                 <div>
@@ -148,7 +148,7 @@ export const StudentLearning: React.FC = () => {
                         href={topic.englishLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 text-xs py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium transition-colors"
+                        className="flex items-center justify-center gap-2 text-xs py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 font-medium transition-colors"
                     >
                         <Youtube className="w-3.5 h-3.5" />
                         English
@@ -157,7 +157,7 @@ export const StudentLearning: React.FC = () => {
                         href={topic.tamilLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 text-xs py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium transition-colors"
+                        className="flex items-center justify-center gap-2 text-xs py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 font-medium transition-colors"
                     >
                         <Youtube className="w-3.5 h-3.5" />
                         Tamil
@@ -167,7 +167,7 @@ export const StudentLearning: React.FC = () => {
                     href={topic.practiceLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 text-xs py-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium transition-colors w-full"
+                    className="flex items-center justify-center gap-2 text-xs py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium transition-colors w-full"
                 >
                     <Globe className="w-3.5 h-3.5" />
                     Practice on IndiaBIX
@@ -187,9 +187,6 @@ export const StudentLearning: React.FC = () => {
             {/* Aptitude Section */}
             <section>
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
-                        <Brain className="w-5 h-5" />
-                    </div>
                     <div>
                         <h2 className="text-xl font-bold text-slate-900">Aptitude & Reasoning</h2>
                         <p className="text-sm text-slate-500">Essential for first round elimination</p>
@@ -205,9 +202,6 @@ export const StudentLearning: React.FC = () => {
             {/* Technical Section */}
             <section>
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
-                        <Terminal className="w-5 h-5" />
-                    </div>
                     <div>
                         <h2 className="text-xl font-bold text-slate-900">Technical Core</h2>
                         <p className="text-sm text-slate-500">Programming, CS Fundamentals & Tools</p>
@@ -221,26 +215,26 @@ export const StudentLearning: React.FC = () => {
             </section>
 
             {/* Tips Section */}
-            <section className="bg-gradient-to-br from-brand-50 to-indigo-50 rounded-2xl p-6 border border-brand-100">
+            <section className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-6 border border-blue-100">
                 <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-brand-600" />
+                    <BookOpen className="w-5 h-5 text-blue-600" />
                     Placement Preparation Tips
                 </h3>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600">
                     <li className="flex items-start gap-2">
-                        <span className="text-brand-600 font-bold">•</span>
+                        <span className="text-blue-600 font-bold">•</span>
                         Focus on one programming language (Java/C++/Python) and master it completely.
                     </li>
                     <li className="flex items-start gap-2">
-                        <span className="text-brand-600 font-bold">•</span>
+                        <span className="text-blue-600 font-bold">•</span>
                         Solve at least 20 aptitude questions daily to improve speed and accuracy.
                     </li>
                     <li className="flex items-start gap-2">
-                        <span className="text-brand-600 font-bold">•</span>
+                        <span className="text-blue-600 font-bold">•</span>
                         Understand Data Structures visually before coding them.
                     </li>
                     <li className="flex items-start gap-2">
-                        <span className="text-brand-600 font-bold">•</span>
+                        <span className="text-blue-600 font-bold">•</span>
                         Practice writing SQL queries on paper/whiteboard for interviews.
                     </li>
                 </ul>

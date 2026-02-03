@@ -103,56 +103,56 @@ export const StudentAssessment: React.FC = () => {
 
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 text-white shadow-lg">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-white/20 rounded-xl">
+                        <div className="p-3 bg-white/20 rounded-2xl">
                             <CheckCircle2 className="w-6 h-6" />
                         </div>
-                        <span className="text-xs font-bold bg-black/20 px-2 py-1 rounded-lg">All Time</span>
+                        <span className="text-xs font-bold bg-black/20 px-3 py-1.5 rounded-full">All Time</span>
                     </div>
                     <div>
                         <h3 className="text-3xl font-bold mb-1">{stats.weeksCompleted}</h3>
-                        <p className="text-indigo-100 font-medium">Weeks Completed</p>
+                        <p className="text-blue-100 font-medium">Weeks Completed</p>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 text-white shadow-lg">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-                            <BarChart className="w-6 h-6" />
+                        <div className="p-3 bg-white/20 rounded-2xl">
+                            <BarChart className="w-6 h-6 text-white" />
                         </div>
-                        <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">Performance</span>
+                        <span className="text-xs font-bold bg-black/20 px-3 py-1.5 rounded-full text-white">Performance</span>
                     </div>
                     <div>
-                        <h3 className="text-3xl font-bold text-slate-800 mb-1">{stats.avgScore}</h3>
-                        <p className="text-slate-500 font-medium">Average Score</p>
+                        <h3 className="text-3xl font-bold mb-1">{stats.avgScore}</h3>
+                        <p className="text-blue-100 font-medium">Average Score</p>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 text-white shadow-lg">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-orange-50 text-orange-600 rounded-xl">
-                            <Clock className="w-6 h-6" />
+                        <div className="p-3 bg-white/20 rounded-2xl">
+                            <Clock className="w-6 h-6 text-white" />
                         </div>
-                        <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">Active</span>
+                        <span className="text-xs font-bold bg-black/20 px-3 py-1.5 rounded-full text-white">Active</span>
                     </div>
                     <div>
-                        <h3 className="text-3xl font-bold text-slate-800 mb-1">{stats.assessmentAvailable}</h3>
-                        <p className="text-slate-500 font-medium">Assessment Available</p>
+                        <h3 className="text-3xl font-bold mb-1">{stats.assessmentAvailable}</h3>
+                        <p className="text-blue-100 font-medium">Assessment Available</p>
                     </div>
                 </div>
             </div>
 
             {/* Category Filter Tabs */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
+                <div className="flex bg-white p-1.5 rounded-full border border-slate-200 shadow-sm">
                     {(['ALL', 'Weekly', 'Daily'] as CategoryFilter[]).map(cat => (
                         <button
                             key={cat}
                             onClick={() => setFilter(cat)}
                             className={cn(
-                                "px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                                filter === cat ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                                "px-6 py-2 rounded-full text-sm font-bold transition-all",
+                                filter === cat ? "bg-slate-900 text-white shadow-md border border-slate-900" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50 border border-transparent"
                             )}
                         >
                             {cat}
@@ -161,11 +161,11 @@ export const StudentAssessment: React.FC = () => {
                 </div>
 
                 <div className="relative w-full md:w-72">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                         type="text"
                         placeholder="Search assessments..."
-                        className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        className="w-full pl-11 pr-4 py-2.5 rounded-full border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -176,7 +176,7 @@ export const StudentAssessment: React.FC = () => {
             {weeklyAssessments.length > 0 && (
                 <div className="space-y-6">
                     <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                        <Brain className="w-5 h-5 text-brand-600" />
+                        <Brain className="w-5 h-5 text-blue-600" />
                         Weekly Assessments
                     </h2>
                     <div className="grid grid-cols-1 gap-6">
@@ -184,8 +184,8 @@ export const StudentAssessment: React.FC = () => {
                             <div
                                 key={week.id}
                                 className={cn(
-                                    "bg-white rounded-2xl border shadow-sm overflow-hidden transition-all",
-                                    week.status === 'Locked' ? "opacity-60 border-slate-200" : "border-slate-200 hover:shadow-lg hover:border-slate-300"
+                                    "bg-white rounded-3xl border shadow-sm overflow-hidden transition-all",
+                                    week.status === 'Locked' ? "opacity-60 border-slate-200" : "border-slate-200 hover:shadow-lg hover:border-blue-200"
                                 )}
                             >
                                 <div className="p-6">
@@ -219,7 +219,7 @@ export const StudentAssessment: React.FC = () => {
                                     {/* Parts Breakdown - Simplified */}
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
                                         {week.parts.map((part, idx) => (
-                                            <div key={idx} className={cn("p-4 rounded-xl border flex items-center gap-3", part.color)}>
+                                            <div key={idx} className={cn("p-4 rounded-2xl border flex items-center gap-3", part.color)}>
                                                 <part.icon className="w-5 h-5 shrink-0" />
                                                 <div className="min-w-0">
                                                     <p className="font-bold text-sm truncate">{part.name}</p>
@@ -233,9 +233,9 @@ export const StudentAssessment: React.FC = () => {
                                         onClick={() => week.status === 'Available' && navigate(`/student/assessment/${week.id}`)}
                                         disabled={week.status === 'Locked'}
                                         className={cn(
-                                            "w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all",
+                                            "w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all",
                                             week.status === 'Completed' ? "bg-green-100 text-green-700 cursor-default" :
-                                                week.status === 'Available' ? "bg-brand-600 text-white hover:bg-brand-700 shadow-lg shadow-brand-500/30" :
+                                                week.status === 'Available' ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30" :
                                                     "bg-slate-100 text-slate-400 cursor-not-allowed"
                                         )}
                                     >
@@ -266,7 +266,7 @@ export const StudentAssessment: React.FC = () => {
             {filteredAssessments.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredAssessments.map((assessment) => (
-                        <div key={assessment.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group overflow-hidden">
+                        <div key={assessment.id} className="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group overflow-hidden">
                             <div className="p-6">
                                 <div className="flex justify-between items-start mb-4">
                                     <span className={cn(
@@ -282,7 +282,7 @@ export const StudentAssessment: React.FC = () => {
                                         </span>
                                     )}
                                 </div>
-                                <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">
+                                <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">
                                     {assessment.title}
                                 </h3>
                                 <div className="flex items-center gap-4 text-sm text-slate-500 mb-6">
@@ -297,7 +297,7 @@ export const StudentAssessment: React.FC = () => {
                                 </div>
                                 <button
                                     onClick={() => navigate(`/student/assessment/${assessment.id}`)}
-                                    className="w-full py-3 rounded-xl border-2 border-slate-100 font-bold text-slate-600 group-hover:border-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all flex items-center justify-center gap-2"
+                                    className="w-full py-3.5 rounded-2xl border-2 border-slate-100 font-bold text-slate-600 group-hover:border-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all flex items-center justify-center gap-2"
                                 >
                                     Start Assessment
                                     <ArrowRight className="w-4 h-4" />

@@ -42,7 +42,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
     return (
         <div className="space-y-8 animate-fade-in text-slate-900">
             {/* Score Card */}
-            <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-100 relative overflow-hidden">
+            <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
                 <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
@@ -65,14 +65,14 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
 
                     <div className="md:col-span-2 space-y-4">
                         <h4 className="font-bold text-slate-800 flex items-center gap-2">
-                            <AlertTriangle className="w-5 h-5 text-indigo-500" />
+                            <AlertTriangle className="w-5 h-5 text-blue-500" />
                             AI Analysis & Suggestions
                         </h4>
-                        <div className="bg-slate-50 rounded-xl p-4 space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
+                        <div className="bg-slate-50 rounded-2xl p-4 space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
                             {suggestions.length > 0 ? (
                                 suggestions.map((s, i) => (
                                     <div key={i} className="flex items-start gap-2 text-sm text-slate-600">
-                                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0"></div>
+                                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"></div>
                                         {s}
                                     </div>
                                 ))
@@ -87,9 +87,9 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
             </div>
 
             {/* Template Selector */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                 <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-4">
-                    <LayoutTemplate className="w-5 h-5 text-indigo-600" />
+                    <LayoutTemplate className="w-5 h-5 text-blue-600" />
                     Select Resume Template
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -97,11 +97,11 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
                         <button
                             key={t.id}
                             onClick={() => onTemplateChange(t.id)}
-                            className={`p-4 rounded-xl border text-left transition-all ${selectedTemplate === t.id ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500' : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'}`}
+                            className={`p-4 rounded-2xl border text-left transition-all ${selectedTemplate === t.id ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500' : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'}`}
                         >
                             <div className="flex items-center justify-between mb-1">
-                                <span className={`font-bold ${selectedTemplate === t.id ? 'text-indigo-700' : 'text-slate-700'}`}>{t.label}</span>
-                                {selectedTemplate === t.id && <div className="w-2 h-2 rounded-full bg-indigo-600"></div>}
+                                <span className={`font-bold ${selectedTemplate === t.id ? 'text-blue-700' : 'text-slate-700'}`}>{t.label}</span>
+                                {selectedTemplate === t.id && <div className="w-2 h-2 rounded-full bg-blue-600"></div>}
                             </div>
                             <p className="text-xs text-slate-500">{t.desc}</p>
                         </button>
@@ -113,14 +113,14 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
             <div className="flex flex-col md:flex-row gap-4">
                 <button
                     onClick={onEdit}
-                    className="flex-1 py-3 px-6 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 py-3 px-6 bg-white border border-slate-200 text-slate-700 font-bold rounded-2xl hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center justify-center gap-2"
                 >
                     <RefreshCw className="w-5 h-5" />
                     Edit Details
                 </button>
                 <button
                     onClick={handleDownload}
-                    className="flex-[2] py-3 px-6 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20 flex items-center justify-center gap-2"
+                    className="flex-[2] py-3 px-6 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20 flex items-center justify-center gap-2"
                 >
                     <Download className="w-5 h-5" />
                     Download PDF
@@ -128,7 +128,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
             </div>
 
             {/* Resume Preview */}
-            <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+            <div className="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
                 <div className="bg-slate-100 p-4 border-b border-slate-200 flex justify-between items-center">
                     <p className="font-bold text-slate-500 text-sm">Preview ({selectedTemplate})</p>
                     <div className="flex gap-1">

@@ -57,7 +57,7 @@ export const StudentList: React.FC = () => {
             />
 
             {/* Filters */}
-            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
                 <div className="relative flex-1 w-full">
                     <Search className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
                     <input
@@ -65,7 +65,7 @@ export const StudentList: React.FC = () => {
                         placeholder="Search by Name, Roll No, or Email..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                        className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     />
                 </div>
 
@@ -75,7 +75,7 @@ export const StudentList: React.FC = () => {
                         <select
                             value={departmentFilter}
                             onChange={(e) => setDepartmentFilter(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 appearance-none bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 appearance-none bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                         >
                             <option value="">All Departments</option>
                             {uniqueDepartments.map(d => (
@@ -87,7 +87,7 @@ export const StudentList: React.FC = () => {
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead className="bg-slate-50 border-b border-slate-200">
@@ -104,7 +104,7 @@ export const StudentList: React.FC = () => {
                                 <tr>
                                     <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
                                         <div className="flex justify-center items-center gap-2">
-                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-600"></div>
+                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
                                             Loading students...
                                         </div>
                                     </td>
@@ -120,7 +120,7 @@ export const StudentList: React.FC = () => {
                                     <tr key={student.id} className="hover:bg-slate-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-bold shrink-0">
+                                                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold shrink-0">
                                                     {(student.name || student.email).charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>

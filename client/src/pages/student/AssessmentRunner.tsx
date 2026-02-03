@@ -41,6 +41,7 @@ export const AssessmentRunner: React.FC = () => {
     const [showWarning, setShowWarning] = useState(false);
     const [warningMessage, setWarningMessage] = useState('');
     const [examStarted, setExamStarted] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const MAX_VIOLATIONS = 3;
 
     // Fetch Exam Data
@@ -236,7 +237,7 @@ export const AssessmentRunner: React.FC = () => {
         return (
             <div className="fixed inset-0 flex items-center justify-center bg-slate-50">
                 <div className="text-center">
-                    <div className="animate-spin w-12 h-12 border-4 border-brand-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
                     <p className="text-slate-500 font-medium">Loading Assessment Environment...</p>
                 </div>
             </div>
@@ -246,13 +247,13 @@ export const AssessmentRunner: React.FC = () => {
     if (error || !exam) {
         return (
             <div className="fixed inset-0 flex items-center justify-center bg-slate-50 p-4">
-                <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
+                <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center">
                     <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
                     <h2 className="text-xl font-bold text-slate-900 mb-2">Access Denied</h2>
                     <p className="text-slate-500 mb-6">{error || 'Exam not found.'}</p>
                     <button
                         onClick={() => navigate('/student/dashboard')}
-                        className="px-6 py-2 bg-slate-900 text-white rounded-lg font-bold hover:bg-slate-800"
+                        className="px-6 py-2 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800"
                     >
                         Return to Dashboard
                     </button>
@@ -266,7 +267,7 @@ export const AssessmentRunner: React.FC = () => {
             <div className="fixed inset-0 bg-slate-50 overflow-y-auto animate-fade-in z-50">
                 <div className="max-w-4xl mx-auto py-12 px-4">
                     {/* Score Card */}
-                    <div className="bg-white p-8 rounded-3xl shadow-xl text-center mb-8 relative overflow-hidden">
+                    <div className="bg-white p-8 rounded-[2.5rem] shadow-xl text-center mb-8 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-green-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
                         <div className="relative z-10">
@@ -275,12 +276,12 @@ export const AssessmentRunner: React.FC = () => {
                             </div>
                             <h2 className="text-3xl font-bold text-slate-900 mb-2">Assessment Completed</h2>
                             <div className="my-6">
-                                <span className="text-6xl font-black text-brand-600">{Math.round((score || 0) * 10) / 10}</span>
+                                <span className="text-6xl font-black text-blue-600">{Math.round((score || 0) * 10) / 10}</span>
                                 <span className="text-2xl text-slate-400 font-medium ml-2">/ {maxScore}</span>
                             </div>
                             <button
                                 onClick={() => navigate('/student/dashboard')}
-                                className="px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all"
+                                className="px-8 py-3 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all"
                             >
                                 Return to Dashboard
                             </button>
@@ -290,7 +291,7 @@ export const AssessmentRunner: React.FC = () => {
                     {/* Detailed Review */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-3 mb-6">
-                            <Eye className="w-6 h-6 text-brand-600" />
+                            <Eye className="w-6 h-6 text-blue-600" />
                             <h3 className="text-2xl font-bold text-slate-800">Detailed Review</h3>
                         </div>
 
@@ -306,9 +307,9 @@ export const AssessmentRunner: React.FC = () => {
                             const isPartial = grade?.score > 0 && grade?.score < (grade?.maxScore || 1);
 
                             return (
-                                <div key={q.id} className={`p-6 rounded-2xl border ${isCorrect ? 'border-green-200 bg-green-50/30' : isPartial ? 'border-orange-200 bg-orange-50/30' : 'border-red-200 bg-red-50/30'} shadow-sm bg-white`}>
+                                <div key={q.id} className={`p-6 rounded-3xl border ${isCorrect ? 'border-green-200 bg-green-50/30' : isPartial ? 'border-orange-200 bg-orange-50/30' : 'border-red-200 bg-red-50/30'} shadow-sm bg-white`}>
                                     <div className="flex items-start gap-4 mb-4">
-                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-bold ${isCorrect ? 'bg-green-100 text-green-700' : isPartial ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
+                                        <div className={`w-8 h-8 rounded-2xl flex items-center justify-center shrink-0 font-bold ${isCorrect ? 'bg-green-100 text-green-700' : isPartial ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
                                             {idx + 1}
                                         </div>
                                         <div className="flex-1">
@@ -321,7 +322,7 @@ export const AssessmentRunner: React.FC = () => {
 
                                             {/* CODING Specific Review */}
                                             {q.question_type === 'CODING' && grade && (
-                                                <div className="mt-4 p-4 bg-slate-50 rounded-lg text-sm font-mono border border-slate-200">
+                                                <div className="mt-4 p-4 bg-slate-50 rounded-2xl text-sm font-mono border border-slate-200">
                                                     <div className="flex gap-4 mb-2 border-b border-slate-200 pb-2">
                                                         <div className="flex items-center gap-2">
                                                             <div className={`w-2 h-2 rounded-full ${grade.passed === grade.total ? 'bg-green-500' : 'bg-orange-500'}`}></div>
@@ -353,7 +354,7 @@ export const AssessmentRunner: React.FC = () => {
                                                 else if (isSelected && !isCorrect) optionClass = "border-red-500 bg-red-50 text-red-900 font-medium";
 
                                                 return (
-                                                    <div key={optIdx} className={`flex items-center justify-between p-3 rounded-lg border ${optionClass}`}>
+                                                    <div key={optIdx} className={`flex items-center justify-between p-3 rounded-2xl border ${optionClass}`}>
                                                         <span>{opt}</span>
                                                         {isTheCorrectAnswer && <CheckCircle className="w-5 h-5 text-green-600" />}
                                                         {isSelected && !isCorrect && <X className="w-5 h-5 text-red-500" />}
@@ -364,7 +365,7 @@ export const AssessmentRunner: React.FC = () => {
                                     )}
 
                                     {explanation && (
-                                        <div className="mt-4 ml-12 p-4 bg-blue-50 rounded-xl text-sm border border-blue-100 text-blue-800">
+                                        <div className="mt-4 ml-12 p-4 bg-blue-50 rounded-2xl text-sm border border-blue-100 text-blue-800">
                                             <strong>Explanation:</strong> {explanation}
                                         </div>
                                     )}
@@ -380,8 +381,8 @@ export const AssessmentRunner: React.FC = () => {
     if (!examStarted) {
         return (
             <div className="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
-                <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden">
-                    <div className="bg-gradient-to-r from-brand-600 to-purple-600 p-8 text-white">
+                <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
                         <div className="flex items-center gap-3 mb-4">
                             <Shield className="w-8 h-8" />
                             <h1 className="text-2xl font-bold">Proctored Assessment</h1>
@@ -390,7 +391,7 @@ export const AssessmentRunner: React.FC = () => {
                     </div>
 
                     <div className="p-8 space-y-6">
-                        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                        <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
                             <h3 className="font-bold text-red-800 flex items-center gap-2 mb-2">
                                 <AlertTriangle className="w-5 h-5" />
                                 STRICT EXAMINATION RULES
@@ -414,7 +415,7 @@ export const AssessmentRunner: React.FC = () => {
                         <div className="text-center pt-4">
                             <button
                                 onClick={enterFullscreen}
-                                className="px-8 py-4 bg-brand-600 text-white font-bold rounded-xl text-lg hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all hover:scale-105"
+                                className="px-8 py-4 bg-blue-600 text-white font-bold rounded-2xl text-lg hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all hover:scale-105"
                             >
                                 I Understand, Start Exam
                             </button>
@@ -428,63 +429,71 @@ export const AssessmentRunner: React.FC = () => {
 
     // ========== MAIN EXAM UI ==========
 
+    // ========== MAIN EXAM UI ==========
+
     const currentQ = questions[currentQuestion];
 
     return (
         <div className="fixed inset-0 bg-slate-100 flex flex-col select-none">
             {/* Violation Toast */}
             {showWarning && (
-                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-bounce">
-                    <div className="bg-red-600 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 font-bold">
-                        <AlertTriangle className="w-5 h-5" />
-                        {warningMessage}
-                        <span className="ml-2 px-2 py-0.5 bg-white/20 rounded text-sm">
-                            {violations.length} / {MAX_VIOLATIONS}
+                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-bounce w-[90%] max-w-sm">
+                    <div className="bg-red-600 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 font-bold text-sm">
+                        <AlertTriangle className="w-5 h-5 shrink-0" />
+                        <div className="flex-1 text-xs">{warningMessage}</div>
+                        <span className="shrink-0 px-2 py-0.5 bg-white/20 rounded-lg text-xs">
+                            {violations.length}/{MAX_VIOLATIONS}
                         </span>
                     </div>
                 </div>
             )}
 
             {/* Header */}
-            <div className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
+            <div className="bg-white border-b border-slate-200 px-4 md:px-8 py-3 md:py-4 flex items-center justify-between shadow-sm shrink-0 z-20">
+                <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
+                    <button
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        className="lg:hidden p-2 text-slate-500 hover:bg-slate-50 rounded-lg"
+                    >
+                        {mobileMenuOpen ? <X className="w-5 h-5" /> : <Shield className="w-5 h-5" />}
+                    </button>
+
+                    <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold shrink-0">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                         PROCTORED
                     </div>
-                    <div>
-                        <h2 className="font-bold text-slate-800 text-lg">{exam.title}</h2>
+                    <div className="min-w-0">
+                        <h2 className="font-bold text-slate-800 text-sm md:text-lg truncate">{exam.title}</h2>
                     </div>
                 </div>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2 md:gap-6">
                     {violations.length > 0 && (
-                        <div className="flex items-center gap-2 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
+                        <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
                             <AlertTriangle className="w-4 h-4" />
                             {violations.length} Violation{violations.length > 1 ? 's' : ''}
                         </div>
                     )}
                     <div className={cn(
-                        "flex items-center gap-2 font-mono text-xl font-bold px-4 py-2 rounded-lg",
+                        "flex items-center gap-2 font-mono text-sm md:text-xl font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-xl",
                         timeLeft < 300 ? "text-red-600 bg-red-50 animate-pulse" : "text-slate-700 bg-slate-100"
                     )}>
-                        <Clock className="w-5 h-5" />
+                        <Clock className="w-4 h-4 md:w-5 md:h-5" />
                         {formatTime(timeLeft)}
                     </div>
                     <button
                         onClick={() => handleSubmit(false)}
                         disabled={submitting}
-                        className="px-6 py-2 bg-brand-600 text-white font-bold rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50"
+                        className="px-4 py-1.5 md:px-6 md:py-2 bg-blue-600 text-white font-bold text-xs md:text-sm rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 whitespace-nowrap"
                     >
-                        {submitting ? 'Submitting...' : 'Submit Test'}
+                        {submitting ? 'Submitting...' : 'Submit'}
                     </button>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-1 overflow-hidden relative">
                 {/* Question Area */}
-                {/* Question Area */}
-                <div className="flex-1 overflow-y-auto bg-slate-50/50">
+                <div className="flex-1 overflow-y-auto bg-slate-50/50 w-full">
                     {/* Render Coding Environment if CODING type */}
                     {questions[currentQuestion].question_type === 'CODING' ? (
                         <CodingEnvironment
@@ -495,15 +504,15 @@ export const AssessmentRunner: React.FC = () => {
                         />
                     ) : (
                         // Standard MCQ / Text UI
-                        <div className="p-8 max-w-3xl mx-auto space-y-8">
+                        <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-4 md:space-y-8 pb-20 md:pb-8">
                             <div className="flex items-start justify-between">
-                                <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">
+                                <span className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider">
                                     Question {currentQuestion + 1} of {questions.length}
                                 </span>
                                 <button
                                     onClick={toggleFlag}
                                     className={cn(
-                                        "flex items-center gap-2 text-sm font-medium transition-colors",
+                                        "flex items-center gap-2 text-xs md:text-sm font-medium transition-colors",
                                         flags.includes(currentQ.id) ? "text-orange-500" : "text-slate-400 hover:text-slate-600"
                                     )}
                                 >
@@ -512,39 +521,39 @@ export const AssessmentRunner: React.FC = () => {
                                 </button>
                             </div>
 
-                            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                                <p className="text-xl text-slate-900 font-medium leading-relaxed whitespace-pre-wrap">
+                            <div className="bg-white p-4 md:p-8 rounded-3xl border border-slate-200 shadow-sm">
+                                <p className="text-base md:text-xl text-slate-900 font-medium leading-relaxed whitespace-pre-wrap">
                                     {currentQ.question_text}
                                 </p>
                             </div>
 
                             {/* Render Options for MCQ */}
                             {(!currentQ.question_type || currentQ.question_type === 'MCQ') && (
-                                <div className="space-y-4">
+                                <div className="space-y-3 md:space-y-4">
                                     {currentQ.options.map((option, idx) => (
                                         <div
                                             key={idx}
                                             onClick={() => handleOptionSelect(option)}
                                             className={cn(
-                                                "flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 group",
+                                                "flex items-center p-3 md:p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 group touch-manipulation",
                                                 answers[currentQ.id] === option
-                                                    ? "border-brand-500 bg-brand-50"
+                                                    ? "border-blue-500 bg-blue-50"
                                                     : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                                             )}
                                         >
                                             <div className={cn(
-                                                "w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4 transition-colors",
+                                                "w-5 h-5 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center mr-3 md:mr-4 shrink-0 transition-colors",
                                                 answers[currentQ.id] === option
-                                                    ? "border-brand-500 bg-brand-500"
+                                                    ? "border-blue-500 bg-blue-500"
                                                     : "border-slate-300 group-hover:border-slate-400"
                                             )}>
                                                 {answers[currentQ.id] === option && (
-                                                    <div className="w-2 h-2 rounded-full bg-white" />
+                                                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-white" />
                                                 )}
                                             </div>
                                             <span className={cn(
-                                                "text-lg",
-                                                answers[currentQ.id] === option ? "font-medium text-brand-900" : "text-slate-700"
+                                                "text-sm md:text-lg",
+                                                answers[currentQ.id] === option ? "font-medium text-blue-900" : "text-slate-700"
                                             )}>
                                                 {option}
                                             </span>
@@ -559,15 +568,15 @@ export const AssessmentRunner: React.FC = () => {
                                     value={answers[currentQ.id] || ''}
                                     onChange={(e) => setAnswers(prev => ({ ...prev, [currentQ.id]: e.target.value }))}
                                     placeholder="Type your answer here..."
-                                    className="w-full h-48 p-4 rounded-xl border-2 border-slate-200 focus:border-brand-500 focus:outline-none text-lg"
+                                    className="w-full h-48 p-4 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:outline-none text-base md:text-lg"
                                 />
                             )}
 
-                            <div className="flex justify-between pt-8">
+                            <div className="flex justify-between pt-4 md:pt-8 gap-4">
                                 <button
                                     onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
                                     disabled={currentQuestion === 0}
-                                    className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-slate-600 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm md:text-base"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
                                     Previous
@@ -575,9 +584,9 @@ export const AssessmentRunner: React.FC = () => {
                                 <button
                                     onClick={() => setCurrentQuestion(prev => Math.min(questions.length - 1, prev + 1))}
                                     disabled={currentQuestion === questions.length - 1}
-                                    className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm md:text-base"
                                 >
-                                    Next Question
+                                    Next
                                     <ChevronRight className="w-5 h-5" />
                                 </button>
                             </div>
@@ -585,21 +594,38 @@ export const AssessmentRunner: React.FC = () => {
                     )}
                 </div>
 
+                {/* Mobile Sidebar Overlay */}
+                {mobileMenuOpen && (
+                    <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm z-30 lg:hidden" onClick={() => setMobileMenuOpen(false)} />
+                )}
+
                 {/* Sidebar */}
-                <div className="w-80 bg-white border-l border-slate-200 flex flex-col">
-                    <div className="p-6 border-b border-slate-100">
-                        <h3 className="font-bold text-slate-800 mb-4">Question Navigator</h3>
-                        <div className="grid grid-cols-5 gap-3">
+                <div className={cn(
+                    "w-72 bg-white border-l border-slate-200 flex flex-col absolute lg:static top-0 right-0 h-full z-40 transition-transform duration-300 shadow-2xl lg:shadow-none",
+                    mobileMenuOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+                )}>
+                    <div className="p-4 md:p-6 border-b border-slate-100 flex items-center justify-between">
+                        <h3 className="font-bold text-slate-800">Question Navigator</h3>
+                        <button onClick={() => setMobileMenuOpen(false)} className="lg:hidden p-1 text-slate-400 hover:bg-slate-50 rounded">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar">
+                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 md:gap-3">
                             {questions.map((q, idx) => (
                                 <button
                                     key={q.id}
-                                    onClick={() => setCurrentQuestion(idx)}
+                                    onClick={() => {
+                                        setCurrentQuestion(idx);
+                                        setMobileMenuOpen(false);
+                                    }}
                                     className={cn(
-                                        "h-10 w-10 rounded-lg text-sm font-bold flex items-center justify-center relative transition-all",
+                                        "h-10 w-10 rounded-xl text-sm font-bold flex items-center justify-center relative transition-all",
                                         currentQuestion === idx
                                             ? "bg-slate-900 text-white shadow-md ring-2 ring-slate-900 ring-offset-2"
                                             : answers[q.id]
-                                                ? "bg-brand-100 text-brand-700 border border-brand-200"
+                                                ? "bg-blue-100 text-blue-700 border border-blue-200"
                                                 : flags.includes(q.id)
                                                     ? "bg-orange-50 text-orange-600 border border-orange-200"
                                                     : "bg-slate-100 text-slate-500 hover:bg-slate-200"
@@ -614,10 +640,10 @@ export const AssessmentRunner: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="p-6 mt-auto bg-slate-50">
-                        <div className="space-y-3 text-sm">
+                    <div className="p-4 md:p-6 mt-auto bg-slate-50 safebar-pb">
+                        <div className="space-y-3 text-xs md:text-sm">
                             <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded bg-brand-100 border border-brand-200"></div>
+                                <div className="w-3 h-3 rounded bg-blue-100 border border-blue-200"></div>
                                 <span className="text-slate-600">Answered ({Object.keys(answers).length})</span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -626,7 +652,7 @@ export const AssessmentRunner: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded bg-slate-100"></div>
-                                <span className="text-slate-600">Unanswered ({questions.length - Object.keys(answers).length})</span>
+                                <span className="text-slate-600">Action Needed ({questions.length - Object.keys(answers).length})</span>
                             </div>
                         </div>
                     </div>

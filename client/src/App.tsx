@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { MainLayout } from './components/layout/MainLayout';
-import { RoleSelection } from './pages/RoleSelection';
 import { LoginForm } from './pages/LoginForm';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
@@ -34,7 +33,7 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<RoleSelection />} />
+          <Route path="/" element={<Navigate to="/login/student" replace />} />
           <Route path="/login/:role" element={<LoginForm />} />
 
 
@@ -82,7 +81,7 @@ function App() {
           </Route>
 
           {/* Catch all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/login/student" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
