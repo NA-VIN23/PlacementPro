@@ -184,36 +184,36 @@ export const StaffAssignAssessment: React.FC = () => {
             {/* Mode Selection */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* FIX 3: Independent Daily/Weekly Logic */}
-                <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
                     <h3 className="text-sm font-bold text-slate-500 mb-2 uppercase">Assessment Type</h3>
                     <div className="flex gap-2">
                         <button
                             onClick={() => setExamType('DAILY')}
-                            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${examType === 'DAILY' ? 'bg-brand-600 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                            className={`flex-1 py-2 px-4 rounded-xl font-medium transition-all ${examType === 'DAILY' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
                         >
                             Daily Assessment
                         </button>
                         <button
                             onClick={() => setExamType('WEEKLY')}
-                            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${examType === 'WEEKLY' ? 'bg-brand-600 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                            className={`flex-1 py-2 px-4 rounded-xl font-medium transition-all ${examType === 'WEEKLY' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
                         >
                             Weekly Assessment
                         </button>
                     </div>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
                     <h3 className="text-sm font-bold text-slate-500 mb-2 uppercase">Creation Mode</h3>
                     <div className="flex gap-2">
                         <button
                             onClick={() => setMode('MANUAL')}
-                            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${mode === 'MANUAL' ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                            className={`flex-1 py-2 px-4 rounded-xl font-medium transition-all ${mode === 'MANUAL' ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
                         >
                             <FileText className="inline w-4 h-4 mr-2" />
                             Manual
                         </button>
                         <button
                             onClick={() => setMode('PDF')}
-                            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${mode === 'PDF' ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                            className={`flex-1 py-2 px-4 rounded-xl font-medium transition-all ${mode === 'PDF' ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
                         >
                             <Upload className="inline w-4 h-4 mr-2" />
                             PDF Upload
@@ -225,9 +225,9 @@ export const StaffAssignAssessment: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Exam Configuration */}
                 <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
                         <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                            <Clock className="w-5 h-5 text-brand-600" />
+                            <Clock className="w-5 h-5 text-blue-600" />
                             Exam Details
                         </h3>
 
@@ -238,7 +238,7 @@ export const StaffAssignAssessment: React.FC = () => {
                                 type="text"
                                 value={title}
                                 onChange={e => setTitle(e.target.value)}
-                                className="w-full px-4 py-2 rounded-lg border border-slate-200"
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 outline-none"
                                 placeholder={`e.g. ${examType === 'WEEKLY' ? 'Weekly' : 'Daily'} Assessment - Topic`}
                             />
                         </div>
@@ -253,7 +253,7 @@ export const StaffAssignAssessment: React.FC = () => {
                                 type="number"
                                 value={duration}
                                 readOnly
-                                className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed"
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed"
                             />
                         </div>
 
@@ -263,7 +263,7 @@ export const StaffAssignAssessment: React.FC = () => {
                                 type="datetime-local"
                                 value={startTime}
                                 onChange={e => setStartTime(e.target.value)}
-                                className="w-full px-4 py-2 rounded-lg border border-slate-200"
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 outline-none"
                             />
                         </div>
 
@@ -273,7 +273,7 @@ export const StaffAssignAssessment: React.FC = () => {
                                 type="datetime-local"
                                 value={endTime}
                                 onChange={e => setEndTime(e.target.value)}
-                                className="w-full px-4 py-2 rounded-lg border border-slate-200"
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 outline-none"
                             />
                         </div>
                     </div>
@@ -281,7 +281,7 @@ export const StaffAssignAssessment: React.FC = () => {
                     <button
                         onClick={handlePublish}
                         disabled={mode === 'PDF' && extractionStatus !== 'SUCCESS'}
-                        className={`w-full py-3 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 ${mode === 'PDF' && extractionStatus !== 'SUCCESS' ? 'bg-slate-400 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700 shadow-brand-500/20'}`}
+                        className={`w-full py-3 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 ${mode === 'PDF' && extractionStatus !== 'SUCCESS' ? 'bg-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/20'}`}
                     >
                         <Save className="w-5 h-5" />
                         Publish Exam
@@ -291,7 +291,7 @@ export const StaffAssignAssessment: React.FC = () => {
                 {/* Right Column: Content */}
                 <div className="lg:col-span-2 space-y-6">
                     {mode === 'PDF' ? (
-                        <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-6">
+                        <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-6">
                             <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-2">
                                 <Upload className="w-10 h-10" />
                             </div>
@@ -313,19 +313,19 @@ export const StaffAssignAssessment: React.FC = () => {
                                       file:rounded-full file:border-0
                                       file:text-sm file:font-semibold
                                       file:bg-indigo-50 file:text-indigo-700
-                                      hover:file:bg-indigo-100 cursor-pointer border border-dashed border-slate-300 rounded-lg p-4"
+                                      hover:file:bg-indigo-100 cursor-pointer border border-dashed border-slate-300 rounded-xl p-4"
                                 />
                             </div>
 
                             {/* Extraction Status */}
                             {isExtracting && (
-                                <div className="text-brand-600 animate-pulse font-medium">
+                                <div className="text-blue-600 animate-pulse font-medium">
                                     Extracting content from PDF...
                                 </div>
                             )}
 
                             {extractionStatus === 'SUCCESS' && (
-                                <div className="w-full bg-green-50 border border-green-200 rounded-xl p-4 text-left">
+                                <div className="w-full bg-green-50 border border-green-200 rounded-3xl p-4 text-left">
                                     <h4 className="flex items-center gap-2 font-bold text-green-800 mb-2">
                                         <CheckCircle className="w-5 h-5" />
                                         Extraction Successful
@@ -344,7 +344,7 @@ export const StaffAssignAssessment: React.FC = () => {
                                     <h4 className="font-bold text-slate-700 mb-4">Preview Extracted Content</h4>
                                     <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                                         {questions.map((q, idx) => (
-                                            <div key={idx} className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                            <div key={idx} className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                                                 <p className="font-medium text-slate-800 text-sm mb-2">
                                                     <span className="text-indigo-600 mr-2">Q{idx + 1}.</span>
                                                     {q.question_text}
@@ -370,7 +370,7 @@ export const StaffAssignAssessment: React.FC = () => {
                     ) : (
                         <>
                             {/* Manual Mode - Builder */}
-                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm border-t-4 border-t-brand-500">
+                            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm border-t-4 border-t-blue-500">
                                 <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
                                     <Plus className="w-5 h-5" />
                                     Add New Question
@@ -386,7 +386,7 @@ export const StaffAssignAssessment: React.FC = () => {
                                                     <button
                                                         key={type}
                                                         onClick={() => setCurrentQ({ ...currentQ, question_type: type as any })}
-                                                        className={`px-3 py-1 rounded-md text-sm font-medium border ${currentQ.question_type === type ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-600'}`}
+                                                        className={`px-3 py-1 rounded-xl text-sm font-medium border ${currentQ.question_type === type ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-600'}`}
                                                     >
                                                         {type === 'TEXT' ? 'Interview/Text' : type}
                                                     </button>
@@ -408,7 +408,7 @@ export const StaffAssignAssessment: React.FC = () => {
                                                     if (sec === 'Part D') type = 'TEXT';
                                                     setCurrentQ({ ...currentQ, section: sec, question_type: type });
                                                 }}
-                                                className="w-full px-4 py-2 rounded-lg border border-slate-200"
+                                                className="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20"
                                             >
                                                 <option value="Part A">Part A - Technical (MCQ)</option>
                                                 <option value="Part B">Part B - Aptitude (MCQ)</option>
@@ -422,7 +422,7 @@ export const StaffAssignAssessment: React.FC = () => {
                                         value={currentQ.question_text}
                                         onChange={e => setCurrentQ({ ...currentQ, question_text: e.target.value })}
                                         placeholder="Enter question text here..."
-                                        className="w-full px-4 py-3 rounded-lg border border-slate-200 min-h-[100px]"
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 min-h-[100px] outline-none focus:ring-2 focus:ring-blue-500/20"
                                     />
 
                                     {/* MCQ UI */}
@@ -438,7 +438,7 @@ export const StaffAssignAssessment: React.FC = () => {
                                                         value={opt}
                                                         onChange={e => handleOptionChange(idx, e.target.value)}
                                                         placeholder={`Option ${idx + 1}`}
-                                                        className="flex-1 px-3 py-2 rounded-lg border border-slate-200"
+                                                        className="flex-1 px-3 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20"
                                                     />
                                                     <input
                                                         type="radio"
@@ -446,7 +446,7 @@ export const StaffAssignAssessment: React.FC = () => {
                                                         checked={currentQ.correct_answer === opt && opt !== ''}
                                                         onChange={() => setCurrentQ({ ...currentQ, correct_answer: opt })}
                                                         disabled={!opt}
-                                                        className="w-4 h-4 text-brand-600 cursor-pointer"
+                                                        className="w-4 h-4 text-blue-600 cursor-pointer"
                                                         title="Mark as correct"
                                                     />
                                                 </div>
@@ -456,64 +456,69 @@ export const StaffAssignAssessment: React.FC = () => {
 
                                     {/* Coding UI */}
                                     {currentQ.question_type === 'CODING' && (
-                                        <div className="space-y-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                        <div className="space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
                                             <div>
                                                 <label className="block text-sm font-medium text-slate-700 mb-1">Constraints</label>
                                                 <textarea
                                                     value={currentQ.constraints || ''}
                                                     onChange={e => setCurrentQ({ ...currentQ, constraints: e.target.value })}
                                                     placeholder="e.g. 1 <= N <= 1000"
-                                                    className="w-full px-3 py-2 rounded-md border border-slate-200 text-sm h-20"
+                                                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm h-20 outline-none focus:ring-2 focus:ring-blue-500/20"
                                                 />
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-slate-700 mb-2">Test Cases</label>
                                                 {/* Test Case List */}
                                                 {(currentQ.test_cases || []).map((tc, i) => (
-                                                    <div key={i} className="flex gap-2 mb-2 items-start">
-                                                        <div className="flex-1 space-y-1">
-                                                            <input
-                                                                placeholder="Input"
-                                                                value={tc.input}
-                                                                onChange={e => {
-                                                                    const cases = [...(currentQ.test_cases || [])];
-                                                                    cases[i].input = e.target.value;
-                                                                    setCurrentQ({ ...currentQ, test_cases: cases });
-                                                                }}
-                                                                className="w-full px-2 py-1 text-sm border rounded"
-                                                            />
-                                                            <input
-                                                                placeholder="Output"
-                                                                value={tc.output}
-                                                                onChange={e => {
-                                                                    const cases = [...(currentQ.test_cases || [])];
-                                                                    cases[i].output = e.target.value;
-                                                                    setCurrentQ({ ...currentQ, test_cases: cases });
-                                                                }}
-                                                                className="w-full px-2 py-1 text-sm border rounded"
-                                                            />
+                                                    <div key={i} className="flex flex-col md:flex-row gap-2 mb-3 items-start p-3 bg-white rounded-xl border border-slate-200 md:border-none md:bg-transparent md:p-0">
+                                                        <div className="flex-1 space-y-2 w-full">
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                                <input
+                                                                    placeholder="Input"
+                                                                    value={tc.input}
+                                                                    onChange={e => {
+                                                                        const cases = [...(currentQ.test_cases || [])];
+                                                                        cases[i].input = e.target.value;
+                                                                        setCurrentQ({ ...currentQ, test_cases: cases });
+                                                                    }}
+                                                                    className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+                                                                />
+                                                                <input
+                                                                    placeholder="Output"
+                                                                    value={tc.output}
+                                                                    onChange={e => {
+                                                                        const cases = [...(currentQ.test_cases || [])];
+                                                                        cases[i].output = e.target.value;
+                                                                        setCurrentQ({ ...currentQ, test_cases: cases });
+                                                                    }}
+                                                                    className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+                                                                />
+                                                            </div>
                                                         </div>
-                                                        <div className="flex flex-col items-center pt-2">
-                                                            <label className="text-xs text-slate-500 mb-1">Hidden</label>
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={tc.hidden}
-                                                                onChange={e => {
-                                                                    const cases = [...(currentQ.test_cases || [])];
-                                                                    cases[i].hidden = e.target.checked;
+                                                        <div className="flex items-center justify-between w-full md:w-auto gap-4 pt-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={tc.hidden}
+                                                                    id={`hidden-${i}`}
+                                                                    onChange={e => {
+                                                                        const cases = [...(currentQ.test_cases || [])];
+                                                                        cases[i].hidden = e.target.checked;
+                                                                        setCurrentQ({ ...currentQ, test_cases: cases });
+                                                                    }}
+                                                                />
+                                                                <label htmlFor={`hidden-${i}`} className="text-sm text-slate-500">Hidden</label>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => {
+                                                                    const cases = (currentQ.test_cases || []).filter((_, idx) => idx !== i);
                                                                     setCurrentQ({ ...currentQ, test_cases: cases });
                                                                 }}
-                                                            />
+                                                                className="text-red-400 hover:text-red-500 p-1 bg-red-50 rounded-lg md:bg-transparent md:p-2"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
                                                         </div>
-                                                        <button
-                                                            onClick={() => {
-                                                                const cases = (currentQ.test_cases || []).filter((_, idx) => idx !== i);
-                                                                setCurrentQ({ ...currentQ, test_cases: cases });
-                                                            }}
-                                                            className="text-red-400 hover:text-red-500 p-2"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
                                                     </div>
                                                 ))}
                                                 <button
@@ -521,7 +526,7 @@ export const StaffAssignAssessment: React.FC = () => {
                                                         const cases = [...(currentQ.test_cases || []), { input: '', output: '', hidden: false }];
                                                         setCurrentQ({ ...currentQ, test_cases: cases });
                                                     }}
-                                                    className="text-sm text-indigo-600 font-medium hover:underline flex items-center gap-1"
+                                                    className="text-sm text-indigo-600 font-medium hover:underline flex items-center gap-1 mt-2"
                                                 >
                                                     <Plus className="w-3 h-3" /> Add Test Case
                                                 </button>
@@ -534,13 +539,13 @@ export const StaffAssignAssessment: React.FC = () => {
                                         value={currentQ.explanation}
                                         onChange={e => setCurrentQ({ ...currentQ, explanation: e.target.value })}
                                         placeholder="Explanation (Optional)"
-                                        className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm"
+                                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-blue-500/20"
                                     />
 
                                     <div className="flex justify-end pt-2">
                                         <button
                                             onClick={addQuestion}
-                                            className="px-6 py-2 bg-slate-900 text-white font-medium rounded-lg hover:bg-slate-800 transition-colors"
+                                            className="px-6 py-2 bg-slate-900 text-white font-medium rounded-xl hover:bg-slate-800 transition-colors"
                                         >
                                             Add Question
                                         </button>
@@ -556,12 +561,12 @@ export const StaffAssignAssessment: React.FC = () => {
                                 </h3>
 
                                 {questions.length === 0 ? (
-                                    <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-400">
+                                    <div className="text-center py-12 bg-slate-50 rounded-3xl border border-dashed border-slate-200 text-slate-400">
                                         No questions added yet.
                                     </div>
                                 ) : (
                                     questions.map((q, idx) => (
-                                        <div key={idx} className="bg-white p-4 rounded-xl border border-slate-200 hover:border-brand-200 transition-colors group relative">
+                                        <div key={idx} className="bg-white p-6 rounded-3xl border border-slate-200 hover:border-blue-200 transition-colors group relative shadow-sm">
                                             {/* Show Section Badge */}
                                             {q.section && examType === 'WEEKLY' && (
                                                 <span className="inline-block bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded mb-2 font-bold uppercase mr-2">
@@ -570,7 +575,7 @@ export const StaffAssignAssessment: React.FC = () => {
                                             )}
                                             {/* Show Type Badge */}
                                             {q.question_type && q.question_type !== 'MCQ' && (
-                                                <span className={`inline-block text-xs px-2 py-1 rounded mb-2 font-bold uppercase mr-2 ${q.question_type === 'CODING' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                <span className={`inline-block text-xs px-2 py-1 rounded-lg mb-2 font-bold uppercase mr-2 ${q.question_type === 'CODING' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                                                     {q.question_type}
                                                 </span>
                                             )}
@@ -581,7 +586,7 @@ export const StaffAssignAssessment: React.FC = () => {
                                                 </p>
                                                 <div className="grid grid-cols-2 gap-2 text-sm">
                                                     {q.options.filter((o: string) => o).map((opt: string, i: number) => (
-                                                        <div key={i} className={`px-2 py-1 rounded ${opt === q.correct_answer ? 'bg-green-50 text-green-700 font-medium' : 'text-slate-500'}`}>
+                                                        <div key={i} className={`px-2 py-1 rounded-lg ${opt === q.correct_answer ? 'bg-green-50 text-green-700 font-medium' : 'text-slate-500'}`}>
                                                             {opt}
                                                         </div>
                                                     ))}

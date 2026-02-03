@@ -68,35 +68,26 @@ export const AdminUserManagement: React.FC = () => {
                 title="User Management"
                 description="Manage students, faculty, and administrative accounts."
                 action={
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => setIsImportModalOpen(true)}
-                            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm"
-                        >
-                            <FileInput className="w-5 h-5 text-brand-600" />
-                            Bulk Import
-                        </button>
-                        <button
-                            onClick={() => navigate('/admin/users/add')}
-                            className="px-4 py-2 bg-brand-600 text-white font-bold rounded-lg hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/30 flex items-center gap-2"
-                        >
-                            <Plus className="w-5 h-5" />
-                            Add User
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => navigate('/admin/users/add')}
+                        className="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 flex items-center gap-2"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Add User
+                    </button>
                 }
             />
 
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 {/* Filters */}
                 <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex bg-slate-100/50 p-1 rounded-lg border border-slate-200/50">
+                    <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
                         {['All', 'Student', 'Staff', 'Admin'].map(role => (
                             <button
                                 key={role}
                                 onClick={() => setRoleFilter(role)}
                                 className={cn(
-                                    "px-4 py-1.5 text-sm font-medium rounded-md transition-all",
+                                    "px-4 py-1.5 text-sm font-bold rounded-xl transition-all",
                                     roleFilter === role ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
                                 )}
                             >
@@ -110,7 +101,7 @@ export const AdminUserManagement: React.FC = () => {
                         <input
                             type="text"
                             placeholder="Search filtered users..."
-                            className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-sm"
+                            className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -149,8 +140,8 @@ export const AdminUserManagement: React.FC = () => {
                                             <span className={cn(
                                                 "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border",
                                                 user.role === 'STUDENT' ? "bg-blue-50 text-blue-700 border-blue-100" :
-                                                    user.role === 'STAFF' ? "bg-purple-50 text-purple-700 border-purple-100" :
-                                                        "bg-amber-50 text-amber-700 border-amber-100"
+                                                    user.role === 'STAFF' ? "bg-indigo-50 text-indigo-700 border-indigo-100" :
+                                                        "bg-slate-100 text-slate-700 border-slate-200"
                                             )}>
                                                 {user.role === 'ADMIN' && <Shield className="w-3 h-3" />}
                                                 {user.role}
@@ -161,18 +152,18 @@ export const AdminUserManagement: React.FC = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
-                                                <div className={cn("w-2 h-2 rounded-full", user.is_active ? "bg-emerald-500" : "bg-red-500")}></div>
-                                                <span className="text-slate-700">{user.is_active ? 'Active' : 'Inactive'}</span>
+                                                <div className={cn("w-2.5 h-2.5 rounded-full", user.is_active ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" : "bg-red-500")}></div>
+                                                <span className="text-slate-700 font-medium">{user.is_active ? 'Active' : 'Inactive'}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => handleToggleStatus(user.id, user.is_active ? 'Active' : 'Inactive')}
-                                                    className={cn("p-2 rounded-lg", user.is_active ? "text-slate-400 hover:text-red-600 hover:bg-red-50" : "text-slate-400 hover:text-green-600 hover:bg-green-50")}
+                                                    className={cn("p-2 rounded-xl transition-colors", user.is_active ? "text-slate-400 hover:text-red-600 hover:bg-red-50" : "text-slate-400 hover:text-green-600 hover:bg-green-50")}
                                                     title={user.is_active ? "Deactivate" : "Activate"}
                                                 >
-                                                    {user.is_active ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                                                    {user.is_active ? <XCircle className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
                                                 </button>
 
                                                 {user.role === 'STUDENT' && (
@@ -193,7 +184,7 @@ export const AdminUserManagement: React.FC = () => {
                     </table>
                 </div>
 
-                <div className="p-4 border-t border-slate-100 bg-slate-50 text-xs text-slate-500 flex justify-between items-center">
+                <div className="p-4 border-t border-slate-100 bg-slate-50 text-xs text-slate-500 flex justify-between items-center rounded-b-3xl">
                     <span>Showing {filteredUsers.length} users</span>
                 </div>
             </div>

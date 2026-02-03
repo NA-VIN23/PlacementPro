@@ -69,25 +69,25 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-                    <h3 className="font-semibold text-slate-800 mb-4">Placement Statistics</h3>
-                    <div className="h-64 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
+                <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+                    <h3 className="font-bold text-slate-800 mb-4">Placement Statistics</h3>
+                    <div className="h-64 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400">
                         Chart Placeholder (Placement vs Time)
                     </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-                    <h3 className="font-semibold text-slate-800 mb-4">Quick Actions</h3>
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+                    <h3 className="font-bold text-slate-800 mb-4">Quick Actions</h3>
                     <div className="space-y-3">
                         <button
                             onClick={() => navigate('/admin/users/add')}
-                            className="w-full py-2 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium rounded-lg text-left transition-colors border border-slate-200"
+                            className="w-full py-3 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-xl text-left transition-colors border border-slate-200"
                         >
                             + Add New User
                         </button>
                         <button
                             onClick={() => navigate('/admin/users')}
-                            className="w-full py-2 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium rounded-lg text-left transition-colors border border-slate-200"
+                            className="w-full py-3 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-xl text-left transition-colors border border-slate-200"
                         >
                             Manage Users
                         </button>

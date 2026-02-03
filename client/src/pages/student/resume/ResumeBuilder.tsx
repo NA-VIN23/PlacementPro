@@ -69,7 +69,7 @@ export const ResumeBuilder: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-4 mb-8">
-                <div className="p-4 bg-gradient-to-br from-brand-600 to-indigo-600 rounded-2xl text-white shadow-xl shadow-brand-500/20">
+                <div className="p-4 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl text-white shadow-xl shadow-blue-500/20">
                     <FileText className="w-8 h-8" />
                 </div>
                 <div>

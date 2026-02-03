@@ -73,7 +73,7 @@ export const StaffStudentAnalysis: React.FC = () => {
                 title="Student Performance Analysis"
                 description="Comprehensive insights into student progress, strengths, and areas for improvement."
                 action={
-                    <button className="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm shadow-sm">
+                    <button className="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 flex items-center gap-2 text-sm shadow-sm">
                         <Download className="w-4 h-4" />
                         Export Report
                     </button>
@@ -86,7 +86,7 @@ export const StaffStudentAnalysis: React.FC = () => {
                     label="Avg. Score"
                     value={`${avgScore}%`}
                     icon={BarChart2}
-                    color="brand"
+                    color="blue"
                     trend="+2.5%"
                     trendUp={true}
                 />
@@ -110,24 +110,28 @@ export const StaffStudentAnalysis: React.FC = () => {
                     label="Participation"
                     value={`${participationRate}%`}
                     icon={TrendingUp}
-                    color="blue"
+                    color="purple"
                 />
             </div>
 
             {/* Main Table */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <h3 className="font-bold text-slate-800">Student Performance List</h3>
-                    <div className="flex gap-2">
-                        <button className="p-2 text-slate-500 hover:bg-slate-50 rounded-lg">
+                    <div className="flex gap-2 w-full md:w-auto">
+                        <button className="p-2 text-slate-500 hover:bg-slate-50 rounded-xl border border-slate-200 md:border-transparent">
                             <Filter className="w-4 h-4" />
                         </button>
-                        <input type="text" placeholder="Search..." className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+                        <input
+                            type="text"
+                            placeholder="Search..."
+                            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 flex-1 md:w-64"
+                        />
                     </div>
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
+                    <table className="w-full text-left text-sm min-w-[600px]">
                         <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
                             <tr>
                                 <th className="px-6 py-4">Student Name</th>

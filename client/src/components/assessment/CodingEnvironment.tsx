@@ -74,35 +74,35 @@ export const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
     };
 
     return (
-        <div className="flex h-full bg-slate-100">
+        <div className="flex flex-col lg:flex-row h-full bg-slate-100 overflow-hidden">
             {/* Left Panel: Problem & Output */}
-            <div className="w-1/2 flex flex-col border-r border-slate-200">
+            <div className="w-full lg:w-1/2 flex flex-col border-r border-slate-200 h-1/2 lg:h-full">
                 {/* Tabs */}
-                <div className="flex border-b border-slate-200 bg-white">
+                <div className="flex border-b border-slate-200 bg-white shadow-sm z-10">
                     <button
                         onClick={() => setActiveTab('problem')}
-                        className={`px-6 py-3 font-medium text-sm flex items-center gap-2 ${activeTab === 'problem' ? 'border-b-2 border-brand-600 text-brand-600' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`flex-1 lg:flex-none px-4 lg:px-6 py-3 font-medium text-xs lg:text-sm flex items-center justify-center gap-2 ${activeTab === 'problem' ? 'border-b-2 border-brand-600 text-brand-600' : 'text-slate-500 hover:text-slate-700'}`}
                     >
                         <Code className="w-4 h-4" />
-                        Problem Statement
+                        Problem
                     </button>
                     <button
                         onClick={() => setActiveTab('output')}
-                        className={`px-6 py-3 font-medium text-sm flex items-center gap-2 ${activeTab === 'output' ? 'border-b-2 border-brand-600 text-brand-600' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`flex-1 lg:flex-none px-4 lg:px-6 py-3 font-medium text-xs lg:text-sm flex items-center justify-center gap-2 ${activeTab === 'output' ? 'border-b-2 border-brand-600 text-brand-600' : 'text-slate-500 hover:text-slate-700'}`}
                     >
                         <Terminal className="w-4 h-4" />
-                        Console / Output
+                        Output
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6 bg-white">
+                <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-white">
                     {activeTab === 'problem' ? (
-                        <div className="space-y-6">
+                        <div className="space-y-4 lg:space-y-6">
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2">{question.question_text}</h2>
+                                <h2 className="text-xl lg:text-2xl font-bold text-slate-900 mb-2">{question.question_text}</h2>
                                 {question.function_name && (
-                                    <div className="mt-2 inline-block px-3 py-1 bg-slate-100 rounded text-sm font-mono text-slate-600 border border-slate-200">
+                                    <div className="mt-2 inline-block px-3 py-1 bg-slate-100 rounded text-xs lg:text-sm font-mono text-slate-600 border border-slate-200">
                                         Function: {question.function_name}
                                     </div>
                                 )}
@@ -111,15 +111,15 @@ export const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
                             {/* Constraints */}
                             {question.constraints && (
                                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                                    <h4 className="font-bold text-slate-700 text-sm uppercase mb-2">Constraints</h4>
-                                    <pre className="whitespace-pre-wrap font-sans text-slate-600 text-sm">{question.constraints}</pre>
+                                    <h4 className="font-bold text-slate-700 text-xs lg:text-sm uppercase mb-2">Constraints</h4>
+                                    <pre className="whitespace-pre-wrap font-sans text-slate-600 text-xs lg:text-sm">{question.constraints}</pre>
                                 </div>
                             )}
 
                             {/* Example Test Cases */}
                             {question.test_cases && question.test_cases.filter((tc: any) => !tc.hidden).map((tc: any, idx: number) => (
-                                <div key={idx} className="bg-slate-50 border border-slate-200 rounded-lg p-4 font-mono text-sm">
-                                    <div className="grid grid-cols-2 gap-4">
+                                <div key={idx} className="bg-slate-50 border border-slate-200 rounded-lg p-4 font-mono text-xs lg:text-sm">
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                         <div>
                                             <span className="block text-xs font-bold text-slate-500 uppercase mb-1">Input</span>
                                             <div className="bg-white p-2 rounded border border-slate-200 text-slate-700 min-h-[40px]">{tc.input}</div>
@@ -156,21 +156,21 @@ export const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
                                             <button
                                                 key={idx}
                                                 onClick={() => setActiveCaseTab(idx)}
-                                                className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-colors ${activeCaseTab === idx
+                                                className={`px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg text-xs lg:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-colors ${activeCaseTab === idx
                                                     ? (res.passed ? 'bg-green-100 text-green-700 ring-2 ring-green-500 ring-offset-1' : 'bg-red-100 text-red-700 ring-2 ring-red-500 ring-offset-1')
                                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                                     }`}
                                             >
-                                                {res.isCustom ? 'Custom Input' : `Case ${idx}`}
-                                                {res.passed ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+                                                {res.isCustom ? 'Custom' : `Case ${idx}`}
+                                                {res.passed ? <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4" /> : <AlertTriangle className="w-3 h-3 lg:w-4 lg:h-4" />}
                                             </button>
                                         ))}
                                     </div>
 
                                     {/* Active Case Detail */}
                                     {output[activeCaseTab] && (
-                                        <div className="flex-1 overflow-y-auto space-y-4 font-mono text-sm">
-                                            <div className={`p-4 rounded-lg border ${output[activeCaseTab].passed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                                        <div className="flex-1 overflow-y-auto space-y-4 font-mono text-xs lg:text-sm">
+                                            <div className={`p-3 lg:p-4 rounded-lg border ${output[activeCaseTab].passed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                                                 <h4 className={`font-bold mb-1 ${output[activeCaseTab].passed ? 'text-green-700' : 'text-red-700'}`}>
                                                     {output[activeCaseTab].passed ? 'Success' : 'Wrong Answer'}
                                                 </h4>
@@ -211,37 +211,37 @@ export const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
             </div>
 
             {/* Right Panel: Editor */}
-            <div className="w-1/2 flex flex-col bg-[#1e1e1e]">
+            <div className="w-full lg:w-1/2 flex flex-col bg-[#1e1e1e] h-1/2 lg:h-full">
                 {/* Editor Header */}
-                <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#252526]">
-                    <div className="flex items-center gap-4">
+                <div className="flex items-center justify-between px-2 lg:px-4 py-2 border-b border-white/10 bg-[#252526]">
+                    <div className="flex items-center gap-2 lg:gap-4">
                         <select
                             value={selectedLang.value}
                             onChange={(e) => setSelectedLang(LANGUAGES.find(l => l.value === e.target.value) || LANGUAGES[0])}
-                            className="bg-[#3c3c3c] text-white text-sm px-3 py-1.5 rounded border border-transparent focus:border-brand-500 focus:outline-none"
+                            className="bg-[#3c3c3c] text-white text-xs lg:text-sm px-2 lg:px-3 py-1.5 rounded border border-transparent focus:border-brand-500 focus:outline-none max-w-[100px] lg:max-w-none"
                         >
                             {LANGUAGES.map(lang => (
                                 <option key={lang.value} value={lang.value}>{lang.name}</option>
                             ))}
                         </select>
-                        {lastSaved && <span className="text-xs text-white/40">Saved {lastSaved.toLocaleTimeString()}</span>}
+                        {lastSaved && <span className="hidden lg:inline text-xs text-white/40">Saved {lastSaved.toLocaleTimeString()}</span>}
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 lg:gap-3">
                         {/* Run Code Button */}
                         <button
                             onClick={handleRun}
                             disabled={isRunning}
-                            className="flex items-center gap-2 px-4 py-1.5 bg-green-600 text-white text-sm font-bold rounded hover:bg-green-700 transition-colors disabled:opacity-50"
+                            className="flex items-center gap-2 px-3 lg:px-4 py-1.5 bg-green-600 text-white text-xs lg:text-sm font-bold rounded hover:bg-green-700 transition-colors disabled:opacity-50"
                         >
-                            <Play className="w-4 h-4" />
-                            Run Code
+                            <Play className="w-3 h-3 lg:w-4 lg:h-4" />
+                            Run
                         </button>
                     </div>
                 </div>
 
                 {/* Monaco Editor */}
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-hidden relative">
                     <CodeEditorPanel
                         language={selectedLang.value}
                         code={currentCode}
@@ -260,16 +260,16 @@ export const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
                             onChange={(e) => setIsCustomInputMode(e.target.checked)}
                             className="rounded border-slate-600 bg-[#3c3c3c] text-brand-600 focus:ring-offset-[#252526]"
                         />
-                        <label htmlFor="customInput" className="text-sm text-slate-300 cursor-pointer select-none">Test against Custom Input</label>
+                        <label htmlFor="customInput" className="text-xs lg:text-sm text-slate-300 cursor-pointer select-none">Test with Custom Input</label>
                     </div>
 
                     {isCustomInputMode && (
-                        <div className="h-32 px-2 pb-2 animate-fade-in">
+                        <div className="h-24 lg:h-32 px-2 pb-2 animate-fade-in">
                             <textarea
                                 value={customInput}
                                 onChange={(e) => setCustomInput(e.target.value)}
                                 placeholder="Enter custom input here..."
-                                className="w-full h-full bg-[#1e1e1e] text-slate-300 font-mono text-sm p-3 rounded border border-slate-700 focus:border-brand-500 focus:outline-none resize-none"
+                                className="w-full h-full bg-[#1e1e1e] text-slate-300 font-mono text-xs lg:text-sm p-3 rounded border border-slate-700 focus:border-brand-500 focus:outline-none resize-none"
                             />
                         </div>
                     )}

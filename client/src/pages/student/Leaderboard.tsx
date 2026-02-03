@@ -56,9 +56,9 @@ export const StudentLeaderboard: React.FC = () => {
                     </div>
                     <div className="text-center mt-5">
                         <h3 className="font-bold text-slate-800">{second.name}</h3>
-                        <p className="text-brand-600 font-bold text-sm">{second.score} pts</p>
+                        <p className="text-blue-600 font-bold text-sm">{second.score} pts</p>
                     </div>
-                    <div className="h-24 w-24 bg-gradient-to-t from-slate-100 to-transparent mt-4 rounded-t-xl"></div>
+                    <div className="h-24 w-24 bg-gradient-to-t from-slate-100 to-transparent mt-4 rounded-t-3xl"></div>
                 </div>
 
                 {/* 1st Place */}
@@ -78,7 +78,7 @@ export const StudentLeaderboard: React.FC = () => {
                         <h3 className="font-bold text-slate-900 text-lg">{first.name}</h3>
                         <p className="text-yellow-600 font-bold text-base">{first.score} pts</p>
                     </div>
-                    <div className="h-32 w-32 bg-gradient-to-t from-yellow-50 to-transparent mt-4 rounded-t-2xl"></div>
+                    <div className="h-32 w-32 bg-gradient-to-t from-yellow-50 to-transparent mt-4 rounded-t-[2.5rem]"></div>
                 </div>
 
                 {/* 3rd Place */}
@@ -93,21 +93,21 @@ export const StudentLeaderboard: React.FC = () => {
                     </div>
                     <div className="text-center mt-5">
                         <h3 className="font-bold text-slate-800">{third.name}</h3>
-                        <p className="text-brand-600 font-bold text-sm">{third.score} pts</p>
+                        <p className="text-blue-600 font-bold text-sm">{third.score} pts</p>
                     </div>
-                    <div className="h-20 w-24 bg-gradient-to-t from-orange-50 to-transparent mt-4 rounded-t-xl"></div>
+                    <div className="h-20 w-24 bg-gradient-to-t from-orange-50 to-transparent mt-4 rounded-t-3xl"></div>
                 </div>
             </div>
 
             {/* List View */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-end gap-4">
                     <div className="relative w-full md:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
                             type="text"
                             placeholder="Search student..."
-                            className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-sm bg-slate-50 focus:bg-white transition-colors"
+                            className="w-full pl-10 pr-4 py-2.5 rounded-full border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm bg-slate-50 focus:bg-white transition-colors"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -128,7 +128,7 @@ export const StudentLeaderboard: React.FC = () => {
                         {filteredLeaderboard.map((user) => (
                             <tr key={user.rank} className={cn(
                                 "hover:bg-slate-50 transition-colors",
-                                user.isUser ? "bg-brand-50/50 hover:bg-brand-50" : ""
+                                user.isUser ? "bg-blue-50/50 hover:bg-blue-50" : ""
                             )}>
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-2">
@@ -152,7 +152,7 @@ export const StudentLeaderboard: React.FC = () => {
                                             {user.avatar}
                                         </div>
                                         <div>
-                                            <p className={cn("font-bold text-sm", user.isUser ? "text-brand-700" : "text-slate-700")}>
+                                            <p className={cn("font-bold text-sm", user.isUser ? "text-blue-700" : "text-slate-700")}>
                                                 {user.name} {user.isUser && "(You)"}
                                             </p>
                                             <p className="text-xs text-slate-400">Batch {user.batch}</p>

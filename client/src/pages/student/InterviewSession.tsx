@@ -5,7 +5,6 @@ import {
     RoomAudioRenderer,
     useVoiceAssistant,
     BarVisualizer,
-    VoiceAssistantControlBar,
     useConnectionState,
 } from '@livekit/components-react';
 import { ConnectionState } from 'livekit-client';
@@ -43,50 +42,54 @@ const VoiceAssistantUI: React.FC<{ onEnd: () => void }> = ({ onEnd }) => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
+        <div className="flex flex-col items-center justify-center min-h-[50vh] md:min-h-[60vh] space-y-8 md:space-y-12 py-8">
             {/* AI Avatar / Visualizer */}
             <div className="relative">
-                <div className="w-48 h-48 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-2xl shadow-purple-500/30">
+                <div className="w-32 h-32 md:w-48 md:h-48 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-cyan-500 flex items-center justify-center shadow-2xl shadow-blue-500/30 transition-all duration-500">
                     {audioTrack ? (
                         <BarVisualizer
                             state={state}
                             barCount={5}
                             trackRef={audioTrack}
-                            style={{ width: '8rem', height: '8rem' }}
+                            style={{ width: '100%', height: '100%' }}
+                            className="text-white scale-75 md:scale-100"
                         />
                     ) : (
-                        <Mic className="w-16 h-16 text-white animate-pulse" />
+                        <Mic className="w-10 h-10 md:w-16 md:h-16 text-white animate-pulse" />
                     )}
                 </div>
 
                 {/* Status Ring */}
-                <div className={`absolute inset-0 rounded-full border-4 ${state === 'listening' ? 'border-green-400 animate-pulse' :
-                    state === 'speaking' ? 'border-blue-400' :
-                        'border-gray-600'
+                <div className={`absolute inset-0 rounded-full border-4 transition-all duration-500 ${state === 'listening' ? 'border-green-400 shadow-[0_0_30px_rgba(74,222,128,0.3)]' :
+                    state === 'speaking' ? 'border-indigo-400 shadow-[0_0_30px_rgba(129,140,248,0.3)]' :
+                        'border-white/10'
                     }`} style={{ pointerEvents: 'none' }} />
             </div>
 
-            {/* Status Text */}
-            <div className="text-center space-y-2">
-                <p className={`text-2xl font-bold ${getStateColor()}`}>
-                    {getStateText()}
-                </p>
-                <p className="text-gray-400 text-sm">
-                    {state === 'listening' ? 'Speak your answer...' :
-                        state === 'speaking' ? 'Listen carefully...' :
-                            'Processing...'}
-                </p>
+            {/* Status Text & User Feedback */}
+            <div className="text-center space-y-4 md:space-y-6">
+                <div className="space-y-2">
+                    <p className={`text-xl md:text-2xl font-bold transition-colors duration-300 ${getStateColor()}`}>
+                        {getStateText()}
+                    </p>
+                    <p className="text-slate-400 text-xs md:text-sm">
+                        {state === 'listening' ? 'Speak clearly while the ring is green' :
+                            state === 'speaking' ? 'Listen to the response' :
+                                'Processing your input...'}
+                    </p>
+                </div>
             </div>
 
-            {/* Control Bar */}
-            <div className="flex items-center gap-4">
-                <VoiceAssistantControlBar />
+            {/* Control Bar - Removed Disconnect, Kept End Button */}
+            <div className="flex items-center gap-6">
+                {/* Mute Toggle can be added here if needed, utilizing TrackToggle source={Track.Source.Microphone} 
+                     But user asked to remove left button, so keeping it clean. */}
 
                 <button
                     onClick={onEnd}
-                    className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold flex items-center gap-2 transition-all"
+                    className="px-6 py-3 md:px-8 md:py-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/50 rounded-2xl font-bold flex items-center gap-2 md:gap-3 transition-all group text-sm md:text-base"
                 >
-                    <PhoneOff className="w-5 h-5" />
+                    <PhoneOff className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
                     End Interview
                 </button>
             </div>
@@ -186,7 +189,7 @@ export const InterviewSession: React.FC = () => {
         return (
             <div className="min-h-screen bg-slate-900 flex items-center justify-center">
                 <div className="text-center space-y-4">
-                    <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto" />
+                    <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto" />
                     <p className="text-white text-lg">Preparing your interview session...</p>
                 </div>
             </div>
@@ -200,7 +203,7 @@ export const InterviewSession: React.FC = () => {
                     <p className="text-red-400 text-lg">{error || 'Configuration error'}</p>
                     <button
                         onClick={() => navigate('/student/communication')}
-                        className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg"
+                        className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-2xl"
                     >
                         Go Back
                     </button>
@@ -210,44 +213,53 @@ export const InterviewSession: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900">
-            {/* Header */}
-            <div className="p-6 border-b border-slate-700/50">
-                <div className="max-w-4xl mx-auto flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold text-white">AI Interview Session</h1>
-                        <p className="text-slate-400 text-sm">Speak naturally - the AI will listen and respond</p>
+        <div className="min-h-screen relative overflow-hidden bg-slate-950">
+            {/* Ambient Background Effects */}
+            <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/10 blur-[100px] rounded-full pointer-events-none" />
+            <div className="absolute top-[20%] right-[-10%] w-[400px] h-[400px] bg-cyan-600/10 blur-[80px] rounded-full pointer-events-none" />
+
+            <div className="relative z-10">
+                {/* Header */}
+                <div className="p-6 border-b border-white/5">
+                    <div className="max-w-4xl mx-auto flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold text-white tracking-tight">AI Interview Session</h1>
+                            <p className="text-slate-400 text-sm">Speak naturally - the AI will listen and respond</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* LiveKit Room */}
-            <div className="max-w-4xl mx-auto p-6">
-                <LiveKitRoom
-                    token={config.token}
-                    serverUrl={config.livekitUrl}
-                    connect={true}
-                    audio={true}
-                    video={false}
-                    className="bg-slate-800/50 rounded-2xl p-8 backdrop-blur-sm border border-slate-700/50"
-                >
-                    <div className="absolute top-4 right-4">
-                        <ConnectionStatus />
+                {/* LiveKit Room */}
+                <div className="max-w-4xl mx-auto p-6">
+                    <LiveKitRoom
+                        token={config.token}
+                        serverUrl={config.livekitUrl}
+                        connect={true}
+                        audio={true}
+                        video={false}
+                        className="bg-white/5 rounded-3xl p-8 backdrop-blur-xl border border-white/10 shadow-2xl"
+                    >
+                        <div className="absolute top-4 right-4">
+                            <ConnectionStatus />
+                        </div>
+                        <VoiceAssistantUI onEnd={endInterview} />
+                        <RoomAudioRenderer />
+                    </LiveKitRoom>
+                </div>
+
+                {/* Tips */}
+                <div className="max-w-4xl mx-auto px-6 pb-8">
+                    <div className="bg-white/5 rounded-2xl p-4 border border-white/10 checkbox-list">
+                        <h3 className="text-sm font-semibold text-blue-200 mb-2 flex items-center gap-2">
+                            <span className="text-lg">💡</span> Tips for a great interview:
+                        </h3>
+                        <ul className="text-sm text-slate-400 space-y-1 ml-1">
+                            <li>• Speak clearly and at a normal pace</li>
+                            <li>• Wait for the AI to finish before responding</li>
+                            <li>• Use the STAR method for behavioral questions</li>
+                        </ul>
                     </div>
-                    <VoiceAssistantUI onEnd={endInterview} />
-                    <RoomAudioRenderer />
-                </LiveKitRoom>
-            </div>
-
-            {/* Tips */}
-            <div className="max-w-4xl mx-auto px-6 pb-8">
-                <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700/30">
-                    <h3 className="text-sm font-semibold text-slate-300 mb-2">💡 Tips for a great interview:</h3>
-                    <ul className="text-sm text-slate-400 space-y-1">
-                        <li>• Speak clearly and at a normal pace</li>
-                        <li>• Wait for the AI to finish before responding</li>
-                        <li>• Use the STAR method for behavioral questions</li>
-                    </ul>
                 </div>
             </div>
         </div>

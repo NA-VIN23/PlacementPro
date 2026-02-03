@@ -39,7 +39,7 @@ export const StaffDashboard: React.FC = () => {
                 action={
                     <button
                         onClick={() => navigate('/staff/assign-assessment')}
-                        className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                        className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
                     >
                         + New Assessment
                     </button>
@@ -74,15 +74,15 @@ export const StaffDashboard: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Recent Submissions */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
                     <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                        <h3 className="font-semibold text-slate-800">Recent Submissions</h3>
+                        <h3 className="font-bold text-slate-800">Recent Submissions</h3>
                     </div>
-                    <div className="p-0">
+                    <div className="p-0 overflow-x-auto">
                         {recentSubmissions.length === 0 ? (
                             <div className="p-6 text-center text-slate-400">No submissions yet.</div>
                         ) : (
-                            <table className="w-full text-sm text-left">
+                            <table className="w-full text-sm text-left min-w-[600px]">
                                 <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
                                     <tr>
                                         <th className="px-6 py-3">Student</th>
@@ -100,7 +100,7 @@ export const StaffDashboard: React.FC = () => {
                                             <td className="px-6 py-4 text-slate-600">
                                                 {row.exams?.title || 'Unknown Exam'}
                                             </td>
-                                            <td className="px-6 py-4 font-semibold text-brand-600">
+                                            <td className="px-6 py-4 font-bold text-blue-600">
                                                 {row.score}
                                             </td>
                                             <td className="px-6 py-4 text-slate-500">
@@ -115,9 +115,9 @@ export const StaffDashboard: React.FC = () => {
                 </div>
 
                 {/* Upcoming Mock Interviews */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
                     <div className="p-6 border-b border-slate-100">
-                        <h3 className="font-semibold text-slate-800">Upcoming Mock Interviews</h3>
+                        <h3 className="font-bold text-slate-800">Upcoming Mock Interviews</h3>
                     </div>
                     <div className="p-6 space-y-4">
                         <div className="text-center text-slate-400 py-8">
