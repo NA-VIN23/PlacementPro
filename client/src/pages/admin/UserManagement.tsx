@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
-import { Plus, Search, Shield, Mail, CheckCircle, XCircle, FileInput, Trash2 } from 'lucide-react';
+import { Plus, Search, Shield, Mail, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { adminService } from '../../services/api';
 import { BulkImportModal } from '../../components/admin/BulkImportModal';
