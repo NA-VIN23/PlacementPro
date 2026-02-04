@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Lock, User, GraduationCap } from 'lucide-react';
+import { Lock, User, GraduationCap, Eye } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import type { UserRole } from '../types';
 import { cn } from '../utils/cn';
 import LightRays from '../components/LightRays';
@@ -10,9 +11,11 @@ export const LoginForm: React.FC = () => {
     const { role } = useParams<{ role: string }>();
     const navigate = useNavigate();
     const { login } = useAuth();
+    const { error: toastError } = useToast();
 
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
     // Validate role
@@ -81,7 +84,7 @@ export const LoginForm: React.FC = () => {
         } catch (error: any) {
             console.error('Login failed:', error);
             setLoading(false);
-            alert(error.message || 'Login failed. Please check your credentials.');
+            toastError("Wrong Credentials or Check your Connection");
         }
     };
 
@@ -91,8 +94,8 @@ export const LoginForm: React.FC = () => {
             <div className="w-full lg:w-[40%] flex flex-col p-8 lg:p-12 relative z-20">
                 {/* Branding */}
                 <div className="flex items-center gap-3 mb-16">
-                    <div className="w-3 h-3 rounded-full bg-blue-600"></div>
-                    <span className="font-bold text-lg tracking-tight text-black">PlacementPro.</span>
+                    <img src="/logo.png" alt="PlacementPrePro" className="w-8 h-8 object-contain" />
+                    <span className="font-bold text-lg tracking-tight text-black">PlacementPrePro </span>
                 </div>
 
                 <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full -mt-20">
@@ -101,12 +104,7 @@ export const LoginForm: React.FC = () => {
                         <h1 className="text-5xl font-serif font-bold text-slate-900 mb-3 leading-tight tracking-tight">
                             {config.label.split(' ')[0]} Login<span className="text-blue-600">.</span>
                         </h1>
-                        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
-                            <span>Not the right portal?</span>
-                            <button onClick={() => navigate('/')} className="text-blue-600 font-bold hover:underline">
-                                Change Role
-                            </button>
-                        </div>
+
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
@@ -131,16 +129,24 @@ export const LoginForm: React.FC = () => {
                             <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider pl-1">Password</label>
                             <div className="relative group">
                                 <input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="w-full pl-5 pr-12 py-3.5 rounded-xl bg-[#EFF6FF] border-transparent focus:bg-white focus:border-blue-200 focus:ring-4 focus:ring-blue-50 transition-all outline-none font-medium text-sm text-slate-700 placeholder:text-slate-400"
                                     placeholder="••••••••"
                                     required
                                 />
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
-                                    <Lock className="w-5 h-5" />
-                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors focus:outline-none"
+                                >
+                                    {showPassword ? (
+                                        <Lock className="w-5 h-5" />
+                                    ) : (
+                                        <Eye className="w-5 h-5" />
+                                    )}
+                                </button>
                             </div>
                         </div>
 
@@ -159,7 +165,7 @@ export const LoginForm: React.FC = () => {
 
                 {/* Footer */}
                 <div className="text-[10px] text-slate-400 font-medium tracking-wide">
-                    © 2024 PlacementPro. All rights reserved.
+                    © 2026 PlacementPrePro. All rights reserved.
                 </div>
             </div>
 
@@ -176,9 +182,9 @@ export const LoginForm: React.FC = () => {
                     <LightRays
                         raysOrigin="top-center"
                         raysColor="#ffffff"
-                        raysSpeed={1}
-                        lightSpread={0.5}
-                        rayLength={3}
+                        raysSpeed={1.5}
+                        lightSpread={1.5}
+                        rayLength={6}
                         followMouse={true}
                         mouseInfluence={0.1}
                         noiseAmount={0}

@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Mail, Linkedin, Github, Edit2, Calendar, Award, X, Save, User, BookOpen, Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { studentService } from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 import { cn } from '../../utils/cn';
+import DotGrid from '../../components/DotGrid';
 
 interface Education {
     degree: string;
@@ -48,6 +50,7 @@ interface ProfileData {
 
 export const StudentProfile: React.FC = () => {
     const { user } = useAuth();
+    const { success, error } = useToast();
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -140,10 +143,11 @@ export const StudentProfile: React.FC = () => {
                 education: profileData.education,
                 certifications: profileData.certifications
             });
+            success("Profile updated successfully!");
             setIsEditing(false);
-        } catch (error) {
-            console.error("Failed to save profile", error);
-            alert("Failed to save profile changes. Please try again.");
+        } catch (err) {
+            console.error("Failed to save profile", err);
+            error("Failed to save profile changes. Please try again.");
         } finally {
             setIsSaving(false);
         }
@@ -153,14 +157,25 @@ export const StudentProfile: React.FC = () => {
         <div className="space-y-8 animate-fade-in pb-12">
             {/* Profile Header */}
             <div className="relative group">
-                <div className="h-48 bg-gradient-to-r from-slate-800 to-slate-900 rounded-3xl overflow-hidden relative">
-                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1557683311-eac922347aa1?q=80&w=2929&auto=format&fit=crop')] bg-cover bg-center opacity-20"></div>
+                <div className="h-40 bg-slate-900 rounded-3xl overflow-hidden relative shadow-md">
+                    <DotGrid
+                        dotSize={4}
+                        gap={20}
+                        baseColor="#334155" // slate-700
+                        activeColor="#60a5fa" // blue-400
+                        proximity={120}
+                        shockRadius={250}
+                        shockStrength={5}
+                        resistance={750}
+                        returnDuration={1.5}
+                        className="opacity-80"
+                    />
                 </div>
 
                 <div className="relative px-8 pb-4 flex flex-col md:flex-row items-end -mt-12 gap-6">
                     <div className="w-32 h-32 rounded-3xl border-4 border-white bg-white shadow-lg overflow-hidden relative group/avatar">
                         <img
-                            src={`https://ui-avatars.com/api/?name=${profileData.name}&background=0D8ABC&color=fff&size=128`}
+                            src={`https://ui-avatars.com/api/?name=${profileData.name}&background=4f46e5&color=fff&size=128`}
                             alt={profileData.name}
                             className="w-full h-full object-cover"
                         />

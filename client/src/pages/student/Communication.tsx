@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
-import { Mic, PlayCircle, History, BarChart2 } from 'lucide-react';
+import { Mic, PlayCircle } from 'lucide-react';
 
 export const StudentCommunication: React.FC = () => {
     const navigate = useNavigate();
@@ -56,37 +56,7 @@ export const StudentCommunication: React.FC = () => {
                 </div>
             </div>
 
-            {/* Recent History */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                        <History className="w-5 h-5 text-slate-400" />
-                        Recent Sessions
-                    </h3>
-                    <button className="text-blue-600 text-sm font-medium hover:underline">View All History</button>
-                </div>
-                <div className="divide-y divide-slate-100">
-                    {[
-                        { title: "AI Interview #3", date: "Jan 26, 2024", duration: "15 min", score: "8.5/10" },
-                        { title: "AI Interview #2", date: "Jan 24, 2024", duration: "25 min", score: "7.2/10" },
-                        { title: "AI Interview #1", date: "Jan 20, 2024", duration: "10 min", score: "9.0/10" },
-                    ].map((session, i) => (
-                        <div key={i} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-6">
-                                <span className="font-medium text-slate-800">{session.title}</span>
-                                <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-1 rounded-lg">{session.date}</span>
-                            </div>
-                            <div className="flex items-center gap-6">
-                                <span className="text-sm text-slate-500">{session.duration}</span>
-                                <span className="text-sm font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">{session.score}</span>
-                                <button className="text-slate-400 hover:text-blue-600">
-                                    <BarChart2 className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+            {/* Recent History Removed as per user request (no backend data) */}
         </div>
     );
 };

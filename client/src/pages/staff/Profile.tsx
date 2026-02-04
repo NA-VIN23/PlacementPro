@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Mail, Save, Edit2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { adminService } from '../../services/api';
+import DotGrid from '../../components/DotGrid';
 
 export const StaffProfile: React.FC = () => {
     const { user, updateUser } = useAuth();
@@ -41,14 +42,26 @@ export const StaffProfile: React.FC = () => {
     return (
         <div className="space-y-8 animate-fade-in">
             <div className="relative group">
-                <div className="h-40 bg-gradient-to-r from-blue-900 to-indigo-900 rounded-t-3xl rounded-b-3xl overflow-hidden relative shadow-md">
-                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2929&auto=format&fit=crop')] bg-cover bg-center opacity-20"></div>
+                <div className="h-40 bg-slate-900 rounded-t-3xl rounded-b-3xl overflow-hidden relative shadow-md">
+                    <DotGrid
+                        dotSize={4}
+                        gap={20}
+                        baseColor="#334155" // slate-700
+                        activeColor="#60a5fa" // blue-400
+                        proximity={120}
+                        shockRadius={250}
+                        shockStrength={5}
+                        resistance={750}
+                        returnDuration={1.5}
+                        className="opacity-80"
+                    />
+                    {/* Overlay Text/Image if needed, but user just said update banner */}
                 </div>
 
                 <div className="relative px-8 pb-4 flex flex-col md:flex-row items-end -mt-12 gap-6">
                     <div className="w-32 h-32 rounded-3xl border-4 border-white bg-white shadow-lg overflow-hidden shrink-0">
                         <img
-                            src={`https://ui-avatars.com/api/?name=${formData.name}&background=2563eb&color=fff&size=128`}
+                            src={`https://ui-avatars.com/api/?name=${formData.name}&background=4f46e5&color=fff&size=128`}
                             alt={formData.name}
                             className="w-full h-full object-cover"
                         />

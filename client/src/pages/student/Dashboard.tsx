@@ -5,7 +5,6 @@ import {
     CheckCircle2,
     FileText,
     BookOpen,
-    MoreHorizontal,
     ChevronLeft,
     ChevronRight,
     Star,
@@ -13,6 +12,8 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Exam } from '../../types';
+import PixelTransition from '../../components/PixelTransition';
+import KRLogo from '../../assets/KR logo.png';
 
 export const StudentDashboard: React.FC = () => {
     const { user } = useAuth();
@@ -62,9 +63,9 @@ export const StudentDashboard: React.FC = () => {
     }, []);
 
     return (
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 h-auto lg:h-[calc(100vh-theme(spacing.24))] overflow-visible lg:overflow-hidden pb-8 lg:pb-0">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 min-h-screen pb-8 lg:pb-0">
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col gap-6 lg:gap-8 overflow-visible lg:overflow-y-auto pr-0 lg:pr-2 custom-scrollbar">
+            <div className="flex-1 flex flex-col gap-4 lg:gap-6 pr-0 lg:pr-1">
 
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -82,7 +83,7 @@ export const StudentDashboard: React.FC = () => {
                         <h2 className="text-lg font-bold text-slate-800">Summary Report</h2>
                     </div>
 
-                    <div className="bg-blue-600 rounded-3xl p-8 text-white shadow-xl shadow-blue-200 grid grid-cols-1 md:grid-cols-3 gap-8 relative overflow-hidden">
+                    <div className="bg-blue-600 rounded-3xl p-6 text-white shadow-xl shadow-blue-200 grid grid-cols-1 md:grid-cols-3 gap-6 relative overflow-hidden shrink-0">
                         {/* Decorative Background Circles */}
                         <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
                         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
@@ -141,9 +142,9 @@ export const StudentDashboard: React.FC = () => {
                 </div>
 
                 {/* Lower Section: Score Graph & GPA */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="flex-1 flex flex-col md:flex-row gap-4">
                     {/* Available Assessments */}
-                    <div className="md:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-50 flex flex-col h-full min-h-[420px]">
+                    <div className="flex-[2] bg-white rounded-3xl p-5 shadow-sm border border-slate-50 flex flex-col h-[340px]">
                         <div className="flex items-center justify-between mb-6">
                             <div>
                                 <h2 className="text-lg font-bold text-slate-800">Available Assessments</h2>
@@ -154,7 +155,7 @@ export const StudentDashboard: React.FC = () => {
                             </button>
                         </div>
 
-                        <div className="space-y-4 overflow-y-auto flex-1 custom-scrollbar pr-2">
+                        <div className="space-y-4 overflow-y-auto flex-1 pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                             {loading ? <div className="text-center text-xs text-slate-400">Loading...</div> :
                                 exams.length === 0 ? <div className="text-center text-xs text-slate-400 py-8">No active exams available at the moment.</div> :
                                     exams.map((exam, i) => (
@@ -190,9 +191,9 @@ export const StudentDashboard: React.FC = () => {
                     </div>
 
                     {/* Right Column: Rank & Learning Module */}
-                    <div className="flex flex-col gap-6 h-full">
+                    <div className="flex-1 flex flex-col gap-4">
                         {/* GPA / Rank Card */}
-                        <div className="bg-gradient-to-b from-blue-400 to-indigo-500 rounded-3xl p-6 shadow-xl shadow-blue-100 text-white relative overflow-hidden flex flex-col justify-center items-center text-center h-48 shrink-0">
+                        <div className="bg-gradient-to-b from-blue-400 to-indigo-500 rounded-3xl p-5 shadow-xl shadow-blue-100 text-white relative overflow-hidden flex flex-col justify-center items-center text-center h-36 shrink-0">
                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
                             <div className="relative z-10 scale-90">
                                 <h3 className="text-indigo-100 font-medium text-xs mb-2 uppercase tracking-widest">Your Rank</h3>
@@ -203,8 +204,8 @@ export const StudentDashboard: React.FC = () => {
                             <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/20 to-transparent"></div>
                         </div>
 
-                        {/* Start Learning Card (Moved Here) */}
-                        <div className="bg-blue-600 rounded-3xl p-5 shadow-xl shadow-blue-200 text-white relative overflow-hidden flex flex-col justify-center gap-4 flex-1 min-h-[200px]">
+                        {/* Start Learning Card */}
+                        <div className="bg-blue-600 rounded-3xl p-5 shadow-xl shadow-blue-200 text-white relative overflow-hidden flex flex-col justify-center gap-3 h-[180px]">
                             {/* Decorative Gradients */}
                             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
                             <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-[60px] translate-y-1/3 -translate-x-1/3"></div>
@@ -235,42 +236,29 @@ export const StudentDashboard: React.FC = () => {
             </div>
 
             {/* Right Panel (Profile & Schedule) */}
-            <div className="w-full lg:w-72 bg-white lg:bg-transparent flex flex-col gap-4 shrink-0">
-                {/* Profile Section */}
-                <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-50 flex flex-col items-center text-center relative">
-                    <button className="absolute top-3 right-3 p-2 text-slate-300 hover:text-slate-600">
-                        <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                    <div className="w-20 h-20 rounded-full p-1 border-2 border-dashed border-blue-300 mb-3 cursor-pointer hover:rotate-3 transition-transform">
-                        <div className="w-full h-full rounded-full bg-slate-100 overflow-hidden relative">
-                            {/* Placeholder Avatar */}
-                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`} alt="Avatar" className="w-full h-full object-cover" />
-                        </div>
-                    </div>
-                    <h2 className="text-base font-bold text-slate-800">{user?.name || 'Student'}</h2>
-                    <p className="text-[11px] text-slate-400 font-medium mb-1">{user?.department || 'Computer Science'}</p>
-                    <p className="text-[10px] text-slate-300 tracking-widest uppercase">{user?.role} | {user?.registration_number || 'ID: ----'}</p>
-                </div>
+            <div className="w-full lg:w-64 bg-white lg:bg-transparent flex flex-col gap-4 lg:gap-6 shrink-0">
+                {/* Spacer to align Calendar with Summary Report (matches Header height + Summary Title) */}
+                <div className="hidden lg:block h-[102px] shrink-0"></div>
 
                 {/* Real-time Working Calendar */}
-                <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-50">
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-bold text-slate-800 text-sm">
+                <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-50 h-[250px] shrink-0 flex flex-col justify-center">
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-bold text-slate-800 text-base">
                             {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
                         </h3>
-                        <div className="flex gap-1 text-slate-400">
+                        <div className="flex gap-2 text-slate-400">
                             <ChevronLeft
-                                className="w-4 h-4 cursor-pointer hover:text-slate-600"
+                                className="w-5 h-5 cursor-pointer hover:text-slate-600"
                                 onClick={handlePrevMonth}
                             />
                             <ChevronRight
-                                className="w-4 h-4 cursor-pointer hover:text-slate-600"
+                                className="w-5 h-5 cursor-pointer hover:text-slate-600"
                                 onClick={handleNextMonth}
                             />
                         </div>
                     </div>
                     {/* Calendar Grid */}
-                    <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-slate-600 font-medium mb-2">
+                    <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-slate-600 font-medium mb-1">
                         <span className="text-slate-300">S</span>
                         <span className="text-slate-300">M</span>
                         <span className="text-slate-300">T</span>
@@ -279,7 +267,7 @@ export const StudentDashboard: React.FC = () => {
                         <span className="text-slate-300">F</span>
                         <span className="text-slate-300">S</span>
                     </div>
-                    <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium">
+                    <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium content-center">
                         {Array.from({ length: getFirstDayOfMonth(currentDate) }).map((_, i) => (
                             <span key={`empty-${i}`} className="text-slate-300"></span>
                         ))}
@@ -302,6 +290,30 @@ export const StudentDashboard: React.FC = () => {
                             );
                         })}
                     </div>
+                </div>
+
+                {/* KR Logo Pixel Transition */}
+                <div className="w-full h-[200px] mt-2">
+                    <PixelTransition
+                        firstContent={
+                            <div className="w-full h-full flex items-center justify-center bg-white rounded-[15px]">
+                                <img
+                                    src={KRLogo}
+                                    alt="KR Logo"
+                                    className="w-full h-full object-contain p-4"
+                                />
+                            </div>
+                        }
+                        secondContent={
+                            <div className="w-full h-full flex items-center justify-center bg-white rounded-[15px]">
+                                <img src="/logo.png" alt="PlacementPrePro" className="w-48 h-48 object-contain" />
+                            </div>
+                        }
+                        gridSize={12}
+                        pixelColor="#ffffff"
+                        animationStepDuration={0.4}
+                        className="w-full h-full rounded-[15px]"
+                    />
                 </div>
 
 

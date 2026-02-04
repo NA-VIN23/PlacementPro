@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import { MainLayout } from './components/layout/MainLayout';
 import { LoginForm } from './pages/LoginForm';
 import { ProtectedRoute } from './routes/ProtectedRoute';
@@ -31,59 +32,61 @@ import { AdminAddUser } from './pages/admin/AddUser';
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/login/student" replace />} />
-          <Route path="/login/:role" element={<LoginForm />} />
+      <ToastProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Navigate to="/login/student" replace />} />
+            <Route path="/login/:role" element={<LoginForm />} />
 
 
-          {/* Student Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
-            {/* Exam Pages (No Sidebar) */}
-            <Route path="/student/assessment/:id" element={<AssessmentRunner />} />
-            <Route path="/student/interview" element={<InterviewSession />} />
+            {/* Student Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
+              {/* Exam Pages (No Sidebar) */}
+              <Route path="/student/assessment/:id" element={<AssessmentRunner />} />
+              <Route path="/student/interview" element={<InterviewSession />} />
 
-            {/* Normal Pages (With Sidebar) */}
-            <Route path="/student" element={<MainLayout />}>
-              <Route path="dashboard" element={<StudentDashboard />} />
-              <Route path="assessment" element={<StudentAssessment />} />
-              <Route path="learning" element={<StudentLearning />} />
-              <Route path="communication" element={<StudentCommunication />} />
-              <Route path="leaderboard" element={<StudentLeaderboard />} />
-              <Route path="resume-builder" element={<ResumeBuilder />} />
-              <Route path="profile" element={<StudentProfile />} />
-              <Route index element={<Navigate to="dashboard" replace />} />
+              {/* Normal Pages (With Sidebar) */}
+              <Route path="/student" element={<MainLayout />}>
+                <Route path="dashboard" element={<StudentDashboard />} />
+                <Route path="assessment" element={<StudentAssessment />} />
+                <Route path="learning" element={<StudentLearning />} />
+                <Route path="communication" element={<StudentCommunication />} />
+                <Route path="leaderboard" element={<StudentLeaderboard />} />
+                <Route path="resume-builder" element={<ResumeBuilder />} />
+                <Route path="profile" element={<StudentProfile />} />
+                <Route index element={<Navigate to="dashboard" replace />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Staff Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['STAFF']} />}>
-            <Route path="/staff" element={<MainLayout />}>
-              <Route path="dashboard" element={<StaffDashboard />} />
-              <Route path="assign-assessment" element={<StaffAssignAssessment />} />
-              <Route path="students" element={<StudentList />} />
-              <Route path="analysis" element={<StaffStudentAnalysis />} />
-              <Route path="profile" element={<StaffProfile />} />
-              <Route path="assessment/:id/grade" element={<StaffGradingConsole />} />
-              <Route index element={<Navigate to="dashboard" replace />} />
+            {/* Staff Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['STAFF']} />}>
+              <Route path="/staff" element={<MainLayout />}>
+                <Route path="dashboard" element={<StaffDashboard />} />
+                <Route path="assign-assessment" element={<StaffAssignAssessment />} />
+                <Route path="students" element={<StudentList />} />
+                <Route path="analysis" element={<StaffStudentAnalysis />} />
+                <Route path="profile" element={<StaffProfile />} />
+                <Route path="assessment/:id/grade" element={<StaffGradingConsole />} />
+                <Route index element={<Navigate to="dashboard" replace />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Admin Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
-            <Route path="/admin" element={<MainLayout />}>
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="users" element={<AdminUserManagement />} />
-              <Route path="users/add" element={<AdminAddUser />} />
-              <Route path="profile" element={<AdminProfile />} />
-              <Route index element={<Navigate to="dashboard" replace />} />
+            {/* Admin Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+              <Route path="/admin" element={<MainLayout />}>
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="users" element={<AdminUserManagement />} />
+                <Route path="users/add" element={<AdminAddUser />} />
+                <Route path="profile" element={<AdminProfile />} />
+                <Route index element={<Navigate to="dashboard" replace />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Catch all */}
-          <Route path="*" element={<Navigate to="/login/student" replace />} />
-        </Routes>
-      </BrowserRouter>
+            {/* Catch all */}
+            <Route path="*" element={<Navigate to="/login/student" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 }

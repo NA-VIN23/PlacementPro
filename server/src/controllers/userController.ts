@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import xlsx from 'xlsx';
+import * as xlsx from 'xlsx';
 import { User, UserRole } from '../models/types';
 import { supabase } from '../config/supabase';
 

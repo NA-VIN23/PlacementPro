@@ -382,13 +382,13 @@ export const StaffAssignAssessment: React.FC = () => {
                                         <div>
                                             <label className="block text-sm font-medium text-slate-700 mb-1">Question Type</label>
                                             <div className="flex gap-2">
-                                                {['MCQ', 'CODING', 'TEXT'].map(type => (
+                                                {['MCQ', 'CODING'].map(type => (
                                                     <button
                                                         key={type}
                                                         onClick={() => setCurrentQ({ ...currentQ, question_type: type as any })}
                                                         className={`px-3 py-1 rounded-xl text-sm font-medium border ${currentQ.question_type === type ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-600'}`}
                                                     >
-                                                        {type === 'TEXT' ? 'Interview/Text' : type}
+                                                        {type}
                                                     </button>
                                                 ))}
                                             </div>
@@ -413,7 +413,6 @@ export const StaffAssignAssessment: React.FC = () => {
                                                 <option value="Part A">Part A - Technical (MCQ)</option>
                                                 <option value="Part B">Part B - Aptitude (MCQ)</option>
                                                 <option value="Part C">Part C - Coding</option>
-                                                <option value="Part D">Part D - Mock Interview</option>
                                             </select>
                                         </div>
                                     )}

@@ -5,6 +5,8 @@ import { StatsCard } from '../../components/ui/StatsCard';
 import { Users, FileCheck, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { staffService } from '../../services/api';
+import PixelTransition from '../../components/PixelTransition';
+import KRLogo from '../../assets/KR logo.png';
 
 export const StaffDashboard: React.FC = () => {
     const { user } = useAuth();
@@ -72,9 +74,10 @@ export const StaffDashboard: React.FC = () => {
                 />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Main Content Layout: Recent Submissions (Flex-1) + KR Card (Fixed Sidebar) */}
+            <div className="flex flex-col lg:flex-row gap-8">
                 {/* Recent Submissions */}
-                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="flex-1 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden min-w-0">
                     <div className="p-6 border-b border-slate-100 flex justify-between items-center">
                         <h3 className="font-bold text-slate-800">Recent Submissions</h3>
                     </div>
@@ -114,16 +117,28 @@ export const StaffDashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Upcoming Mock Interviews */}
-                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="p-6 border-b border-slate-100">
-                        <h3 className="font-bold text-slate-800">Upcoming Mock Interviews</h3>
-                    </div>
-                    <div className="p-6 space-y-4">
-                        <div className="text-center text-slate-400 py-8">
-                            No upcoming interviews scheduled.
-                        </div>
-                    </div>
+                {/* KR Logo Card (Replaces Upcoming Mock Interviews) */}
+                <div className="w-full lg:w-64 shrink-0 h-[200px]">
+                    <PixelTransition
+                        firstContent={
+                            <div className="w-full h-full flex items-center justify-center bg-white rounded-[15px] border border-slate-50 shadow-sm">
+                                <img
+                                    src={KRLogo}
+                                    alt="KR Logo"
+                                    className="w-full h-full object-contain p-4"
+                                />
+                            </div>
+                        }
+                        secondContent={
+                            <div className="w-full h-full flex items-center justify-center bg-white rounded-[15px]">
+                                <img src="/logo.png" alt="PlacementPrePro" className="w-48 h-48 object-contain" />
+                            </div>
+                        }
+                        gridSize={12}
+                        pixelColor="#ffffff"
+                        animationStepDuration={0.4}
+                        className="w-full h-full rounded-[15px]"
+                    />
                 </div>
             </div>
         </div>

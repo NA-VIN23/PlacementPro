@@ -19,6 +19,7 @@
     "ace-builds": "^1.43.6",
     "axios": "^1.13.4",
     "clsx": "^2.1.0",
+    "gsap": "^3.14.2",
     "livekit-client": "^2.17.0",
     "lucide-react": "^0.344.0",
     "meshline": "^3.3.1",

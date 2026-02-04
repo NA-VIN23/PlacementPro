@@ -5,6 +5,8 @@ import { cn } from '../../utils/cn';
 import { studentService } from '../../services/api';
 import type { Exam, Question } from '../../types';
 import { CodingEnvironment } from '../../components/assessment/CodingEnvironment';
+import { Modal } from '../../components/ui/Modal';
+import { useToast } from '../../context/ToastContext';
 
 type ViolationType = 'tab_switch' | 'fullscreen_exit' | 'copy_paste' | 'right_click';
 
@@ -34,6 +36,12 @@ export const AssessmentRunner: React.FC = () => {
     const [timeLeft, setTimeLeft] = useState(0);
     const [answers, setAnswers] = useState<Record<string, string>>({});
     const [flags, setFlags] = useState<string[]>([]);
+
+    // Alert/Modal State
+    const { error: toastError } = useToast();
+    const [showSubmitModal, setShowSubmitModal] = useState(false);
+    const [showTerminationModal, setShowTerminationModal] = useState(false);
+    const [terminationReason, setTerminationReason] = useState('');
 
     // Proctoring State
 
@@ -73,8 +81,10 @@ export const AssessmentRunner: React.FC = () => {
             const updated = [...prev, newViolation];
             if (updated.length >= MAX_VIOLATIONS) {
                 // Auto-submit on max violations
-                alert('EXAM TERMINATED: Maximum violations exceeded. Your test has been auto-submitted.');
-                handleSubmit(true, true); // Force submit and TERMINATE
+                setTerminationReason('Assessment terminated due to excessive violations.');
+                setShowTerminationModal(true);
+                // Delay submit slightly to show modal, or handle in modal effect
+                handleSubmit(true, true);
             }
             return updated;
         });
@@ -175,7 +185,8 @@ export const AssessmentRunner: React.FC = () => {
             setTimeLeft((prev) => {
                 if (prev <= 1) {
                     clearInterval(timer);
-                    alert('Time is up! Your test has been auto-submitted.');
+                    setTerminationReason('Time is up! Submitting your assessment...');
+                    setShowTerminationModal(true);
                     handleSubmit(true);
                     return 0;
                 }
@@ -207,7 +218,8 @@ export const AssessmentRunner: React.FC = () => {
     };
 
     const handleSubmit = async (force = false, terminated = false) => {
-        if (!force && !confirm("Are you sure you want to submit the assessment? This action cannot be undone.")) {
+        if (!force) {
+            setShowSubmitModal(true);
             return;
         }
 
@@ -226,7 +238,7 @@ export const AssessmentRunner: React.FC = () => {
             setSubmitted(true);
         } catch (err) {
             console.error('Submission failed', err);
-            alert('Failed to submit exam. Please try again or contact support.');
+            toastError('Failed to submit exam. Please try again or contact support.');
             setSubmitting(false);
         }
     };
@@ -435,6 +447,46 @@ export const AssessmentRunner: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-slate-100 flex flex-col select-none">
+            {/* Submit Confirmation Modal */}
+            <Modal isOpen={showSubmitModal} onClose={() => setShowSubmitModal(false)} title="Submit Assessment">
+                <div className="space-y-4">
+                    <p className="text-slate-600">
+                        Are you sure you want to submit? You cannot change your answers after submission.
+                        {Object.keys(answers).length < questions.length && (
+                            <span className="block mt-2 text-orange-600 font-bold">
+                                You have answered {Object.keys(answers).length} out of {questions.length} questions.
+                            </span>
+                        )}
+                    </p>
+                    <div className="flex justify-end gap-3 pt-4">
+                        <button
+                            onClick={() => setShowSubmitModal(false)}
+                            className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-xl"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => { setShowSubmitModal(false); handleSubmit(true); }}
+                            className="px-6 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700"
+                        >
+                            Confirm Submit
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Termination Modal */}
+            <Modal isOpen={showTerminationModal} preventClose={true} showCloseButton={false} title="Assessment Ended">
+                <div className="text-center space-y-4 py-4">
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <AlertTriangle className="w-8 h-8 text-red-600" />
+                    </div>
+                    <p className="text-lg font-bold text-slate-800">{terminationReason}</p>
+                    <p className="text-slate-500 text-sm">Please wait while we finalize your submission...</p>
+                    <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
+                </div>
+            </Modal>
+
             {/* Violation Toast */}
             {showWarning && (
                 <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-bounce w-[90%] max-w-sm">
