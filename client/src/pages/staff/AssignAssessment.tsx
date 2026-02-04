@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Plus, Trash2, Save, Clock, HelpCircle, FileText, Upload, CheckCircle } from 'lucide-react';
@@ -49,17 +49,17 @@ export const StaffAssignAssessment: React.FC = () => {
         test_cases: []
     });
 
-    // FIX 1: Auto Calculate Duration
-    useEffect(() => {
-        if (startTime && endTime) {
-            const start = new Date(startTime);
-            const end = new Date(endTime);
-            const diffMs = end.getTime() - start.getTime();
-            if (diffMs > 0) {
-                setDuration(Math.floor(diffMs / 60000));
-            }
-        }
-    }, [startTime, endTime]);
+    // FIX 1: Auto Calculate Duration REMOVED to allow independent Window vs Duration
+    // useEffect(() => {
+    //     if (startTime && endTime) {
+    //         const start = new Date(startTime);
+    //         const end = new Date(endTime);
+    //         const diffMs = end.getTime() - start.getTime();
+    //         if (diffMs > 0) {
+    //             setDuration(Math.floor(diffMs / 60000));
+    //         }
+    //     }
+    // }, [startTime, endTime]);
 
     // Handle PDF Upload and Extraction
     const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -243,17 +243,17 @@ export const StaffAssignAssessment: React.FC = () => {
                             />
                         </div>
 
-                        {/* FIX 1: Read-Only Duration */}
+                        {/* FIX 1: Read-Only Duration REMOVED - Now Editable */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
                                 Duration (Minutes)
-                                <span className="text-xs text-slate-400 ml-2">(Auto-calculated)</span>
+                                {/* <span className="text-xs text-slate-400 ml-2">(Auto-calculated)</span> */}
                             </label>
                             <input
                                 type="number"
                                 value={duration}
-                                readOnly
-                                className="w-full px-4 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed"
+                                onChange={(e) => setDuration(parseInt(e.target.value) || 0)}
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20"
                             />
                         </div>
 
