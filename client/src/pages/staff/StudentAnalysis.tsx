@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { StatsCard } from '../../components/ui/StatsCard';
-import { BarChart2, TrendingUp, Users, AlertTriangle, Download } from 'lucide-react';
+import { BarChart2, TrendingUp, Users, AlertTriangle } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { staffService } from '../../services/api';
 
@@ -77,12 +77,6 @@ export const StaffStudentAnalysis: React.FC = () => {
             <PageHeader
                 title="Student Performance Analysis"
                 description="Comprehensive insights into student progress, strengths, and areas for improvement."
-                action={
-                    <button className="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 flex items-center gap-2 text-sm shadow-sm">
-                        <Download className="w-4 h-4" />
-                        Export Report
-                    </button>
-                }
             />
 
             {/* High Level Stats */}

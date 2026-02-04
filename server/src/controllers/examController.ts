@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+﻿import { Request, Response } from 'express';
 import { supabase } from '../config/supabase';
 import { Exam, Submission } from '../models/types';
 
@@ -297,6 +297,7 @@ export const getAllSubmissions = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Failed to fetch submissions', error: err.message });
     }
 };
+
 
 // STAFF: Get Dashboard Stats
 export const getDashboardStats = async (req: Request, res: Response) => {
@@ -868,3 +869,4 @@ export const submitExam = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Failed to submit exam', error: err.message });
     }
 };
+
