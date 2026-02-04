@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { StatsCard } from '../../components/ui/StatsCard';
-import { BarChart2, TrendingUp, Users, AlertTriangle, Download, Filter } from 'lucide-react';
+import { BarChart2, TrendingUp, Users, AlertTriangle, Download } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { staffService } from '../../services/api';
 
@@ -9,6 +9,7 @@ export const StaffStudentAnalysis: React.FC = () => {
     const [submissions, setSubmissions] = useState<any[]>([]);
     const [stats, setStats] = useState<any>({ totalStudents: 0 });
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -67,13 +68,17 @@ export const StaffStudentAnalysis: React.FC = () => {
         });
     }
 
+    const filteredSubmissions = submissions.filter(sub =>
+        (sub.users?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <div className="space-y-8 animate-fade-in">
             <PageHeader
                 title="Student Performance Analysis"
                 description="Comprehensive insights into student progress, strengths, and areas for improvement."
                 action={
-                    <button className="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm shadow-sm">
+                    <button className="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 flex items-center gap-2 text-sm shadow-sm">
                         <Download className="w-4 h-4" />
                         Export Report
                     </button>
@@ -86,7 +91,7 @@ export const StaffStudentAnalysis: React.FC = () => {
                     label="Avg. Score"
                     value={`${avgScore}%`}
                     icon={BarChart2}
-                    color="brand"
+                    color="blue"
                     trend="+2.5%"
                     trendUp={true}
                 />
@@ -110,24 +115,27 @@ export const StaffStudentAnalysis: React.FC = () => {
                     label="Participation"
                     value={`${participationRate}%`}
                     icon={TrendingUp}
-                    color="blue"
+                    color="purple"
                 />
             </div>
 
             {/* Main Table */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <h3 className="font-bold text-slate-800">Student Performance List</h3>
-                    <div className="flex gap-2">
-                        <button className="p-2 text-slate-500 hover:bg-slate-50 rounded-lg">
-                            <Filter className="w-4 h-4" />
-                        </button>
-                        <input type="text" placeholder="Search..." className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+                    <div className="flex gap-2 w-full md:w-auto">
+                        <input
+                            type="text"
+                            placeholder="Search by student name..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 flex-1 md:w-64"
+                        />
                     </div>
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
+                    <table className="w-full text-left text-sm min-w-[600px]">
                         <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
                             <tr>
                                 <th className="px-6 py-4">Student Name</th>
@@ -139,10 +147,10 @@ export const StaffStudentAnalysis: React.FC = () => {
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
                                 <tr><td colSpan={4} className="p-4 text-center">Loading...</td></tr>
-                            ) : submissions.length === 0 ? (
+                            ) : filteredSubmissions.length === 0 ? (
                                 <tr><td colSpan={4} className="p-4 text-center text-slate-500">No submissions found.</td></tr>
                             ) : (
-                                submissions.map((sub, i) => (
+                                filteredSubmissions.map((sub, i) => (
                                     <tr key={i} className="hover:bg-slate-50 transition-colors">
                                         <td className="px-6 py-4 font-medium text-slate-800">{sub.users?.name || 'Unknown'}</td>
                                         <td className="px-6 py-4 text-slate-600">{sub.exams?.title || 'Unknown Exam'}</td>

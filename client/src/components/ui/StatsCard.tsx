@@ -31,7 +31,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
     const currentStyle = styles[color as keyof typeof styles] || styles.brand;
 
     return (
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 group">
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 group">
             <div className="flex justify-between items-start mb-4">
                 <div className={cn("p-3 rounded-xl transition-colors", currentStyle.bg, currentStyle.text)}>
                     <Icon className="w-6 h-6" />

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Mail, Save, Edit2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { adminService } from '../../services/api';
+import DotGrid from '../../components/DotGrid';
 
 export const StaffProfile: React.FC = () => {
     const { user, updateUser } = useAuth();
@@ -41,14 +42,26 @@ export const StaffProfile: React.FC = () => {
     return (
         <div className="space-y-8 animate-fade-in">
             <div className="relative group">
-                <div className="h-40 bg-gradient-to-r from-blue-900 to-indigo-900 rounded-2xl overflow-hidden relative">
-                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2929&auto=format&fit=crop')] bg-cover bg-center opacity-20"></div>
+                <div className="h-40 bg-slate-900 rounded-t-3xl rounded-b-3xl overflow-hidden relative shadow-md">
+                    <DotGrid
+                        dotSize={4}
+                        gap={20}
+                        baseColor="#334155" // slate-700
+                        activeColor="#60a5fa" // blue-400
+                        proximity={120}
+                        shockRadius={250}
+                        shockStrength={5}
+                        resistance={750}
+                        returnDuration={1.5}
+                        className="opacity-80"
+                    />
+                    {/* Overlay Text/Image if needed, but user just said update banner */}
                 </div>
 
                 <div className="relative px-8 pb-4 flex flex-col md:flex-row items-end -mt-12 gap-6">
-                    <div className="w-32 h-32 rounded-2xl border-4 border-white bg-white shadow-lg overflow-hidden">
+                    <div className="w-32 h-32 rounded-3xl border-4 border-white bg-white shadow-lg overflow-hidden shrink-0">
                         <img
-                            src={`https://ui-avatars.com/api/?name=${formData.name}&background=6366f1&color=fff&size=128`}
+                            src={`https://ui-avatars.com/api/?name=${formData.name}&background=4f46e5&color=fff&size=128`}
                             alt={formData.name}
                             className="w-full h-full object-cover"
                         />
@@ -61,7 +74,7 @@ export const StaffProfile: React.FC = () => {
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="text-3xl font-bold w-full border-b-2 border-brand-500 focus:outline-none bg-transparent"
+                                    className="text-3xl font-bold w-full border-b-2 border-blue-500 focus:outline-none bg-transparent"
                                 />
                                 <input
                                     type="text"
@@ -82,14 +95,14 @@ export const StaffProfile: React.FC = () => {
                         {isEditing ? (
                             <button
                                 onClick={handleUpdate}
-                                className="px-4 py-2 bg-brand-600 text-white font-bold rounded-lg hover:bg-brand-700 shadow-lg flex items-center gap-2"
+                                className="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/20 flex items-center gap-2"
                             >
                                 <Save className="w-4 h-4" /> Save
                             </button>
                         ) : (
                             <button
                                 onClick={() => setIsEditing(true)}
-                                className="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-50 shadow-sm flex items-center gap-2"
+                                className="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 shadow-sm flex items-center gap-2"
                             >
                                 <Edit2 className="w-4 h-4" /> Edit Profile
                             </button>
@@ -100,7 +113,7 @@ export const StaffProfile: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="space-y-6">
-                    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-4">
+                    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-4">
                         <h3 className="font-bold text-slate-800 text-lg">Contact Info</h3>
                         <div className="space-y-3">
                             <div className="flex items-center gap-3 text-slate-600">
@@ -110,10 +123,10 @@ export const StaffProfile: React.FC = () => {
                                         type="email"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="text-sm border border-slate-300 rounded px-2 py-1 w-full"
+                                        className="text-sm border border-slate-300 rounded-xl px-2 py-1 w-full focus:ring-2 focus:ring-blue-500/20 outline-none"
                                     />
                                 ) : (
-                                    <span className="text-sm">{formData.email}</span>
+                                    <span className="text-sm font-medium">{formData.email}</span>
                                 )}
                             </div>
                         </div>
@@ -121,16 +134,16 @@ export const StaffProfile: React.FC = () => {
                 </div>
 
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
+                    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
                         <h3 className="font-bold text-slate-800 text-lg mb-4">Activity Log (Real-time)</h3>
                         <div className="space-y-4">
                             {logs.length === 0 ? (
-                                <p className="text-slate-400 text-sm">No recent activity.</p>
+                                <p className="text-slate-400 text-sm italic">No recent activity found.</p>
                             ) : (
                                 logs.map((log, i) => (
-                                    <div key={i} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0 hover:bg-slate-50 px-2 rounded-lg transition-colors">
+                                    <div key={i} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 px-3 rounded-xl transition-colors">
                                         <span className="text-sm font-medium text-slate-700">{log.action}</span>
-                                        <span className="text-xs text-slate-400">{log.time}</span>
+                                        <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">{log.time}</span>
                                     </div>
                                 ))
                             )}

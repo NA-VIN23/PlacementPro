@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Lock, User, GraduationCap, ArrowRight } from 'lucide-react';
+import { Lock, User, GraduationCap, Eye } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import type { UserRole } from '../types';
 import { cn } from '../utils/cn';
+import LightRays from '../components/LightRays';
 
 export const LoginForm: React.FC = () => {
     const { role } = useParams<{ role: string }>();
     const navigate = useNavigate();
     const { login } = useAuth();
+    const { error: toastError } = useToast();
 
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
     // Validate role
@@ -69,7 +73,7 @@ export const LoginForm: React.FC = () => {
 
         // Simulate network delay
         try {
-            await login(identifier, password);
+            await login(identifier, password, currentRole);
             setLoading(false);
 
             navigate(
@@ -77,84 +81,72 @@ export const LoginForm: React.FC = () => {
                     currentRole === 'STAFF' ? '/staff/dashboard' :
                         '/admin/dashboard'
             );
-        } catch (error) {
-            console.error('Login failed during component submit:', error);
+        } catch (error: any) {
+            console.error('Login failed:', error);
             setLoading(false);
-            alert('Login failed. Please check your credentials.');
+            toastError("Wrong Credentials or Check your Connection");
         }
     };
 
     return (
-        <div className="min-h-screen flex bg-slate-50">
-            {/* Left Banner */}
-            <div className="hidden lg:flex w-1/2 bg-slate-900 relative items-center justify-center overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1497294815431-9365093b7331?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-20"></div>
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900/90 to-transparent"></div>
-
-                <div className="relative z-10 p-12 max-w-lg text-white">
-                    <button
-                        onClick={() => navigate('/')}
-                        className="group flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                        Back to Role Selection
-                    </button>
-
-                    <h1 className="text-4xl font-bold mb-6">Secure Access Portal</h1>
-                    <p className="text-slate-300 text-lg leading-relaxed">
-                        Welcome to the {role} portal. Please sign in to verify your identity and access your dashboard.
-                    </p>
+        <div className="min-h-screen flex bg-white font-sans text-slate-900 overflow-hidden">
+            {/* Left Section: Form */}
+            <div className="w-full lg:w-[40%] flex flex-col p-8 lg:p-12 relative z-20">
+                {/* Branding */}
+                <div className="flex items-center gap-3 mb-16">
+                    <img src="/logo.png" alt="PlacementPrePro" className="w-8 h-8 object-contain" />
+                    <span className="font-bold text-lg tracking-tight text-black">PlacementPrePro </span>
                 </div>
-            </div>
 
-            {/* Login Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
-                <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-sm border border-slate-100 animate-fade-in">
-                    <div className="flex items-center gap-3 mb-8">
-                        <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", config.bgColor, config.color)}>
-                            <config.icon className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-bold text-slate-900">{config.label}</h2>
-                            <p className="text-sm text-slate-500">Enter your credentials to continue</p>
-                        </div>
+                <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full -mt-20">
+                    <div className="mb-10">
+                        <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase mb-4">WELCOME BACK</p>
+                        <h1 className="text-5xl font-serif font-bold text-slate-900 mb-3 leading-tight tracking-tight">
+                            {config.label.split(' ')[0]} Login<span className="text-blue-600">.</span>
+                        </h1>
+
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">{config.identifierLabel}</label>
-                            <div className="relative">
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                    <User className="w-5 h-5" />
-                                </div>
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider pl-1">{config.identifierLabel}</label>
+                            <div className="relative group">
                                 <input
                                     type={currentRole === 'STUDENT' ? 'text' : 'email'}
                                     value={identifier}
                                     onChange={(e) => setIdentifier(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
+                                    className="w-full pl-5 pr-12 py-3.5 rounded-xl bg-[#EFF6FF] border-transparent focus:bg-white focus:border-blue-200 focus:ring-4 focus:ring-blue-50 transition-all outline-none font-medium text-sm text-slate-700 placeholder:text-slate-400"
                                     placeholder={config.identifierPlaceholder}
                                     required
                                 />
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                                    <config.icon className="w-5 h-5" />
+                                </div>
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <div className="flex justify-between">
-                                <label className="text-sm font-medium text-slate-700">Password</label>
-                                <a href="#" className="text-xs text-brand-600 hover:underline">Forgot password?</a>
-                            </div>
-                            <div className="relative">
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                    <Lock className="w-5 h-5" />
-                                </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider pl-1">Password</label>
+                            <div className="relative group">
                                 <input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
+                                    className="w-full pl-5 pr-12 py-3.5 rounded-xl bg-[#EFF6FF] border-transparent focus:bg-white focus:border-blue-200 focus:ring-4 focus:ring-blue-50 transition-all outline-none font-medium text-sm text-slate-700 placeholder:text-slate-400"
                                     placeholder="••••••••"
                                     required
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors focus:outline-none"
+                                >
+                                    {showPassword ? (
+                                        <Lock className="w-5 h-5" />
+                                    ) : (
+                                        <Eye className="w-5 h-5" />
+                                    )}
+                                </button>
                             </div>
                         </div>
 
@@ -162,27 +154,52 @@ export const LoginForm: React.FC = () => {
                             type="submit"
                             disabled={loading}
                             className={cn(
-                                "w-full py-3 px-4 rounded-xl text-white font-bold flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95",
-                                loading ? "bg-slate-400 cursor-not-allowed" : "bg-slate-900 hover:bg-slate-800 shadow-slate-900/20"
+                                "w-full py-3.5 rounded-full text-white font-bold text-sm shadow-[0_10px_20px_-10px_rgba(37,99,235,0.5)] transition-all hover:shadow-[0_15px_25px_-10px_rgba(37,99,235,0.6)] hover:-translate-y-0.5 mt-4",
+                                loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
                             )}
                         >
-                            {loading ? (
-                                <span>Signing in...</span>
-                            ) : (
-                                <>
-                                    <span>Sign In</span>
-                                    <ArrowRight className="w-5 h-5" />
-                                </>
-                            )}
+                            {loading ? "Signing in..." : "Sign In"}
                         </button>
                     </form>
-
-                    <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-                        <p className="text-xs text-slate-400">
-                            Protected by PlacementPro Secure Login System
-                        </p>
-                    </div>
                 </div>
+
+                {/* Footer */}
+                <div className="text-[10px] text-slate-400 font-medium tracking-wide">
+                    © 2026 PlacementPrePro. All rights reserved.
+                </div>
+            </div>
+
+            {/* Right Section: Image with Curve */}
+            <div className="hidden lg:flex lg:w-[60%] fixed right-0 top-0 bottom-0 overflow-hidden z-10 bg-black items-center justify-center lg:pl-36">
+                {/* Organic Curve Divider */}
+                <div className="absolute top-0 left-0 h-full w-[45vh] z-20 pointer-events-none -translate-x-[1px]">
+                    <svg className="h-full w-full text-white fill-current" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <path d="M 0 0 L 50 0 C 110 30 0 70 50 100 L 0 100 Z" />
+                    </svg>
+                </div>
+
+                <div className="absolute inset-0 w-full h-full pointer-events-none z-10 pl-47.86">
+                    <LightRays
+                        raysOrigin="top-center"
+                        raysColor="#ffffff"
+                        raysSpeed={1.5}
+                        lightSpread={1.5}
+                        rayLength={6}
+                        followMouse={true}
+                        mouseInfluence={0.1}
+                        noiseAmount={0}
+                        distortion={0}
+                        pulsating={false}
+                        fadeDistance={1}
+                        saturation={1}
+                    />
+                </div>
+
+                <img
+                    src="/login-bg.png"
+                    alt="PlacementPro Background"
+                    className="w-[90%] h-auto object-contain relative z-0 brightness-125"
+                />
             </div>
         </div>
     );

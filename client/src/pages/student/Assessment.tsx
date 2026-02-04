@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
-import { Search, Clock, HelpCircle, BarChart, ArrowRight, CheckCircle2, Code, Brain, Sigma, MessageSquare, Layers } from 'lucide-react';
+import { Search, Clock, HelpCircle, BarChart, ArrowRight, CheckCircle2, Code, Brain } from 'lucide-react';
 import { cn } from '../../utils/cn';
-import { useData } from '../../context/DataContext';
+import { studentService } from '../../services/api';
 
-type CategoryFilter = 'ALL' | 'Technical' | 'Aptitude' | 'Coding';
+type CategoryFilter = 'ALL' | 'Weekly' | 'Daily';
 
 interface WeeklyAssessment {
     id: string;
@@ -25,58 +25,66 @@ interface WeeklyAssessment {
 
 export const StudentAssessment: React.FC = () => {
     const navigate = useNavigate();
-    const { assessments } = useData();
     const [filter, setFilter] = useState<CategoryFilter>('ALL');
     const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(true);
 
-    // Weekly Assessment Data (Combined Parts A-D)
-    const weeklyAssessments: WeeklyAssessment[] = [
-        {
-            id: 'week-1',
-            week: 1,
-            title: 'Week 1 - Foundation Assessment',
-            status: 'Completed',
-            dueDate: '2024-01-15',
-            parts: [
-                { name: 'Part A: Technical', type: 'Technical', questions: 15, duration: 20, icon: Code, color: 'bg-blue-50 text-blue-600 border-blue-200' },
-                { name: 'Part B: Aptitude', type: 'Aptitude', questions: 15, duration: 20, icon: Sigma, color: 'bg-purple-50 text-purple-600 border-purple-200' },
-                { name: 'Part C: Coding', type: 'Coding', questions: 2, duration: 30, icon: Layers, color: 'bg-orange-50 text-orange-600 border-orange-200' },
-                { name: 'Part D: Mock Interview', type: 'Interview', questions: 5, duration: 15, icon: MessageSquare, color: 'bg-green-50 text-green-600 border-green-200' },
-            ]
-        },
-        {
-            id: 'week-2',
-            week: 2,
-            title: 'Week 2 - Intermediate Assessment',
-            status: 'Available',
-            dueDate: '2024-01-22',
-            parts: [
-                { name: 'Part A: Technical', type: 'Technical', questions: 20, duration: 25, icon: Code, color: 'bg-blue-50 text-blue-600 border-blue-200' },
-                { name: 'Part B: Aptitude', type: 'Aptitude', questions: 20, duration: 25, icon: Sigma, color: 'bg-purple-50 text-purple-600 border-purple-200' },
-                { name: 'Part C: Coding', type: 'Coding', questions: 3, duration: 40, icon: Layers, color: 'bg-orange-50 text-orange-600 border-orange-200' },
-                { name: 'Part D: Mock Interview', type: 'Interview', questions: 5, duration: 15, icon: MessageSquare, color: 'bg-green-50 text-green-600 border-green-200' },
-            ]
-        },
-        {
-            id: 'week-3',
-            week: 3,
-            title: 'Week 3 - Advanced Assessment',
-            status: 'Locked',
-            dueDate: '2024-01-29',
-            parts: [
-                { name: 'Part A: Technical', type: 'Technical', questions: 25, duration: 30, icon: Code, color: 'bg-blue-50 text-blue-600 border-blue-200' },
-                { name: 'Part B: Aptitude', type: 'Aptitude', questions: 25, duration: 30, icon: Sigma, color: 'bg-purple-50 text-purple-600 border-purple-200' },
-                { name: 'Part C: Coding', type: 'Coding', questions: 4, duration: 50, icon: Layers, color: 'bg-orange-50 text-orange-600 border-orange-200' },
-                { name: 'Part D: Mock Interview', type: 'Interview', questions: 5, duration: 20, icon: MessageSquare, color: 'bg-green-50 text-green-600 border-green-200' },
-            ]
-        }
-    ];
+    const [stats, setStats] = useState({
+        weeksCompleted: 0,
+        avgScore: '0%',
+        assessmentAvailable: 0
+    });
+    const [allAssessments, setAllAssessments] = useState<any[]>([]);
 
-    // Get individual assessments by type for category filter view
-    const filteredAssessments = assessments.filter(a => {
-        if (filter === 'ALL') return true;
-        return a.type === filter;
-    }).filter(a => a.title.toLowerCase().includes(searchTerm.toLowerCase()));
+    useEffect(() => {
+        const fetchAssessments = async () => {
+            try {
+                const data = await studentService.getAssessmentPageData();
+                setStats(data.stats);
+                setAllAssessments(data.assessments);
+            } catch (error) {
+                console.error('Failed to load assessment data', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAssessments();
+    }, []);
+
+    const isWeekly = (title: string) => title.toLowerCase().includes('week');
+
+    // 1. Weekly Assessments List
+    const weeklyAssessments: WeeklyAssessment[] = allAssessments
+        .filter(a => isWeekly(a.title) && (filter === 'ALL' || filter === 'Weekly'))
+        .filter(a => a.title.toLowerCase().includes(searchTerm.toLowerCase()))
+        .map(a => ({
+            id: a.id,
+            week: parseInt(a.title.match(/Week (\d+)/i)?.[1] || '0'),
+            title: a.title,
+            status: a.status,
+            dueDate: a.dueDate,
+            parts: [{
+                name: 'Full Assessment',
+                type: 'Technical',
+                questions: a.questions,
+                duration: a.duration,
+                icon: Code,
+                color: 'bg-blue-50 text-blue-600 border-blue-200'
+            }]
+        }));
+
+    // 2. Daily/Other Assessments List
+    const filteredAssessments = allAssessments
+        .filter(a => !isWeekly(a.title) && (filter === 'ALL' || filter === 'Daily'))
+        .filter(a => a.title.toLowerCase().includes(searchTerm.toLowerCase()))
+        .map(a => ({
+            id: a.id,
+            title: a.title,
+            type: 'Technical', // Default type
+            status: a.status === 'Completed' ? 'Completed' : 'Pending', // pending/completed
+            duration: a.duration,
+            questions: a.questions
+        }));
 
     const getTotalDuration = (parts: WeeklyAssessment['parts']) => {
         return parts.reduce((acc, p) => acc + p.duration, 0);
@@ -95,56 +103,56 @@ export const StudentAssessment: React.FC = () => {
 
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 text-white shadow-lg">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-white/20 rounded-xl">
+                        <div className="p-3 bg-white/20 rounded-2xl">
                             <CheckCircle2 className="w-6 h-6" />
                         </div>
-                        <span className="text-xs font-bold bg-black/20 px-2 py-1 rounded-lg">All Time</span>
+                        <span className="text-xs font-bold bg-black/20 px-3 py-1.5 rounded-full">All Time</span>
                     </div>
                     <div>
-                        <h3 className="text-3xl font-bold mb-1">1</h3>
-                        <p className="text-indigo-100 font-medium">Weeks Completed</p>
+                        <h3 className="text-3xl font-bold mb-1">{stats.weeksCompleted}</h3>
+                        <p className="text-blue-100 font-medium">Weeks Completed</p>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 text-white shadow-lg">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-                            <BarChart className="w-6 h-6" />
+                        <div className="p-3 bg-white/20 rounded-2xl">
+                            <BarChart className="w-6 h-6 text-white" />
                         </div>
-                        <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">+5%</span>
+                        <span className="text-xs font-bold bg-black/20 px-3 py-1.5 rounded-full text-white">Performance</span>
                     </div>
                     <div>
-                        <h3 className="text-3xl font-bold text-slate-800 mb-1">78%</h3>
-                        <p className="text-slate-500 font-medium">Average Score</p>
+                        <h3 className="text-3xl font-bold mb-1">{stats.avgScore}</h3>
+                        <p className="text-blue-100 font-medium">Average Score</p>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 text-white shadow-lg">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-orange-50 text-orange-600 rounded-xl">
-                            <Clock className="w-6 h-6" />
+                        <div className="p-3 bg-white/20 rounded-2xl">
+                            <Clock className="w-6 h-6 text-white" />
                         </div>
-                        <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">This Week</span>
+                        <span className="text-xs font-bold bg-black/20 px-3 py-1.5 rounded-full text-white">Active</span>
                     </div>
                     <div>
-                        <h3 className="text-3xl font-bold text-slate-800 mb-1">1</h3>
-                        <p className="text-slate-500 font-medium">Assessment Available</p>
+                        <h3 className="text-3xl font-bold mb-1">{stats.assessmentAvailable}</h3>
+                        <p className="text-blue-100 font-medium">Assessment Available</p>
                     </div>
                 </div>
             </div>
 
             {/* Category Filter Tabs */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
-                    {(['ALL', 'Technical', 'Aptitude', 'Coding'] as CategoryFilter[]).map(cat => (
+                <div className="flex bg-white p-1.5 rounded-full border border-slate-200 shadow-sm">
+                    {(['ALL', 'Weekly', 'Daily'] as CategoryFilter[]).map(cat => (
                         <button
                             key={cat}
                             onClick={() => setFilter(cat)}
                             className={cn(
-                                "px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                                filter === cat ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                                "px-6 py-2 rounded-full text-sm font-bold transition-all",
+                                filter === cat ? "bg-slate-900 text-white shadow-md border border-slate-900" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50 border border-transparent"
                             )}
                         >
                             {cat}
@@ -153,22 +161,22 @@ export const StudentAssessment: React.FC = () => {
                 </div>
 
                 <div className="relative w-full md:w-72">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                         type="text"
                         placeholder="Search assessments..."
-                        className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        className="w-full pl-11 pr-4 py-2.5 rounded-full border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
             </div>
 
-            {/* Weekly Assessment Cards (Shown when ALL is selected) */}
-            {filter === 'ALL' && (
+            {/* Weekly Assessment Cards */}
+            {weeklyAssessments.length > 0 && (
                 <div className="space-y-6">
                     <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                        <Brain className="w-5 h-5 text-brand-600" />
+                        <Brain className="w-5 h-5 text-blue-600" />
                         Weekly Assessments
                     </h2>
                     <div className="grid grid-cols-1 gap-6">
@@ -176,8 +184,8 @@ export const StudentAssessment: React.FC = () => {
                             <div
                                 key={week.id}
                                 className={cn(
-                                    "bg-white rounded-2xl border shadow-sm overflow-hidden transition-all",
-                                    week.status === 'Locked' ? "opacity-60 border-slate-200" : "border-slate-200 hover:shadow-lg hover:border-slate-300"
+                                    "bg-white rounded-3xl border shadow-sm overflow-hidden transition-all",
+                                    week.status === 'Locked' ? "opacity-60 border-slate-200" : "border-slate-200 hover:shadow-lg hover:border-blue-200"
                                 )}
                             >
                                 <div className="p-6">
@@ -208,10 +216,10 @@ export const StudentAssessment: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Parts Breakdown */}
+                                    {/* Parts Breakdown - Simplified */}
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
                                         {week.parts.map((part, idx) => (
-                                            <div key={idx} className={cn("p-4 rounded-xl border flex items-center gap-3", part.color)}>
+                                            <div key={idx} className={cn("p-4 rounded-2xl border flex items-center gap-3", part.color)}>
                                                 <part.icon className="w-5 h-5 shrink-0" />
                                                 <div className="min-w-0">
                                                     <p className="font-bold text-sm truncate">{part.name}</p>
@@ -225,9 +233,9 @@ export const StudentAssessment: React.FC = () => {
                                         onClick={() => week.status === 'Available' && navigate(`/student/assessment/${week.id}`)}
                                         disabled={week.status === 'Locked'}
                                         className={cn(
-                                            "w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all",
+                                            "w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all",
                                             week.status === 'Completed' ? "bg-green-100 text-green-700 cursor-default" :
-                                                week.status === 'Available' ? "bg-brand-600 text-white hover:bg-brand-700 shadow-lg shadow-brand-500/30" :
+                                                week.status === 'Available' ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30" :
                                                     "bg-slate-100 text-slate-400 cursor-not-allowed"
                                         )}
                                     >
@@ -254,29 +262,27 @@ export const StudentAssessment: React.FC = () => {
                 </div>
             )}
 
-            {/* Individual Assessment Cards (Shown when specific category is selected) */}
-            {filter !== 'ALL' && (
+            {/* Individual/Daily Assessment Cards */}
+            {filteredAssessments.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredAssessments.length > 0 ? filteredAssessments.map((assessment) => (
-                        <div key={assessment.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group overflow-hidden">
+                    {filteredAssessments.map((assessment) => (
+                        <div key={assessment.id} className="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group overflow-hidden">
                             <div className="p-6">
                                 <div className="flex justify-between items-start mb-4">
                                     <span className={cn(
                                         "px-3 py-1 rounded-full text-xs font-bold",
-                                        assessment.type === 'Technical' ? "bg-blue-50 text-blue-600" :
-                                            assessment.type === 'Aptitude' ? "bg-purple-50 text-purple-600" :
-                                                "bg-orange-50 text-orange-600"
+                                        "bg-orange-50 text-orange-600"
                                     )}>
-                                        {assessment.type}
+                                        Daily
                                     </span>
-                                    {assessment.status === 'Pending' && (
+                                    {assessment.status === 'Available' && (
                                         <span className="flex h-3 w-3 relative">
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
                                             <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
                                         </span>
                                     )}
                                 </div>
-                                <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">
+                                <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">
                                     {assessment.title}
                                 </h3>
                                 <div className="flex items-center gap-4 text-sm text-slate-500 mb-6">
@@ -291,19 +297,27 @@ export const StudentAssessment: React.FC = () => {
                                 </div>
                                 <button
                                     onClick={() => navigate(`/student/assessment/${assessment.id}`)}
-                                    className="w-full py-3 rounded-xl border-2 border-slate-100 font-bold text-slate-600 group-hover:border-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all flex items-center justify-center gap-2"
+                                    className="w-full py-3.5 rounded-2xl border-2 border-slate-100 font-bold text-slate-600 group-hover:border-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all flex items-center justify-center gap-2"
                                 >
                                     Start Assessment
                                     <ArrowRight className="w-4 h-4" />
                                 </button>
                             </div>
                         </div>
-                    )) : (
-                        <div className="col-span-full text-center py-12 text-slate-400">
-                            <HelpCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                            <p>No {filter} assessments found.</p>
-                        </div>
-                    )}
+                    ))}
+                </div>
+            )}
+
+            {loading && (
+                <div className="col-span-full text-center py-12 text-slate-400">
+                    <p>Loading assessments...</p>
+                </div>
+            )}
+
+            {!loading && weeklyAssessments.length === 0 && filteredAssessments.length === 0 && (
+                <div className="col-span-full text-center py-12 text-slate-400">
+                    <HelpCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No assessments found.</p>
                 </div>
             )}
         </div>

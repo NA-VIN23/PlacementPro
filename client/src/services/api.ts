@@ -52,13 +52,55 @@ export const studentService = {
         const response = await api.get(`/exams/${examId}/take`);
         return response.data;
     },
-    submitExam: async (examId: string, answers: Record<string, string>): Promise<{ message: string, score: number }> => {
-        const response = await api.post(`/exams/${examId}/submit`, { answers });
+    submitExam: async (examId: string, answers: Record<string, string>, terminated?: boolean): Promise<{
+        message: string;
+        score: number;
+        total: number;
+        maxScore?: number;
+        reviewDetails?: any[];
+        gradingDetails?: any;
+    }> => {
+        const response = await api.post(`/exams/${examId}/submit`, { answers, terminated });
         return response.data;
     },
     getStudentResults: async (): Promise<any[]> => {
         const response = await api.get('/exams/student/results');
         return response.data;
+    },
+    getDashboardStats: async () => {
+        const response = await api.get('/exams/student/dashboard-stats');
+        return response.data;
+    },
+    getAssessmentPageData: async () => {
+        const response = await api.get('/exams/student/assessment-page');
+        return response.data;
+    },
+    async startInterview(type: 'HR' | 'TECHNICAL') {
+        const response = await api.post('/mock-interviews/start', { type });
+        return response.data;
+    },
+    async chatInterview(interviewId: string, message: string) {
+        const response = await api.post('/mock-interviews/chat', { interviewId, message });
+        return response.data;
+    },
+    async endInterview(interviewId: string) {
+        const response = await api.post('/mock-interviews/end', { interviewId });
+        return response.data;
+    },
+    async getProfile() {
+        const response = await api.get('/student/profile');
+        return response.data;
+    },
+    async updateProfile(profileData: any) {
+        const response = await api.post('/student/profile', profileData);
+        return response.data;
+    },
+    async runCode(language: string, version: string, code: string, question_id: string, customInput?: string) {
+        const response = await api.post('/exams/run-code', { language, version, code, question_id, customInput });
+        return response.data;
+    },
+    async saveCode(exam_id: string, question_id: string, language: string, code: string) {
+        return api.post('/exams/save-code', { exam_id, question_id, language, code });
     }
 };
 
@@ -73,6 +115,18 @@ export const staffService = {
     },
     getAllSubmissions: async (): Promise<any[]> => {
         const response = await api.get('/exams/staff/submissions');
+        return response.data;
+    },
+    extractPdf: async (file: File) => {
+        const formData = new FormData();
+        formData.append('pdf', file);
+        const response = await api.post('/exams/extract-pdf', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
+    getStudents: async () => {
+        const response = await api.get('/users/students');
         return response.data;
     }
 };
@@ -96,6 +150,18 @@ export const adminService = {
     },
     getLogs: async () => {
         const response = await api.get('/users/logs');
+        return response.data;
+    },
+    bulkImportUsers: async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await api.post('/users/import-bulk', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
+    deleteUser: async (userId: string) => {
+        const response = await api.delete(`/users/${userId}`);
         return response.data;
     }
 };

@@ -18,6 +18,9 @@ export interface Exam {
     duration: number;
     start_time: string; // ISO Date String
     end_time: string;
+    type?: 'DAILY' | 'WEEKLY';
+    mode?: 'MANUAL' | 'PDF';
+    pdf_url?: string;
 }
 
 export interface Question {
@@ -25,6 +28,13 @@ export interface Question {
     question_text: string;
     options: string[];
     explanation?: string;
+    section?: string;
+    question_type?: 'MCQ' | 'CODING' | 'TEXT';
+    code_template?: string;
+    constraints?: string;
+    test_cases?: { input: string; output: string; hidden: boolean }[];
+    function_name?: string;
+    exam_id?: string;
     // correct_answer is hidden from frontend usually
 }
 
