@@ -210,11 +210,15 @@ export const AdminAddUser: React.FC = () => {
                                         onChange={handleChange}
                                     >
                                         <option value="">Select Department</option>
-                                        <option>Computer Science</option>
-                                        <option>Electronics</option>
-                                        <option>Mechanical</option>
-                                        <option>Civil</option>
-                                        <option>Business Admin</option>
+                                        <option>IT</option>
+                                        <option>CSE</option>
+                                        <option>CSBS</option>
+                                        <option>EEE</option>
+                                        <option>MECH</option>
+                                        <option>ECE</option>
+                                        <option>AIDS</option>
+                                        <option>AIML</option>
+                                        <option>CIVIL</option>
                                     </select>
                                 </div>
                                 <div>

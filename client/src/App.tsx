@@ -25,6 +25,7 @@ import { InterviewSession } from './pages/student/InterviewSession';
 import { StaffGradingConsole } from './pages/staff/GradingConsole';
 import { AdminUserManagement } from './pages/admin/UserManagement';
 import { AdminProfile } from './pages/admin/Profile';
+import { StaffAssignment } from './pages/admin/StaffAssignment';
 
 import { AdminAddUser } from './pages/admin/AddUser';
 
@@ -76,6 +77,7 @@ function App() {
               <Route path="users" element={<AdminUserManagement />} />
               <Route path="users/add" element={<AdminAddUser />} />
               <Route path="profile" element={<AdminProfile />} />
+              <Route path="staff-assignment" element={<StaffAssignment />} />
               <Route index element={<Navigate to="dashboard" replace />} />
             </Route>
           </Route>

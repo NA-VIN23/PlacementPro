@@ -31,37 +31,47 @@ const quantTopics: Topic[] = [
 ];
 
 const logicalTopics: Topic[] = [
-    { id: '1', title: 'Puzzles', practice: 'https://www.indiabix.com/logical-reasoning/puzzles/' },
-    { id: '2', title: 'Seating Arrangement', practice: 'https://www.indiabix.com/logical-reasoning/seating-arrangement/' },
-    { id: '3', title: 'Coding & Decoding', practice: 'https://www.indiabix.com/logical-reasoning/coding-decoding/' },
-    { id: '4', title: 'Blood Relations', practice: 'https://www.indiabix.com/logical-reasoning/blood-relation-test/' },
-    { id: '5', title: 'Direction Sense', practice: 'https://www.indiabix.com/logical-reasoning/direction-sense-test/' },
-    { id: '6', title: 'Syllogisms', practice: 'https://www.indiabix.com/logical-reasoning/syllogism/' },
-    { id: '7', title: 'Number Series', practice: 'https://www.indiabix.com/logical-reasoning/number-series/' },
-    { id: '8', title: 'Alphabet Series', practice: 'https://www.indiabix.com/logical-reasoning/letter-and-symbol-series/' },
-    { id: '9', title: 'Data Sufficiency', practice: 'https://www.indiabix.com/logical-reasoning/data-sufficiency/' },
-    { id: '10', title: 'Statement & Assumptions', practice: 'https://www.indiabix.com/logical-reasoning/statement-and-assumption/' },
-    { id: '11', title: 'Statement & Conclusions', practice: 'https://www.indiabix.com/logical-reasoning/statement-and-conclusion/' },
-    { id: '12', title: 'Venn Diagrams', practice: 'https://www.indiabix.com/logical-reasoning/venn-diagrams/' },
-    { id: '13', title: 'Cause & Effect', practice: 'https://www.indiabix.com/logical-reasoning/cause-and-effect/' },
-    { id: '14', title: 'Analogy', practice: 'https://www.indiabix.com/logical-reasoning/analogy/' }
+    { id: '1', title: 'Number Series', practice: 'https://www.indiabix.com/logical-reasoning/number-series/' },
+    { id: '2', title: 'Verbal Classification', practice: 'https://www.indiabix.com/logical-reasoning/verbal-classification/' },
+    { id: '3', title: 'Analogies', practice: 'https://www.indiabix.com/logical-reasoning/analogies/' },
+    { id: '4', title: 'Matching Definitions', practice: 'https://www.indiabix.com/logical-reasoning/matching-definitions/' },
+    { id: '5', title: 'Verbal Reasoning', practice: 'https://www.indiabix.com/logical-reasoning/verbal-reasoning/' },
+    { id: '6', title: 'Logical Games', practice: 'https://www.indiabix.com/logical-reasoning/logical-games/' },
+    { id: '7', title: 'Statement and Assumption', practice: 'https://www.indiabix.com/logical-reasoning/statement-and-assumption/' },
+    { id: '8', title: 'Statement and Conclusion', practice: 'https://www.indiabix.com/logical-reasoning/statement-and-conclusion/' },
+    { id: '9', title: 'Cause and Effect', practice: 'https://www.indiabix.com/logical-reasoning/cause-and-effect/' },
+    { id: '10', title: 'Logical Deduction', practice: 'https://www.indiabix.com/logical-reasoning/logical-deduction/' },
+    { id: '11', title: 'Letter and Symbol Series', practice: 'https://www.indiabix.com/logical-reasoning/letter-and-symbol-series/' },
+    { id: '12', title: 'Essential Part', practice: 'https://www.indiabix.com/logical-reasoning/essential-part/' },
+    { id: '13', title: 'Artificial Language', practice: 'https://www.indiabix.com/logical-reasoning/artificial-language/' },
+    { id: '14', title: 'Making Judgments', practice: 'https://www.indiabix.com/logical-reasoning/making-judgments/' },
+    { id: '15', title: 'Logical Problems', practice: 'https://www.indiabix.com/logical-reasoning/logical-problems/' },
+    { id: '16', title: 'Analyzing Arguments', practice: 'https://www.indiabix.com/logical-reasoning/analyzing-arguments/' },
+    { id: '17', title: 'Course of Action', practice: 'https://www.indiabix.com/logical-reasoning/course-of-action/' },
+    { id: '18', title: 'Theme Detection', practice: 'https://www.indiabix.com/logical-reasoning/theme-detection/' },
+    { id: '19', title: 'Statement and Argument', practice: 'https://www.indiabix.com/logical-reasoning/statement-and-argument/' }
 ];
 
 const verbalTopics: Topic[] = [
-    { id: '1', title: 'Grammar Basics', practice: 'https://www.indiabix.com/verbal-ability/questions-and-answers/' },
-    { id: '2', title: 'Reading Comprehension', practice: 'https://www.indiabix.com/verbal-ability/questions-and-answers/' },
-    { id: '3', title: 'Vocabulary', practice: 'https://www.indiabix.com/verbal-ability/questions-and-answers/' },
-    { id: '4', title: 'Synonyms', practice: 'https://www.indiabix.com/verbal-ability/questions-and-answers/' },
-    { id: '5', title: 'Antonyms', practice: 'https://www.indiabix.com/verbal-ability/questions-and-answers/' },
-    { id: '6', title: 'Sentence Correction', practice: 'https://www.indiabix.com/verbal-ability/questions-and-answers/' },
-    { id: '7', title: 'Error Spotting', practice: 'https://www.indiabix.com/verbal-ability/questions-and-answers/' },
-    { id: '8', title: 'Fill in the Blanks', practice: 'https://www.indiabix.com/verbal-ability/questions-and-answers/' },
-    { id: '9', title: 'Para Jumbles', practice: 'https://www.indiabix.com/verbal-ability/questions-and-answers/' },
-    { id: '10', title: 'Idioms & Phrases', practice: 'https://www.indiabix.com/verbal-ability/questions-and-answers/' },
-    { id: '11', title: 'Active & Passive Voice', practice: 'https://www.indiabix.com/verbal-ability/questions-and-answers/' },
-    { id: '12', title: 'Direct & Indirect Speech', practice: 'https://www.indiabix.com/verbal-ability/questions-and-answers/' },
-    { id: '13', title: 'One-Word Substitution', practice: 'https://www.indiabix.com/verbal-ability/questions-and-answers/' },
-    { id: '14', title: 'Cloze Test', practice: 'https://www.indiabix.com/verbal-ability/questions-and-answers/' }
+    { id: '1', title: 'Spotting Errors', practice: 'https://www.indiabix.com/verbal-ability/spotting-errors/' },
+    { id: '2', title: 'Antonyms', practice: 'https://www.indiabix.com/verbal-ability/antonyms/' },
+    { id: '3', title: 'Spellings', practice: 'https://www.indiabix.com/verbal-ability/spellings/' },
+    { id: '4', title: 'Ordering of Words', practice: 'https://www.indiabix.com/verbal-ability/ordering-of-words/' },
+    { id: '5', title: 'Sentence Improvement', practice: 'https://www.indiabix.com/verbal-ability/sentence-improvement/' },
+    { id: '6', title: 'Ordering of Sentences', practice: 'https://www.indiabix.com/verbal-ability/ordering-of-sentences/' },
+    { id: '7', title: 'Cloze Test', practice: 'https://www.indiabix.com/verbal-ability/cloze-test/' },
+    { id: '8', title: 'One Word Substitutes', practice: 'https://www.indiabix.com/verbal-ability/one-word-substitutes/' },
+    { id: '9', title: 'Change of Voice', practice: 'https://www.indiabix.com/verbal-ability/change-of-voice/' },
+    { id: '10', title: 'Verbal Analogies', practice: 'https://www.indiabix.com/verbal-ability/verbal-analogies/' },
+    { id: '11', title: 'Synonyms', practice: 'https://www.indiabix.com/verbal-ability/synonyms/' },
+    { id: '12', title: 'Selecting Words', practice: 'https://www.indiabix.com/verbal-ability/selecting-words/' },
+    { id: '13', title: 'Sentence Formation', practice: 'https://www.indiabix.com/verbal-ability/sentence-formation/' },
+    { id: '14', title: 'Sentence Correction', practice: 'https://www.indiabix.com/verbal-ability/sentence-correction/' },
+    { id: '15', title: 'Completing Statements', practice: 'https://www.indiabix.com/verbal-ability/completing-statements/' },
+    { id: '16', title: 'Paragraph Formation', practice: 'https://www.indiabix.com/verbal-ability/paragraph-formation/' },
+    { id: '17', title: 'Comprehension', practice: 'https://www.indiabix.com/verbal-ability/comprehension/' },
+    { id: '18', title: 'Idioms and Phrases', practice: 'https://www.indiabix.com/verbal-ability/idioms-and-phrases/' },
+    { id: '19', title: 'Change of Speech', practice: 'https://www.indiabix.com/verbal-ability/change-of-speech/' }
 ];
 
 interface TechnicalTopic {
@@ -78,80 +88,80 @@ interface TechnicalTopic {
 const technicalTopics: TechnicalTopic[] = [
     {
         id: '1', title: 'C Programming', subtitle: 'Pointers, Arrays, Memory',
-        english: 'https://youtube.com/playlist?list=PLsyeobzWxl7oBxHp43xQTFrw9f1CDPR6C',
-        tamil: 'https://youtu.be/fmSnLiAv-zc',
+        english: 'https://www.youtube.com/watch?v=KJgsSFOSQv0',
+        tamil: 'https://www.youtube.com/watch?v=Zi_n_mE3pEM',
         practice: 'https://www.indiabix.com/c-programming/questions-and-answers/',
         icon: <Terminal className="w-7 h-7 text-slate-600" />,
         colorClass: 'bg-slate-100 group-hover:bg-slate-200'
     },
     {
         id: '2', title: 'Java Programming', subtitle: 'OOPs, Collections, Strings',
-        english: 'https://youtube.com/playlist?list=PLsyeobzWxl7pFZoGT1NbZJpywedeyzyaf',
-        tamil: 'https://youtube.com/playlist?list=PL1lPSVzW89Hb1p0D6yR_4LxLw3oS01R8N',
+        english: 'https://www.youtube.com/playlist?list=PLsyeobzWxl7pe_IiTfN68UlrFJ97TawYs',
+        tamil: 'https://www.youtube.com/watch?v=Gex-j7GlCHc',
         practice: 'https://www.indiabix.com/java/questions-and-answers/',
         icon: <Code2 className="w-7 h-7 text-red-600" />,
         colorClass: 'bg-red-50 group-hover:bg-red-100'
     },
     {
         id: '3', title: 'Python Programming', subtitle: 'Basics, Lists, Libraries',
-        english: 'https://youtube.com/playlist?list=PLsyeobzWxl7poL9JTVyndKe62ieoN-MZ3',
-        tamil: 'https://youtube.com/playlist?list=PL1lPSVzW89HZxY8K8x5jG5p8GZtVQe9o_',
+        english: 'https://www.youtube.com/watch?v=_uQrJ0TkZlc',
+        tamil: 'https://www.youtube.com/watch?v=dHzYLjfr-uY',
         practice: 'https://www.indiabix.com/python-programming/questions-and-answers/',
         icon: <Database className="w-7 h-7 text-yellow-600" />,
         colorClass: 'bg-yellow-50 group-hover:bg-yellow-100'
     },
     {
         id: '4', title: 'Data Structures', subtitle: 'Trees, Graphs, Stacks',
-        english: 'https://youtube.com/playlist?list=PLsyeobzWxl7r-AwTGdRFQJp2pP9PpL6rP',
-        tamil: 'https://youtube.com/playlist?list=PL1lPSVzW89HajqA0aM1FfT3Zp8nGdK4zG',
+        english: 'https://www.youtube.com/playlist?list=PLDN4rrl48XKpZgh8NY68Gq8qK1uP63uW5',
+        tamil: 'https://www.youtube.com/watch?v=IBkwl4HSY8A',
         practice: 'https://www.indiabix.com/data-structure/questions-and-answers/',
         icon: <Layers className="w-7 h-7 text-orange-600" />,
         colorClass: 'bg-orange-50 group-hover:bg-orange-100'
     },
     {
         id: '5', title: 'Algorithms', subtitle: 'Sorting, Searching, DP',
-        english: 'https://youtube.com/playlist?list=PLsyeobzWxl7qI9dJ9MZ9FZ9oG2PpYp9sE',
-        tamil: 'https://youtube.com/playlist?list=PL1lPSVzW89Ha2h8w8gFJ8kFqZy9E0x9pH',
+        english: 'https://www.youtube.com/playlist?list=PL2_aWCzGMAwLz3gquqoyeJJOYfTLEpEkj',
+        tamil: 'https://www.youtube.com/playlist?list=PLj8W76VvK5WntE6Q7YmR0K3MTo3n0S69v',
         practice: 'https://www.indiabix.com/algorithms/questions-and-answers/',
         icon: <BrainCircuit className="w-7 h-7 text-pink-600" />,
         colorClass: 'bg-pink-50 group-hover:bg-pink-100'
     },
     {
         id: '6', title: 'DBMS', subtitle: 'Normalization, SQL, ACID',
-        english: 'https://youtube.com/playlist?list=PLsyeobzWxl7rUeR9yFX8zH6J5j6L8S1rY',
-        tamil: 'https://youtube.com/playlist?list=PL1lPSVzW89HZZu9QyP0R1yZz3E3JY4ZxF',
+        english: 'https://www.youtube.com/playlist?list=PLxCzCOWd7aiFAN6I8CuViBuCdJgiOkT2Y',
+        tamil: 'https://www.youtube.com/watch?v=lf2lZLNUoek',
         practice: 'https://www.indiabix.com/database/questions-and-answers/',
         icon: <Database className="w-7 h-7 text-cyan-600" />,
         colorClass: 'bg-cyan-50 group-hover:bg-cyan-100'
     },
     {
         id: '7', title: 'Operating System', subtitle: 'Process, Memory, Threads',
-        english: 'https://youtube.com/playlist?list=PLsyeobzWxl7qU5fD2H0m5YyYzWf9T5X3Z',
-        tamil: 'https://youtube.com/playlist?list=PL1lPSVzW89HZnXK0s1yFJpKqN4ZJQp9xK',
+        english: 'https://www.youtube.com/playlist?list=PLBlnK6fEyqRiVhbXDGLSiER_qRvm649Si',
+        tamil: 'https://www.youtube.com/playlist?list=PL7jN_L-p_vW0B_C9O689-F_5M43mU4G6p',
         practice: 'https://www.indiabix.com/operating-system/questions-and-answers/',
         icon: <Cpu className="w-7 h-7 text-indigo-600" />,
         colorClass: 'bg-indigo-50 group-hover:bg-indigo-100'
     },
     {
         id: '8', title: 'Computer Networks', subtitle: 'OSI Model, TCP/IP, DNS',
-        english: 'https://youtube.com/playlist?list=PLsyeobzWxl7rU9Z6U5ZPp4xXy7R8pYJxF',
-        tamil: 'https://youtube.com/playlist?list=PL1lPSVzW89Hb1X2yZ8YJpN9KQpXGJZ0XW',
+        english: 'https://www.youtube.com/watch?v=IPvYjXWgi6U',
+        tamil: 'https://www.youtube.com/playlist?list=PL7jN_L-p_vW0B888f4B0-H-mRz6A_G5S',
         practice: 'https://www.indiabix.com/networking/questions-and-answers/',
         icon: <Network className="w-7 h-7 text-sky-600" />,
         colorClass: 'bg-sky-50 group-hover:bg-sky-100'
     },
     {
         id: '9', title: 'Git & GitHub', subtitle: 'Version Control',
-        english: 'https://youtube.com/playlist?list=PLsyeobzWxl7p0j5R1N6pG6p5yZ9J9Z5pX',
-        tamil: 'https://youtube.com/playlist?list=PL1lPSVzW89HbZz9JXy0FQZpK1Y8ZJX9XQ',
+        english: 'https://www.youtube.com/watch?v=RGOj5yH7evk',
+        tamil: 'https://www.youtube.com/watch?v=tNwrtU_Adag',
         practice: 'https://www.indiabix.com/git/questions-and-answers/',
         icon: <GitBranch className="w-7 h-7 text-emerald-600" />,
         colorClass: 'bg-emerald-50 group-hover:bg-emerald-100'
     },
     {
         id: '10', title: 'Web Basics', subtitle: 'HTML, CSS, JS',
-        english: 'https://youtube.com/playlist?list=PLsyeobzWxl7pX9p1R0Yy8YJpZ9JZ9JX5X',
-        tamil: 'https://youtube.com/playlist?list=PL1lPSVzW89HaXyZ9JpYpFZ9KJXyZpQX9',
+        english: 'https://www.youtube.com/watch?v=G3e-cpL7ofc',
+        tamil: 'https://www.youtube.com/playlist?list=PLjVLYmrlmjGfHlD85t8j_XfB_K697YvE1',
         practice: 'https://www.indiabix.com/web-technology/questions-and-answers/',
         icon: <Globe className="w-7 h-7 text-violet-600" />,
         colorClass: 'bg-violet-50 group-hover:bg-violet-100'

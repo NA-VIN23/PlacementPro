@@ -30,5 +30,6 @@ export const STAFF_NAV = [
 export const ADMIN_NAV = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
     { label: 'User Management', icon: Users, path: '/admin/users' },
+    { label: 'Class Advisors', icon: ClipboardList, path: '/admin/staff-assignment' },
     { label: 'Profile', icon: User, path: '/admin/profile' },
 ];

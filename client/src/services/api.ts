@@ -163,5 +163,13 @@ export const adminService = {
     deleteUser: async (userId: string) => {
         const response = await api.delete(`/users/${userId}`);
         return response.data;
+    },
+    assignClassAdvisor: async (data: { staffId: string, batch: string, section: string, department: string }) => {
+        const response = await api.post('/users/staff/assign-class-advisor', data);
+        return response.data;
+    },
+    getStaffList: async () => {
+        const response = await api.get('/users/staff/list');
+        return response.data;
     }
 };
