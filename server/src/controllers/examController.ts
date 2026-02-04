@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+﻿import { Request, Response } from 'express';
 import { supabase } from '../config/supabase';
 import { Exam, Submission } from '../models/types';
 
@@ -102,15 +102,91 @@ export const createExam = async (req: Request, res: Response) => {
 };
 
 // STUDENT: Get Available Exams
+// STUDENT: Get Available Exams
 export const getAvailableExams = async (req: Request, res: Response) => {
+    // @ts-ignore
+    const studentId = req.user?.userId;
+
     try {
+        // 1. Get Student Details
+        const { data: student, error: studentError } = await supabase
+            .from('users')
+            .select('registration_number, batch, department')
+            .eq('id', studentId)
+            .single();
+
+        if (studentError || !student) throw new Error('Student not found');
+
+        // 2. Derive Student Section
+        const regNo = student.registration_number;
+        let studentSection = null;
+        if (regNo) {
+            const match = regNo.match(/^(?:L)?([A-Z]{2})([A-Z])(\d{2})(\d{2})$/);
+            if (match) studentSection = match[2];
+        }
+
+        // 3. Get Exams
         const { data: exams, error } = await supabase
             .from('exams')
             .select('*')
             .order('start_time', { ascending: true });
 
         if (error) throw error;
-        res.json(exams);
+
+        // 4. Filter Exams based on Staff Assignment
+        // We need to check the creator of each exam
+        const creatorIds = [...new Set(exams.map(e => e.created_by))];
+
+        if (creatorIds.length === 0) return res.json(exams);
+
+        const { data: creators } = await supabase
+            .from('users')
+            .select('id, batch')
+            .in('id', creatorIds);
+
+        const creatorMap = new Map();
+        creators?.forEach(c => creatorMap.set(c.id, c.batch));
+
+        const filteredExams = exams.filter(exam => {
+            const creatorBatch = creatorMap.get(exam.created_by);
+
+            // If creator has no special assignment (no colon), allow visible to all (or restrict? assuming allow global staff)
+            // If it is 'RANGE:xxx:xxx', we check range.
+            if (!creatorBatch) return true; // Unassigned creator -> Visible to all? Safest for now.
+
+            if (creatorBatch.startsWith('RANGE:')) {
+                // Format: "RANGE:Start:End|Extra1,Extra2"
+                const mainSplit = creatorBatch.split('|');
+                const rangePart = mainSplit[0];
+                const extrasPart = mainSplit[1] || '';
+
+                const rangeParts = rangePart.split(':');
+                // Validate range parts length is 3 (RANGE, S, E)
+                if (rangeParts.length !== 3) return false;
+
+                const startRegNo = rangeParts[1];
+                const endRegNo = rangeParts[2];
+                const extras = extrasPart ? extrasPart.split(',') : [];
+
+                const studentRegNo = student.registration_number;
+                if (!studentRegNo) return false;
+
+                // Check Range
+                const inRange = (startRegNo && endRegNo)
+                    ? (studentRegNo >= startRegNo && studentRegNo <= endRegNo)
+                    : false;
+
+                // Check Extras
+                const inExtras = extras.includes(studentRegNo);
+
+                return inRange || inExtras;
+            }
+
+            // Legacy/Other format -> Visible
+            return true;
+        });
+
+        res.json(filteredExams);
     } catch (err: any) {
         res.status(500).json({ message: 'Failed to fetch exams', error: err.message });
     }
@@ -221,6 +297,7 @@ export const getAllSubmissions = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Failed to fetch submissions', error: err.message });
     }
 };
+
 
 // STAFF: Get Dashboard Stats
 export const getDashboardStats = async (req: Request, res: Response) => {
@@ -792,3 +869,4 @@ export const submitExam = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Failed to submit exam', error: err.message });
     }
 };
+
