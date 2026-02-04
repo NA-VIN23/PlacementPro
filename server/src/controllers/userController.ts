@@ -194,13 +194,23 @@ export const getStudents = async (req: Request, res: Response) => {
             const startRegNo = parts[1];
             const endRegNo = parts[2];
 
-            // 2. Filter Students by Range
+            const extras = extrasPart ? extrasPart.split(',') : [];
+
+            // 2. Filter Students by Range OR Extra List
             const filteredStudents = students.filter((student: any) => {
                 const regNo = student.registration_number;
                 if (!regNo) return false;
 
-                // String comparison works for RegNo format like "8115U23IT001"
-                return regNo >= startRegNo && regNo <= endRegNo;
+                // Check Range
+                const inRange = (startRegNo && endRegNo)
+                    ? (regNo >= startRegNo && regNo <= endRegNo)
+                    : false;
+
+                // Check Extras (Exact Match)
+                // We assume stored extras are trimmed. We should trim student regNo too just in case.
+                const inExtras = extras.includes(regNo.trim());
+
+                return inRange || inExtras;
             });
 
             return res.json(filteredStudents);
