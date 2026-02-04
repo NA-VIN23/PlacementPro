@@ -23,4 +23,10 @@ router.delete('/:id', authorize(['ADMIN']), deleteUser);
 router.get('/', authorize(['ADMIN']), listUsers);
 router.patch('/:id/toggle-active', authorize(['ADMIN']), toggleUserParams);
 
+// Staff Assignment (Admin Only)
+import { assignClassAdvisor, listStaff } from '../controllers/staffController';
+
+router.post('/staff/assign-class-advisor', authorize(['ADMIN']), assignClassAdvisor);
+router.get('/staff/list', authorize(['ADMIN']), listStaff);
+
 export default router;

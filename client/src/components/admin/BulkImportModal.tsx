@@ -27,9 +27,12 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
         // Simple CSV template
         const headers = ['RegNo', 'RollNo', 'Name', 'Email', 'Password'];
         const example = ['8115U23IT001', 'ITA2301', 'John Doe', 'john.doe@example.com', 'InitialPass123!'];
+        const lateralExample = ['8115U23IT063', 'LITA2363', 'Lateral Student', 'lateral@example.com', 'SecurePass456!'];
+
         const csvContent = "data:text/csv;charset=utf-8,"
             + headers.join(",") + "\n"
-            + example.join(",");
+            + example.join(",") + "\n"
+            + lateralExample.join(",");
 
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");

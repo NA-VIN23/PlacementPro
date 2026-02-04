@@ -4,8 +4,9 @@ import * as xlsx from 'xlsx';
 import { User, UserRole } from '../models/types';
 import { supabase } from '../config/supabase';
 
+// Trigger restart
 export const addUser = async (req: Request, res: Response) => {
-    const { role, email, registration_number, department, batch, password } = req.body;
+    const { role, email, name, registration_number, department, batch, password } = req.body;
 
     // Validation
     if (role === 'STUDENT' && !registration_number) {
@@ -29,6 +30,7 @@ export const addUser = async (req: Request, res: Response) => {
         const newUser = {
             role: role as UserRole,
             email,
+            name,
             registration_number: registration_number || null,
             department,
             batch,
@@ -54,7 +56,7 @@ export const listUsers = async (req: Request, res: Response) => {
     try {
         const { data: users, error } = await supabase
             .from('users')
-            .select('id, role, email, registration_number, department, batch, is_active, created_at')
+            .select('id, role, email, name, registration_number, department, batch, is_active, created_at')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -133,14 +135,6 @@ export const getStaffActivityLogs = async (req: Request, res: Response) => {
 
         if (examError) throw examError;
 
-        // 2. Fetch submissions for their exams (Joined query)
-        // Since Supabase join syntax can be complex in JS client without foreign key embedding setup perfectly, 
-        // we might do two steps or use correct syntax.
-        // Let's keep it simple: Just show "Created Exam X" for now to ensure reliability, 
-        // or try to fetch submissions if we can.
-        // Actually, let's just use exams for now as "Activity", and maybe "Users added" if we had that.
-        // For staff, "Created Exam" is the main activity.
-
         const logs = exams?.map(exam => ({
             action: `Created assessment: ${exam.title}`,
             time: new Date(exam.created_at).toLocaleDateString()
@@ -154,15 +148,66 @@ export const getStaffActivityLogs = async (req: Request, res: Response) => {
 };
 
 export const getStudents = async (req: Request, res: Response) => {
+    // @ts-ignore
+    const userRole = req.user?.role?.toUpperCase();
+    // @ts-ignore
+    const userId = req.user?.userId;
+
     try {
-        const { data: students, error } = await supabase
+        console.log(`Fetching students for User: ${userId}, Role: ${userRole}`);
+
+        let query = supabase
             .from('users')
             .select('id, role, email, registration_number, department, batch, name, created_at')
             .eq('role', 'STUDENT')
             .order('registration_number', { ascending: true });
 
+        const { data: students, error } = await query;
         if (error) throw error;
-        res.json(students);
+
+        // If Admin, return all
+        if (userRole === 'ADMIN') {
+            return res.json(students);
+        }
+
+        // If Staff, Filter by Assigned RegNo Range
+        if (userRole === 'STAFF') {
+            // 1. Get Staff Assignment (Stored in 'batch' as "RANGE:Start:End")
+            const { data: staff } = await supabase
+                .from('users')
+                .select('batch')
+                .eq('id', userId)
+                .single();
+
+            if (!staff || !staff.batch || !staff.batch.startsWith('RANGE:')) {
+                // Not assigned or invalid format -> Return empty
+                return res.json([]);
+            }
+
+            // Parse Assignment: "RANGE:Start:End|Extra1,Extra2"
+            const mainSplit = staff.batch.split('|');
+            const rangePart = mainSplit[0];
+            const extrasPart = mainSplit[1] || '';
+            const parts = rangePart.split(':'); // renamed to parts to match next usage if needed, but I'll update next lines too
+            if (parts.length !== 3) return res.json([]);
+
+            const startRegNo = parts[1];
+            const endRegNo = parts[2];
+
+            // 2. Filter Students by Range
+            const filteredStudents = students.filter((student: any) => {
+                const regNo = student.registration_number;
+                if (!regNo) return false;
+
+                // String comparison works for RegNo format like "8115U23IT001"
+                return regNo >= startRegNo && regNo <= endRegNo;
+            });
+
+            return res.json(filteredStudents);
+        }
+
+        // Default: Return empty to prevent data leak
+        res.json([]);
     } catch (err: any) {
         res.status(500).json({ message: 'Failed to fetch students', error: err.message });
     }
@@ -172,7 +217,7 @@ export const deleteUser = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     try {
-        // 1. Verify User exists and is a STUDENT
+        // 1. Verify User exists
         const { data: user, error: fetchError } = await supabase
             .from('users')
             .select('role')
@@ -183,34 +228,74 @@ export const deleteUser = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        if (user.role !== 'STUDENT') {
-            return res.status(403).json({ message: 'Only Student accounts can be deleted via this endpoint' });
-        }
+        const role = user.role?.toUpperCase();
 
-        // 2. Cascade Delete: Delete related data first
-        // Order: Resumes -> Submissions -> User (Parent)
-        // We do this sequentially to ensure parent is deleted last.
+        // Helper for safe deletion (logs but continues, assumes manual cleanup if critical)
+        const safeDelete = async (table: string, column: string, value: string) => {
+            const { error } = await supabase.from(table).delete().eq(column, value);
+            if (error) {
+                // Ignore "relation does not exist" (code 42P01) or Supabase/PostgREST missing table (PGRST205)
+                const ignoredCodes = ['42P01', 'PGRST205'];
+                if (!ignoredCodes.includes(error.code)) {
+                    console.warn(`Warning during delete ${table}:`, error.message, error);
+                }
+            }
+        };
 
-        // Delete Resumes
-        const { error: resumeError } = await supabase
-            .from('resumes')
-            .delete()
-            .eq('student_id', id);
+        // 2. Cascade Delete based on Role
+        if (role === 'STUDENT') {
+            // Delete Profile Data
+            const profileTables = [
+                'profile_internships',
+                'profile_projects',
+                'profile_education',
+                'profile_certifications'
+            ];
 
-        if (resumeError) {
-            console.error("Failed to delete resumes:", resumeError);
-            throw new Error("Failed to delete student resumes.");
-        }
+            for (const table of profileTables) {
+                await safeDelete(table, 'student_id', id as string);
+            }
 
-        // Delete Submissions (Scores, Answers, Results)
-        const { error: subError } = await supabase
-            .from('submissions')
-            .delete()
-            .eq('student_id', id);
+            await safeDelete('student_profiles', 'student_id', id as string);
 
-        if (subError) {
-            console.error("Failed to delete submissions:", subError);
-            throw new Error("Failed to delete student submissions.");
+            // Delete Resumes & Mock Interviews
+            await safeDelete('resumes', 'student_id', id as string);
+            await safeDelete('mock_interviews', 'student_id', id as string);
+
+            // Delete Submissions
+            await safeDelete('submissions', 'student_id', id as string);
+
+        } else if (role === 'STAFF') {
+            // Cascade Delete for Staff: Exams -> Questions -> Submissions
+            const { data: exams } = await supabase
+                .from('exams')
+                .select('id')
+                .eq('created_by', id);
+
+            const examIds = exams?.map(e => e.id) || [];
+
+            if (examIds.length > 0) {
+                // Delete Submissions for these exams
+                const { error: subError } = await supabase
+                    .from('submissions')
+                    .delete()
+                    .in('exam_id', examIds);
+                if (subError) console.warn("Staff clean submissions error:", subError.message);
+
+                // Delete Questions for these exams
+                const { error: qError } = await supabase
+                    .from('questions')
+                    .delete()
+                    .in('exam_id', examIds);
+                if (qError) console.warn("Staff clean questions error:", qError.message);
+
+                // Delete Exams
+                const { error: examDeleteError } = await supabase
+                    .from('exams')
+                    .delete()
+                    .in('id', examIds);
+                if (examDeleteError) console.warn("Staff clean exams error:", examDeleteError.message);
+            }
         }
 
         // 3. Delete User Record
@@ -223,11 +308,12 @@ export const deleteUser = async (req: Request, res: Response) => {
             throw deleteError;
         }
 
-        res.json({ message: 'Student and all related data deleted successfully (Hard Delete)' });
+        res.json({ message: 'User deleted successfully' });
 
     } catch (err: any) {
         console.error("Delete user error", err);
-        res.status(500).json({ message: 'Failed to delete user', error: err.message });
+        // Include specific DB error message for debugging
+        res.status(500).json({ message: 'Failed to delete user', error: err.message, details: err.details || err.hint });
     }
 };
 
@@ -245,15 +331,15 @@ const validateAndDeriveStudent = (row: any) => {
     const regRegex = /^(\d{4})([A-Z])(\d{2})([A-Z]{2})(\d{3})$/;
     const regMatch = RegNo ? String(RegNo).match(regRegex) : null;
 
-    // RollNo Validation: ITA2301
-    const rollRegex = /^([A-Z]{2})([A-Z])(\d{2})(\d{2})$/;
+    // RollNo Validation: ITA2301 or LITA2301 (Lateral)
+    const rollRegex = /^(L)?([A-Z]{2})([A-Z])(\d{2})(\d{2})$/;
     const rollMatch = RollNo ? String(RollNo).match(rollRegex) : null;
 
     if (RegNo && !regMatch) {
         errors.push("Invalid RegNo Format (Expected e.g., 8115U23IT001)");
     }
     if (RollNo && !rollMatch) {
-        errors.push("Invalid RollNo Format (Expected e.g., ITA2301)");
+        errors.push("Invalid RollNo Format (Expected e.g., ITA2301 or LITA2363)");
     }
 
     if (errors.length > 0) return { error: errors.join(", ") };
@@ -266,20 +352,14 @@ const validateAndDeriveStudent = (row: any) => {
     const batch = `${batchStart}-${batchEnd}`;
     const program = programCode === 'U' ? 'UG' : 'PG';
 
-    // RollNo: IT A 23 01
-    const [__, rollDept, section, rollBatch, sectionRoll] = rollMatch!;
+    // RollNo: (L) IT A 23 01
+    const [__, isLateral, rollDept, section, rollBatch, sectionRoll] = rollMatch!;
 
     // Cross-check
     if (deptCode !== rollDept) errors.push("Mismatch in Department between RegNo and RollNo");
     if (batchYearShort !== rollBatch) errors.push("Mismatch in Batch Year between RegNo and RollNo");
 
     if (errors.length > 0) return { error: errors.join(", ") };
-
-    // Derived Data
-    // We strictly prepare fields that match the User Table schema primarily,
-    // but we can try to include others or store them if possible. 
-    // Based on schema check, we have: department, batch, name, email, registration_number, role, is_active, password_hash
-    // We will map 'section' if possible, otherwise it might be lost if DB doesn't support it.
 
     return {
         success: true,
@@ -291,12 +371,6 @@ const validateAndDeriveStudent = (row: any) => {
             batch: batch,
             role: 'STUDENT',
             is_active: true,
-            // Extra fields that we ideally want to store (might need DB schema update)
-            // For now, we put them here. Supabase insert might ignore extra fields or error.
-            // We'll handle error in the loop logic.
-            // section: section,
-            // college_code: collegeCode,
-            // program: program
         },
         password: Password,
         derivedMeta: {
@@ -320,12 +394,9 @@ export const bulkImportUsers = async (req: Request, res: Response) => {
         let failureCount = 0;
         const errors: any[] = [];
 
-        // Single transaction approach is hard with Supabase client-side library loop.
-        // We will process row by row. "Transaction-safe" per row.
-
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
-            const rowNum = i + 2; // +2 taking header into account (1-based + 1 header)
+            const rowNum = i + 2;
 
             const validation = validateAndDeriveStudent(row);
             if (validation.error || !validation.user) {
@@ -352,16 +423,11 @@ export const bulkImportUsers = async (req: Request, res: Response) => {
                 const userToSave = {
                     ...user,
                     password_hash: hashedPassword
-                    // Attempt to add derived meta if DB allows, otherwise we might retry without them?
-                    // Safe bet: stick to known schema to ensure production stability as per "ABSOLUTE RULES"
-                    // If we strictly MUST store section, we'd need to confirm schema. 
-                    // Given we can't change schema, we'll store confirmed fields.
                 };
 
                 const { error } = await supabase.from('users').insert(userToSave);
 
                 if (error) {
-                    // Unique violation might happen on Email too
                     if (error.code === '23505') throw new Error('Duplicate Email or RegNo');
                     throw error;
                 }
