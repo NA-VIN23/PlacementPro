@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Plus, Trash2, Save, Clock, HelpCircle, FileText, Upload } from 'lucide-react';
+import axios from 'axios';
 import { staffService } from '../../services/api';
 
 interface QuestionDraft {
@@ -35,7 +36,7 @@ export const StaffAssignAssessment: React.FC = () => {
 
     // PDF State
     const [pdfFile, setPdfFile] = useState<File | null>(null);
-    const [extractionStatus, setExtractionStatus] = useState<'IDLE' | 'SUCCESS' | 'ERROR'>('IDLE');
+    const [extractionStatus, setExtractionStatus] = useState<'IDLE' | 'LOADING' | 'SUCCESS' | 'ERROR'>('IDLE');
 
     // Questions State
     const [questions, setQuestions] = useState<QuestionDraft[]>([]);
@@ -54,28 +55,83 @@ export const StaffAssignAssessment: React.FC = () => {
 
     // Handle PDF Upload and Extraction
     const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            setPdfFile(file);
-            setExtractionStatus('IDLE');
+        const file = e.target.files?.[0];
+        if (!file) return;
 
-            try {
-                const data = await staffService.extractPdf(file);
+        setPdfFile(file);
+        setExtractionStatus('LOADING');
 
-                // Populate Fields
-                if (data.title && data.title !== 'Extracted Assessment') setTitle(data.title);
-                if (data.duration && !startTime && !endTime) setDuration(data.duration); // Only if not auto-calculated
-                if (data.questions && data.questions.length > 0) {
-                    setQuestions(data.questions);
+        const formData = new FormData();
+        formData.append('pdf', file);
+
+        // Check if env var already has /api
+        const baseUrl = import.meta.env.VITE_API_URL || '';
+        const endpoint = baseUrl.endsWith('/api') ? '/assessment/parse-pdf' : '/api/assessment/parse-pdf';
+        const apiUrl = `${baseUrl}${endpoint}`;
+        console.log("Hitting API Endpoint:", apiUrl);
+
+        try {
+            const token = localStorage.getItem('placement_token');
+            console.log("Frontend Token used:", token ? token.substring(0, 20) + '...' : 'NULL');
+            const response = await axios.post(apiUrl, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${token}`
                 }
+            });
 
-                setExtractionStatus('SUCCESS');
-            } catch (error) {
-                console.error("PDF Extraction Error", error);
-                setExtractionStatus('ERROR');
-                alert('Failed to parse PDF content. Please check format.');
-            } finally {
+            const { title, startTime, endTime, duration, questions: parsedQuestions } = response.data;
+
+            // Auto-populate Metadata
+            if (title) setTitle(title);
+            if (duration) setDuration(duration);
+
+            // Handle Dates (Expecting ISO URLs from backend)
+            if (startTime) {
+                const s = new Date(startTime);
+                s.setMinutes(s.getMinutes() - s.getTimezoneOffset());
+                setStartTime(s.toISOString().slice(0, 16));
             }
+            if (endTime) {
+                const e = new Date(endTime);
+                e.setMinutes(e.getMinutes() - e.getTimezoneOffset());
+                setEndTime(e.toISOString().slice(0, 16));
+            }
+
+            // Map parsed questions to UI structure
+            const mappedQuestions = parsedQuestions.map((q: any) => ({
+                id: Math.random().toString(36).substr(2, 9),
+                question_text: q.question_text,
+                options: q.options || [],
+                correct_answer: q.correct_answer || '',
+                explanation: q.explanation || '',
+                section: q.type === 'CODING' ? 'Part C' : 'Part A', // Default sections
+                question_type: q.type, // 'MCQ' or 'CODING'
+                marks: q.marks || 1,
+                // Coding specific
+                input_format: q.input_format || '',
+                output_format: q.output_format || '',
+                constraints: q.constraints || '',
+                test_cases: q.testcases?.map((tc: any) => ({
+                    input: tc.input,
+                    output: tc.output,
+                    hidden: !tc.public // Invert public to hidden
+                })) || []
+            }));
+
+            setQuestions(mappedQuestions);
+            setExtractionStatus('SUCCESS');
+
+            // Alert user of strict success
+            alert(`Successfully parsed strict PDF.\nQuestions: ${mappedQuestions.length}`);
+
+        } catch (error: any) {
+            console.error("PDF Extraction Error", error);
+            setExtractionStatus('ERROR');
+            const msg = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to parse PDF content.';
+            alert(`Parsing Failed:\n${msg}`);
+        } finally {
+            e.target.value = '';
         }
     };
 
@@ -277,18 +333,66 @@ export const StaffAssignAssessment: React.FC = () => {
                 {/* Right Column: Content */}
                 <div className="lg:col-span-2 space-y-6">
                     {mode === 'PDF' ? (
-                        <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-6">
-                            {/* PDF Mode Content Omitted for brevity, but re-added here if needed. Assuming user mostly wants Manual mode fixed. Keeping PDF structure. */}
-                            <div className="space-y-2">
-                                <h3 className="text-xl font-bold text-slate-800">Upload Assessment PDF</h3>
-                                <input
-                                    type="file"
-                                    accept=".pdf"
-                                    onChange={handlePdfUpload}
-                                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer border border-dashed border-slate-300 rounded-xl p-4"
-                                />
+                        <>
+                            {/* PDF Mode Content */}
+                            <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-6">
+                                <div className="space-y-2">
+                                    <h3 className="text-xl font-bold text-slate-800">Upload Assessment PDF</h3>
+                                    <input
+                                        type="file"
+                                        accept=".pdf"
+                                        onChange={handlePdfUpload}
+                                        className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer border border-dashed border-slate-300 rounded-xl p-4"
+                                    />
+                                </div>
                             </div>
-                        </div>
+
+                            {/* Show Questions if Extracted */}
+                            {questions.length > 0 && (
+                                <div className="space-y-4">
+                                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                                        <HelpCircle className="w-5 h-5 text-slate-400" />
+                                        Extracted Questions ({questions.length})
+                                    </h3>
+                                    {questions.map((q, idx) => (
+                                        <div key={idx} className="bg-white p-6 rounded-3xl border border-slate-200 hover:border-blue-200 transition-colors group relative shadow-sm">
+                                            {q.section && examType === 'WEEKLY' && (
+                                                <span className="inline-block bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded mb-2 font-bold uppercase mr-2">
+                                                    {q.section}
+                                                </span>
+                                            )}
+                                            {q.question_type && q.question_type !== 'MCQ' && (
+                                                <span className={`inline-block text-xs px-2 py-1 rounded-lg mb-2 font-bold uppercase mr-2 ${q.question_type === 'CODING' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                    {q.question_type}
+                                                </span>
+                                            )}
+                                            <div className="pr-8">
+                                                <p className="font-medium text-slate-900 mb-2">
+                                                    <span className="font-bold text-slate-400 mr-2">{idx + 1}.</span>
+                                                    {q.question_text}
+                                                </p>
+                                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                                    {q.options.filter((o: string) => o).map((opt: string, i: number) => (
+                                                        <div key={i} className={`px-2 py-1 rounded-lg ${opt === q.correct_answer ? 'bg-green-50 text-green-700 font-medium' : 'text-slate-500'}`}>
+                                                            {opt}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                {q.marks && (
+                                                    <div className="mt-2 text-xs text-slate-500 font-bold">Marks: {q.marks}</div>
+                                                )}
+                                            </div>
+                                            <button
+                                                onClick={() => removeQuestion(idx)}
+                                                className="absolute top-4 right-4 text-slate-300 hover:text-red-500 transition-colors p-1"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
                     ) : (
                         <>
                             {/* Manual Mode - Builder */}
