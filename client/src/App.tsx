@@ -13,6 +13,7 @@ import { StudentLeaderboard } from './pages/student/Leaderboard';
 import { StudentProfile } from './pages/student/Profile';
 import { StudentLearning } from './pages/student/Learning';
 import { ResumeBuilder } from './pages/student/resume/ResumeBuilder';
+import { AssessmentResult } from './pages/student/AssessmentResult';
 
 import { StaffAssignAssessment } from './pages/staff/AssignAssessment';
 import { StaffDashboard } from './pages/staff/Dashboard';
@@ -44,6 +45,7 @@ function App() {
             <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
               {/* Exam Pages (No Sidebar) */}
               <Route path="/student/assessment/:id" element={<AssessmentRunner />} />
+              <Route path="/student/assessment/result/:id" element={<AssessmentResult />} />
               <Route path="/student/interview" element={<InterviewSession />} />
 
               {/* Normal Pages (With Sidebar) */}

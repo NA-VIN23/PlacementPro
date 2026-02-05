@@ -22,8 +22,14 @@ export const StudentDashboard: React.FC = () => {
         assessmentsPassed: 0,
         pendingTasks: 0,
         rank: 'N/A',
-        avgScore: '0%'
+        avgScore: '0%',
+        activity: [] as { date: string, status: 'attended' | 'missed' }[]
     });
+
+    const getDayStatus = (day: number, current: Date) => {
+        const dateStr = new Date(current.getFullYear(), current.getMonth(), day).toLocaleDateString('en-CA');
+        return stats.activity?.find(a => a.date === dateStr)?.status;
+    };
     const [exams, setExams] = useState<Exam[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -114,7 +120,6 @@ export const StudentDashboard: React.FC = () => {
                                 <p className="text-blue-100 text-sm font-medium mb-1">Pending Task</p>
                                 <div className="flex items-baseline gap-2">
                                     <h3 className="text-3xl font-bold">{stats.pendingTasks}</h3>
-                                    <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded text-white font-medium">/ 10</span>
                                 </div>
                                 <p className="text-xs text-blue-200 mt-2 leading-relaxed opacity-80">
                                     Don't forget to turn in your tasks.
@@ -198,7 +203,7 @@ export const StudentDashboard: React.FC = () => {
                             <div className="relative z-10 scale-90">
                                 <h3 className="text-indigo-100 font-medium text-xs mb-2 uppercase tracking-widest">Your Rank</h3>
                                 <div className="text-5xl font-bold mb-2 tracking-tighter">{stats.rank === 'N/A' ? '-' : stats.rank}</div>
-                                <p className="text-[10px] text-indigo-100 opacity-80">Top 10 students in campus</p>
+                                <p className="text-[10px] text-indigo-100 opacity-80">Global Rank</p>
                             </div>
                             {/* Bottom Illustration Mock */}
                             <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -273,17 +278,32 @@ export const StudentDashboard: React.FC = () => {
                         ))}
                         {Array.from({ length: getDaysInMonth(currentDate) }).map((_, i) => {
                             const day = i + 1;
+                            const status = getDayStatus(day, currentDate);
                             const isToday = day === new Date().getDate() &&
                                 currentDate.getMonth() === new Date().getMonth() &&
                                 currentDate.getFullYear() === new Date().getFullYear();
 
+                            // Priority: Status (Green/Red) > Today (Blue)
+                            // User requirement: "if nothings happens on that day then no circle of color is needed" (unless it's Today? User said "Today's date circle is blue as default")
+                            // So:
+                            // - Attended -> Green
+                            // - Missed -> Red
+                            // - Today (and no status) -> Blue
+                            // - Else -> None
+
+                            let bgClass = 'text-slate-600 hover:bg-slate-100';
+                            if (status === 'attended') {
+                                bgClass = 'bg-green-500 text-white shadow-md shadow-green-200';
+                            } else if (status === 'missed') {
+                                bgClass = 'bg-red-500 text-white shadow-md shadow-red-200';
+                            } else if (isToday) {
+                                bgClass = 'bg-blue-600 text-white shadow-md shadow-blue-200';
+                            }
+
                             return (
                                 <span
                                     key={day}
-                                    className={`flex items-center justify-center rounded-full w-6 h-6 cursor-pointer transition-all text-[11px] ${isToday
-                                        ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                                        : 'text-slate-600 hover:bg-slate-100'
-                                        }`}
+                                    className={`flex items-center justify-center rounded-full w-6 h-6 cursor-pointer transition-all text-[11px] ${bgClass}`}
                                 >
                                     {day}
                                 </span>

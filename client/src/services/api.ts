@@ -101,6 +101,10 @@ export const studentService = {
     },
     async saveCode(exam_id: string, question_id: string, language: string, code: string) {
         return api.post('/exams/save-code', { exam_id, question_id, language, code });
+    },
+    async getExamAnalysis(examId: string) {
+        const response = await api.get(`/exams/${examId}/analysis`);
+        return response.data;
     }
 };
 

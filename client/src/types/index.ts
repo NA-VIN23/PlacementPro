@@ -35,6 +35,9 @@ export interface Question {
     test_cases?: { input: string; output: string; hidden: boolean }[];
     function_name?: string;
     exam_id?: string;
+    marks?: number;
+    input_format?: string;
+    output_format?: string;
     // correct_answer is hidden from frontend usually
 }
 

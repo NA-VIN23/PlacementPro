@@ -108,6 +108,21 @@ export const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
                                 )}
                             </div>
 
+                            {/* Input / Output Formats */}
+                            {question.input_format && (
+                                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                    <h4 className="font-bold text-slate-700 text-xs lg:text-sm uppercase mb-2">Input Format</h4>
+                                    <pre className="whitespace-pre-wrap font-sans text-slate-600 text-xs lg:text-sm">{question.input_format}</pre>
+                                </div>
+                            )}
+
+                            {question.output_format && (
+                                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                    <h4 className="font-bold text-slate-700 text-xs lg:text-sm uppercase mb-2">Output Format</h4>
+                                    <pre className="whitespace-pre-wrap font-sans text-slate-600 text-xs lg:text-sm">{question.output_format}</pre>
+                                </div>
+                            )}
+
                             {/* Constraints */}
                             {question.constraints && (
                                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
@@ -172,7 +187,10 @@ export const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
                                         <div className="flex-1 overflow-y-auto space-y-4 font-mono text-xs lg:text-sm">
                                             <div className={`p-3 lg:p-4 rounded-lg border ${output[activeCaseTab].passed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                                                 <h4 className={`font-bold mb-1 ${output[activeCaseTab].passed ? 'text-green-700' : 'text-red-700'}`}>
-                                                    {output[activeCaseTab].passed ? 'Success' : 'Wrong Answer'}
+                                                    {output[activeCaseTab].isCustom
+                                                        ? (output[activeCaseTab].passed ? 'Execution Successful' : 'Execution Failed')
+                                                        : (output[activeCaseTab].passed ? 'Success' : 'Wrong Answer')
+                                                    }
                                                 </h4>
                                                 {!output[activeCaseTab].passed && output[activeCaseTab].error && (
                                                     <p className="text-red-600 text-xs whitespace-pre-wrap">{output[activeCaseTab].error}</p>
@@ -180,14 +198,18 @@ export const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
                                             </div>
 
                                             <div>
-                                                <span className="block text-xs font-bold text-slate-500 uppercase mb-1">Input</span>
+                                                <span className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                                                    {output[activeCaseTab].isCustom ? 'Your custom input' : 'Input'}
+                                                </span>
                                                 <div className="bg-slate-50 p-3 rounded border border-slate-200 text-slate-700 whitespace-pre-wrap min-h-[40px]">
                                                     {output[activeCaseTab].input}
                                                 </div>
                                             </div>
 
                                             <div>
-                                                <span className="block text-xs font-bold text-slate-500 uppercase mb-1">Your Output</span>
+                                                <span className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                                                    {output[activeCaseTab].isCustom ? 'Your custom output' : 'Your Output'}
+                                                </span>
                                                 <div className={`p-3 rounded border whitespace-pre-wrap min-h-[40px] ${output[activeCaseTab].passed ? 'bg-white border-slate-200 text-slate-700' : 'bg-white border-red-200 text-red-700'}`}>
                                                     {output[activeCaseTab].actual}
                                                 </div>
