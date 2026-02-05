@@ -106,8 +106,7 @@ export const StaffAssignAssessment: React.FC = () => {
                 correct_answer: q.correct_answer || '',
                 explanation: q.explanation || '',
                 section: q.type === 'CODING' ? 'Part C' : 'Part A', // Default sections
-                question_type: q.type, // 'MCQ' or 'CODING'
-                marks: q.marks || 1,
+                marks: q.type === 'MCQ' ? 1 : (q.marks || 10), // Enforce 1 for MCQ, allow PDF to specify coding marks
                 // Coding specific
                 input_format: q.input_format || '',
                 output_format: q.output_format || '',
@@ -163,7 +162,13 @@ export const StaffAssignAssessment: React.FC = () => {
             return;
         }
 
-        setQuestions([...questions, currentQ]);
+        // Explicitly set marks based on type
+        const finalQuestion: QuestionDraft = {
+            ...currentQ,
+            marks: isMCQ ? 1 : (currentQ.marks || 10) // Fixed 1 for MCQ, User Input for Coding (default 10)
+        };
+
+        setQuestions([...questions, finalQuestion]);
         setCurrentQ({
             question_text: '',
             options: ['', '', '', ''],
@@ -174,7 +179,7 @@ export const StaffAssignAssessment: React.FC = () => {
             code_template: '',
             constraints: '',
             test_cases: [],
-            marks: 1
+            marks: 1 // Reset to default
         });
     };
 
@@ -666,6 +671,15 @@ export const StaffAssignAssessment: React.FC = () => {
                                             </button>
                                         </div>
                                     ))
+                                )}
+
+                                {questions.length > 0 && (
+                                    <div className="bg-slate-900 text-white p-4 rounded-2xl flex justify-between items-center shadow-lg">
+                                        <span className="font-bold">Total Marks</span>
+                                        <span className="text-xl font-bold bg-white/20 px-4 py-1 rounded-lg">
+                                            {questions.reduce((sum, q) => sum + (q.marks || 0), 0)}
+                                        </span>
+                                    </div>
                                 )}
                             </div>
                         </>

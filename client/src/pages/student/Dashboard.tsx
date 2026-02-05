@@ -58,7 +58,11 @@ export const StudentDashboard: React.FC = () => {
                     studentService.getAvailableExams()
                 ]);
                 setStats(statsData);
-                setExams(examsData.slice(0, 4)); // Get top 4 for schedule
+                // Sort by latest start_time first
+                const sorted = examsData.sort((a: Exam, b: Exam) =>
+                    new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
+                );
+                setExams(sorted.slice(0, 4)); // Get top 4 for schedule
             } catch (error) {
                 console.error("Failed to load dashboard data", error);
             } finally {

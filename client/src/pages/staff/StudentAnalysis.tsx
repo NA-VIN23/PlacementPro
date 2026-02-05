@@ -153,7 +153,7 @@ export const StaffStudentAnalysis: React.FC = () => {
                                                 "px-2.5 py-1 rounded-full text-xs font-bold",
                                                 sub.score >= 4 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
                                             )}>
-                                                {sub.score} / {sub.total || 5}
+                                                {sub.score}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-slate-500 text-xs">
