@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
-import { Plus, Trash2, Save, Clock, HelpCircle, FileText, Upload, CheckCircle } from 'lucide-react';
+import { Plus, Trash2, Save, Clock, HelpCircle, FileText, Upload } from 'lucide-react';
 import { staffService } from '../../services/api';
 
 interface QuestionDraft {
@@ -35,7 +35,6 @@ export const StaffAssignAssessment: React.FC = () => {
 
     // PDF State
     const [pdfFile, setPdfFile] = useState<File | null>(null);
-    const [isExtracting, setIsExtracting] = useState(false);
     const [extractionStatus, setExtractionStatus] = useState<'IDLE' | 'SUCCESS' | 'ERROR'>('IDLE');
 
     // Questions State
@@ -58,7 +57,6 @@ export const StaffAssignAssessment: React.FC = () => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             setPdfFile(file);
-            setIsExtracting(true);
             setExtractionStatus('IDLE');
 
             try {
@@ -77,7 +75,6 @@ export const StaffAssignAssessment: React.FC = () => {
                 setExtractionStatus('ERROR');
                 alert('Failed to parse PDF content. Please check format.');
             } finally {
-                setIsExtracting(false);
             }
         }
     };

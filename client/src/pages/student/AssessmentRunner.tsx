@@ -26,10 +26,6 @@ export const AssessmentRunner: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
-    const [score, setScore] = useState<number | null>(null);
-    const [maxScore, setMaxScore] = useState<number | null>(null);
-    const [reviewDetails, setReviewDetails] = useState<any[]>([]);
-    const [gradingDetails, setGradingDetails] = useState<any>(null);
 
     // Core Assessment State
     const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -230,11 +226,8 @@ export const AssessmentRunner: React.FC = () => {
         setSubmitting(true);
         try {
             if (!id) return;
-            const result = await studentService.submitExam(id, answers, terminated);
-            setScore(result.score);
-            setMaxScore(result.maxScore || questions.length); // Fallback if no maxScore
-            setReviewDetails(result.reviewDetails || []);
-            setGradingDetails(result.gradingDetails || {});
+            await studentService.submitExam(id, answers, terminated);
+
             setSubmitted(true);
         } catch (err) {
             console.error('Submission failed', err);

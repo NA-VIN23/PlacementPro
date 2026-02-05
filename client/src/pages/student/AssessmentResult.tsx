@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PageHeader } from '../../components/ui/PageHeader';
 import { studentService } from '../../services/api';
 import { CheckCircle2, XCircle, Clock, Trophy, AlertTriangle, ChevronDown, ChevronUp, ArrowLeft, Terminal } from 'lucide-react';
 import { cn } from '../../utils/cn';
