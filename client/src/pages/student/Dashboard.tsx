@@ -160,7 +160,7 @@ export const StudentDashboard: React.FC = () => {
                                 <p className="text-blue-100 text-sm font-medium mb-1">Score</p>
                                 <div className="flex items-baseline gap-2">
                                     <h3 className="text-3xl font-bold">{stats.avgScore}</h3>
-                                    <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded text-white font-medium">Avg</span>
+                                    <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded text-white font-medium">Pts</span>
                                 </div>
                                 <p className="text-xs text-blue-200 mt-2 leading-relaxed opacity-80">
                                     Keep improving your subjects score.

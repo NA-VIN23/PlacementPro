@@ -438,18 +438,20 @@ export const getStudentDashboardStats = async (req: Request, res: Response) => {
         let avgPercentage = 0;
         if (myExamIds.length > 0) {
             // Get all questions to calculate max scores for each exam
-            // We need to fetch questions for the exams the student has taken
             const { data: questions, error: qError } = await supabase
                 .from('questions')
-                .select('exam_id')
+                .select('exam_id, marks, question_type')
                 .in('exam_id', myExamIds);
 
             if (qError) throw qError;
 
             // Group questions by exam
-            const questionsPerExam: Record<string, number> = {};
+            const marksPerExam: Record<string, number> = {};
             questions?.forEach(q => {
-                questionsPerExam[q.exam_id] = (questionsPerExam[q.exam_id] || 0) + 1;
+                // Match logic in submitExam: CODING defaults to 5, others to 1 if marks is null
+                const defaultMarks = q.question_type === 'CODING' ? 5 : 1;
+                const qMarks = q.marks || defaultMarks;
+                marksPerExam[q.exam_id] = (marksPerExam[q.exam_id] || 0) + qMarks;
             });
 
             let totalMaxScore = 0;
@@ -461,10 +463,10 @@ export const getStudentDashboardStats = async (req: Request, res: Response) => {
                 // Take max score if multiple attempts
                 const bestScore = examSubs.length > 0 ? Math.max(...examSubs.map(s => s.score)) : 0;
 
-                const totalQ = questionsPerExam[examId] || 1; // Default to 1 to avoid /0
+                const maxScoreForExam = marksPerExam[examId] || 1; // Default to 1 to avoid /0
 
                 totalMyScore += bestScore;
-                totalMaxScore += totalQ;
+                totalMaxScore += maxScoreForExam;
             });
 
             if (totalMaxScore > 0) {
@@ -474,11 +476,14 @@ export const getStudentDashboardStats = async (req: Request, res: Response) => {
 
         // 4. Rank - REAL TIME
         let rank = "N/A";
+        // Calculate Leaderboard Score
+        let lbScore = 0;
         try {
             const leaderboard = await getLeaderboardData();
             const studentRank = leaderboard.find((s: any) => s.id === studentId);
             if (studentRank) {
                 rank = `#${studentRank.rank}`;
+                lbScore = studentRank.score;
             }
         } catch (rankErr) {
             console.error("Failed to fetch rank for dashboard", rankErr);
@@ -545,7 +550,7 @@ export const getStudentDashboardStats = async (req: Request, res: Response) => {
             assessmentsPassed: myExamIds.length,
             pendingTasks: pendingCount || 0,
             rank: rank,
-            avgScore: `${avgPercentage}%`,
+            avgScore: `${lbScore}`,
             activity: activity
         });
 
