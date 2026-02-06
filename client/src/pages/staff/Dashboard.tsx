@@ -18,18 +18,24 @@ export const StaffDashboard: React.FC = () => {
     });
     const [recentSubmissions, setRecentSubmissions] = useState<any[]>([]);
 
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            try {
-                const statsData = await staffService.getStats();
-                setStats(statsData);
+    const [refreshing, setRefreshing] = useState(false);
 
-                const submissionsData = await staffService.getAllSubmissions();
-                setRecentSubmissions(submissionsData.slice(0, 5)); // Top 5
-            } catch (err) {
-                console.error("Failed to fetch dashboard data", err);
-            }
-        };
+    const fetchDashboardData = async () => {
+        setRefreshing(true);
+        try {
+            const statsData = await staffService.getStats();
+            setStats(statsData);
+
+            const submissionsData = await staffService.getAllSubmissions();
+            setRecentSubmissions(submissionsData);
+        } catch (err) {
+            console.error("Failed to fetch dashboard data", err);
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
+    useEffect(() => {
         fetchDashboardData();
     }, []);
 
@@ -77,16 +83,32 @@ export const StaffDashboard: React.FC = () => {
             {/* Main Content Layout: Recent Submissions (Flex-1) + KR Card (Fixed Sidebar) */}
             <div className="flex flex-col lg:flex-row gap-8">
                 {/* Recent Submissions */}
-                <div className="flex-1 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden min-w-0">
-                    <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                <div className="flex-1 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden min-w-0 flex flex-col h-[340px] relative">
+                    {refreshing && (
+                        <div className="absolute inset-0 z-20 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
+                            <div className="flex flex-col items-center gap-2">
+                                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-slate-800"></div>
+                                <span className="text-xs font-bold text-slate-800 animate-pulse">Refreshing...</span>
+                            </div>
+                        </div>
+                    )}
+                    <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
                         <h3 className="font-bold text-slate-800">Recent Submissions</h3>
+                        <button
+                            onClick={fetchDashboardData}
+                            disabled={refreshing}
+                            className={`p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-colors ${refreshing ? 'animate-spin' : ''}`}
+                            title="Refresh Submissions"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>
+                        </button>
                     </div>
-                    <div className="p-0 overflow-x-auto">
+                    <div className="p-0 overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                         {recentSubmissions.length === 0 ? (
                             <div className="p-6 text-center text-slate-400">No submissions yet.</div>
                         ) : (
-                            <table className="w-full text-sm text-left min-w-[600px]">
-                                <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
+                            <table className="w-full text-sm text-left min-w-[600px] relative">
+                                <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-100 sticky top-0 bg-slate-50 z-10">
                                     <tr>
                                         <th className="px-6 py-3">Student</th>
                                         <th className="px-6 py-3">Test</th>

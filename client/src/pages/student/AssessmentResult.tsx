@@ -178,18 +178,25 @@ export const AssessmentResult: React.FC = () => {
                                                 <div>
                                                     <h4 className="font-bold text-xs uppercase text-slate-500 mb-2">Test Case Results</h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                        {(ans.feedback || []).map((fb: any, i: number) => (
-                                                            <div key={i} className={cn(
-                                                                "p-3 rounded-xl border text-sm flex items-center justify-between",
-                                                                fb.status === 'Passed' ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"
-                                                            )}>
-                                                                <span className="font-bold">Test Case {i + 1}</span>
-                                                                <span className="flex items-center gap-1 font-bold">
-                                                                    {fb.status === 'Passed' ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                                                                    {fb.status}
-                                                                </span>
-                                                            </div>
-                                                        ))}
+                                                        {(ans.feedback || []).map((fb: any, i: number) => {
+                                                            // Backend sends { passed: boolean }
+                                                            // Fallback to checking status if strictly string is ever sent
+                                                            const isPassed = fb.passed === true || fb.status === 'Passed';
+                                                            const statusText = isPassed ? 'Passed' : 'Failed';
+
+                                                            return (
+                                                                <div key={i} className={cn(
+                                                                    "p-3 rounded-xl border text-sm flex items-center justify-between",
+                                                                    isPassed ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"
+                                                                )}>
+                                                                    <span className="font-bold">Test Case {i + 1}</span>
+                                                                    <span className="flex items-center gap-1 font-bold">
+                                                                        {isPassed ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                                                                        {statusText}
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
                                             )}

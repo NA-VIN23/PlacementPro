@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
+import { Modal } from '../../components/ui/Modal';
 import { Plus, Trash2, Save, Clock, HelpCircle, FileText, Upload } from 'lucide-react';
 import axios from 'axios';
 import { staffService } from '../../services/api';
@@ -40,6 +41,8 @@ export const StaffAssignAssessment: React.FC = () => {
 
     // Questions State
     const [questions, setQuestions] = useState<QuestionDraft[]>([]);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [isPublishing, setIsPublishing] = useState(false);
     const [currentQ, setCurrentQ] = useState<QuestionDraft>({
         question_text: '',
         options: ['', '', '', ''],
@@ -206,6 +209,8 @@ export const StaffAssignAssessment: React.FC = () => {
             return;
         }
 
+        setIsPublishing(true);
+
         try {
             await staffService.createExam({
                 title: finalTitle,
@@ -215,11 +220,13 @@ export const StaffAssignAssessment: React.FC = () => {
                 questions: questions, // Send extracted or manual questions
                 type: examType,
                 mode: mode,
-                pdf_url: pdfFile ? `uploaded:${pdfFile.name}` : undefined // Mock URL for now as requested by constraint
+                pdf_url: pdfFile ? `uploaded:${pdfFile.name}` : undefined
             });
-            alert('Exam Created Successfully!');
-            navigate('/staff/dashboard');
+            setIsPublishing(false);
+            setShowSuccessModal(true);
+            // navigate('/staff/dashboard'); // Moved to modal action
         } catch (error) {
+            setIsPublishing(false);
             console.error('Failed to create exam', error);
             alert('Failed to publish exam.');
         }
@@ -686,6 +693,43 @@ export const StaffAssignAssessment: React.FC = () => {
                     )}
                 </div>
             </div>
+            {/* Success Modal */}
+            <Modal
+                isOpen={showSuccessModal}
+                title="Assessment Published!"
+                onClose={() => navigate('/staff/dashboard')}
+                preventClose={true} // Force user to click button
+            >
+                <div className="flex flex-col items-center justify-center text-center space-y-4">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                        <Upload className="w-8 h-8 text-green-600" />
+                    </div>
+                    <p className="text-slate-600">
+                        Your assessment <strong>{title}</strong> has been successfully created and assigned to the selected batch.
+                    </p>
+                    <div className="pt-4 w-full">
+                        <button
+                            onClick={() => navigate('/staff/dashboard')}
+                            className="w-full py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors"
+                        >
+                            Back to Dashboard
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+            {/* Loading Modal */}
+            <Modal
+                isOpen={isPublishing}
+                title=""
+                showCloseButton={false}
+                preventClose={true}
+                className="max-w-sm"
+            >
+                <div className="flex flex-col items-center justify-center p-8 space-y-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+                    <p className="text-slate-600 font-medium animate-pulse">Submitting Assessment...</p>
+                </div>
+            </Modal>
         </div>
     );
 };

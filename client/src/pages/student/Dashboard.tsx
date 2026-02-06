@@ -50,27 +50,47 @@ export const StudentDashboard: React.FC = () => {
         setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
     };
 
+    const [refreshing, setRefreshing] = useState(false);
+
+    const fetchData = async () => {
+        if (exams.length === 0) setLoading(true);
+        else setRefreshing(true);
+
+        try {
+            const [statsData, examsData] = await Promise.all([
+                studentService.getDashboardStats(),
+                studentService.getAvailableExams()
+            ]);
+            setStats(statsData);
+            // Sort by latest start_time first
+            const sorted = examsData.sort((a: Exam, b: Exam) =>
+                new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
+            );
+            setExams(sorted);
+        } catch (error) {
+            console.error("Failed to load dashboard data", error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
     useEffect(() => {
-        const loadData = async () => {
-            try {
-                const [statsData, examsData] = await Promise.all([
-                    studentService.getDashboardStats(),
-                    studentService.getAvailableExams()
-                ]);
-                setStats(statsData);
-                // Sort by latest start_time first
-                const sorted = examsData.sort((a: Exam, b: Exam) =>
-                    new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
-                );
-                setExams(sorted.slice(0, 4)); // Get top 4 for schedule
-            } catch (error) {
-                console.error("Failed to load dashboard data", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadData();
+        fetchData();
     }, []);
+
+    const getExamStatus = (exam: Exam): 'LOCKED' | 'ACTIVE' | 'COMPLETED' => {
+        const now = new Date();
+        const start = new Date(exam.start_time);
+        const end = new Date(exam.end_time);
+
+        // Adjust for timezone if needed, but assuming ISO strings are handled correctly by Date()
+        // If "now" is local and start is UTC, standard Date comparison works if strings are ISO.
+
+        if (now < start) return 'LOCKED';
+        if (now > end) return 'COMPLETED';
+        return 'ACTIVE';
+    };
 
     return (
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 min-h-screen pb-8 lg:pb-0">
@@ -153,13 +173,26 @@ export const StudentDashboard: React.FC = () => {
                 {/* Lower Section: Score Graph & GPA */}
                 <div className="flex-1 flex flex-col md:flex-row gap-4">
                     {/* Available Assessments */}
-                    <div className="flex-[2] bg-white rounded-3xl p-5 shadow-sm border border-slate-50 flex flex-col h-[340px]">
+                    <div className="flex-[2] bg-white rounded-3xl p-5 shadow-sm border border-slate-50 flex flex-col h-[340px] relative">
+                        {refreshing && (
+                            <div className="absolute inset-0 z-20 bg-white/60 backdrop-blur-[1px] flex items-center justify-center rounded-3xl">
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-slate-800"></div>
+                                    <span className="text-xs font-bold text-slate-800 animate-pulse">Refreshing...</span>
+                                </div>
+                            </div>
+                        )}
                         <div className="flex items-center justify-between mb-6">
                             <div>
                                 <h2 className="text-lg font-bold text-slate-800">Available Assessments</h2>
                                 <p className="text-slate-400 text-xs mt-1">Exams assigned to your batch</p>
                             </div>
-                            <button className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-colors" title="Refresh">
+                            <button
+                                onClick={fetchData}
+                                disabled={refreshing || loading}
+                                className={`p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-colors ${refreshing ? 'animate-spin' : ''}`}
+                                title="Refresh"
+                            >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>
                             </button>
                         </div>
@@ -167,35 +200,52 @@ export const StudentDashboard: React.FC = () => {
                         <div className="space-y-4 overflow-y-auto flex-1 pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                             {loading ? <div className="text-center text-xs text-slate-400">Loading...</div> :
                                 exams.length === 0 ? <div className="text-center text-xs text-slate-400 py-8">No active exams available at the moment.</div> :
-                                    exams.map((exam, i) => (
-                                        <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border border-slate-100 rounded-2xl hover:border-blue-100 transition-colors shadow-sm">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${i % 2 === 0 ? 'bg-orange-50 text-orange-600' : 'bg-green-50 text-green-600'}`}>
-                                                        {i % 2 === 0 ? 'Expired' : 'Active'}
-                                                    </span>
-                                                    <h4 className="font-bold text-slate-800 text-sm truncate">{exam.title}</h4>
-                                                </div>
-                                                <div className="flex items-center gap-4 text-xs text-slate-400 font-medium">
-                                                    <div className="flex items-center gap-1">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-clock"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                                                        {exam.duration} Mins
+                                    exams.map((exam, i) => {
+                                        const status = getExamStatus(exam);
+                                        const isLocked = status === 'LOCKED';
+                                        const isCompleted = status === 'COMPLETED';
+                                        const isActive = status === 'ACTIVE';
+
+                                        return (
+                                            <div key={i} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border rounded-2xl transition-all shadow-sm ${isActive ? 'border-indigo-100 bg-indigo-50/20' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        {isActive && <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700 animate-pulse">Live</span>}
+                                                        {isLocked && <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600">Upcoming</span>}
+                                                        {isCompleted && <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-50 text-orange-600">Finished</span>}
+
+                                                        <h4 className="font-bold text-slate-800 text-sm truncate">{exam.title}</h4>
                                                     </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calendar"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>
-                                                        {new Date(exam.start_time).toLocaleDateString()}
+                                                    <div className="flex items-center gap-4 text-xs text-slate-400 font-medium">
+                                                        <div className="flex items-center gap-1">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-clock"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                                                            {exam.duration} Mins
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calendar"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>
+                                                            {new Date(exam.start_time).toLocaleDateString()}
+                                                        </div>
                                                     </div>
                                                 </div>
+                                                <button
+                                                    onClick={() => {
+                                                        if (isActive) navigate(`/student/assessment/${exam.id}`);
+                                                        if (isCompleted) navigate(`/student/assessment/result/${exam.id}`);
+                                                    }}
+                                                    disabled={isLocked}
+                                                    className={`px-6 py-2 text-xs font-bold rounded-xl border transition-all flex items-center justify-center gap-2 group whitespace-nowrap
+                                                        ${isActive ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200' : ''}
+                                                        ${isLocked ? 'bg-slate-100 text-slate-400 border-slate-100 cursor-not-allowed' : ''}
+                                                        ${isCompleted ? 'bg-white text-slate-600 border-slate-200 hover:border-orange-200 hover:text-orange-600' : ''}
+                                                    `}
+                                                >
+                                                    {isLocked && <span className="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg> Locked</span>}
+                                                    {isActive && <span className="flex items-center gap-2"><Play className="w-3 h-3 fill-current" /> Start Now</span>}
+                                                    {isCompleted && <span>View Results</span>}
+                                                </button>
                                             </div>
-                                            <button
-                                                onClick={() => navigate(`/student/assessment/${exam.id}`)}
-                                                className="px-6 py-2 bg-slate-50 text-slate-500 text-xs font-bold rounded-xl border border-slate-200 hover:bg-white hover:border-blue-200 hover:text-blue-600 transition-all flex items-center justify-center gap-2 group whitespace-nowrap"
-                                            >
-                                                <Play className="w-3 h-3 fill-current opacity-50 group-hover:opacity-100" />
-                                                {i % 2 === 0 ? 'Locked' : 'Start'}
-                                            </button>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                         </div>
                     </div>
 
