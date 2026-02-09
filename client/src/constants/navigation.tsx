@@ -27,6 +27,13 @@ export const STAFF_NAV = [
     { label: 'Profile', icon: User, path: '/staff/profile' },
 ];
 
+export const HOD_NAV = [
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/hod/dashboard' },
+    { label: 'Staff', icon: Users, path: '/hod/staff' },
+    { label: 'Students', icon: Users, path: '/hod/students' },
+    { label: 'Department Analytics', icon: BarChart, path: '/hod/analytics' },
+];
+
 export const ADMIN_NAV = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
     { label: 'User Management', icon: Users, path: '/admin/users' },

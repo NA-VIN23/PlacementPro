@@ -28,6 +28,7 @@ import resumeRoutes from './routes/resumeRoutes';
 import leaderboardRoutes from './routes/leaderboardRoutes';
 import studentRoutes from './routes/studentRoutes';
 import assessmentRoutes from './routes/assessmentRoutes';
+import hodRoutes from './routes/hodRoutes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -37,5 +38,6 @@ app.use('/api/resume', resumeRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/assessment', assessmentRoutes);
+app.use('/api/hod', hodRoutes);
 
 export default app;

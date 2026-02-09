@@ -1,4 +1,4 @@
-export type UserRole = 'ADMIN' | 'STAFF' | 'STUDENT';
+export type UserRole = 'ADMIN' | 'STAFF' | 'STUDENT' | 'HOD';
 
 export interface User {
     id: string; // UUID from DB
