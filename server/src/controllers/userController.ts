@@ -8,9 +8,26 @@ import { supabase } from '../config/supabase';
 export const addUser = async (req: Request, res: Response) => {
     const { role, email, name, registration_number, department, batch, password } = req.body;
 
+
     // Validation
     if (role === 'STUDENT' && !registration_number) {
         return res.status(400).json({ message: 'Registration number required for students' });
+    }
+
+    if (role === 'HOD') {
+        if (!department) return res.status(400).json({ message: 'Department is required for HOD' });
+
+        // Ensure One HOD per Department
+        const { data: existingHod } = await supabase
+            .from('users')
+            .select('id')
+            .eq('role', 'HOD')
+            .eq('department', department)
+            .single();
+
+        if (existingHod) {
+            return res.status(400).json({ message: `HOD already exists for ${department} department.` });
+        }
     }
 
     try {
@@ -48,7 +65,8 @@ export const addUser = async (req: Request, res: Response) => {
 
         res.status(201).json({ message: 'User created successfully', userId: data.id });
     } catch (err: any) {
-        res.status(500).json({ message: 'Failed to create user', error: err.message });
+        console.error("Create User Error:", err);
+        res.status(500).json({ message: 'Failed to create user', error: err.message, details: err });
     }
 };
 

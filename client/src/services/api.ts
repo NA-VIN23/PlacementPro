@@ -101,6 +101,10 @@ export const studentService = {
     },
     async saveCode(exam_id: string, question_id: string, language: string, code: string) {
         return api.post('/exams/save-code', { exam_id, question_id, language, code });
+    },
+    async getExamAnalysis(examId: string) {
+        const response = await api.get(`/exams/${examId}/analysis`);
+        return response.data;
     }
 };
 
@@ -170,6 +174,37 @@ export const adminService = {
     },
     getStaffList: async () => {
         const response = await api.get('/users/staff/list');
+        return response.data;
+    }
+};
+
+export const hodService = {
+    getStats: async () => {
+        const response = await api.get('/hod/stats');
+        return response.data;
+    },
+    getStaff: async () => {
+        const response = await api.get('/hod/staff');
+        return response.data;
+    },
+    getStudents: async () => {
+        const response = await api.get('/hod/students');
+        return response.data;
+    },
+    getAnalytics: async () => {
+        const response = await api.get('/hod/analytics');
+        return response.data;
+    },
+    getStaffPerformance: async (staffId: string) => {
+        const response = await api.get(`/hod/staff/${staffId}/performance`);
+        return response.data;
+    },
+    compareClasses: async (classA: string, classB: string) => {
+        const response = await api.post('/hod/compare-classes', { classA, classB });
+        return response.data;
+    },
+    getStaffStudents: async (staffId: string) => {
+        const response = await api.get(`/hod/staff-students/${staffId}`);
         return response.data;
     }
 };

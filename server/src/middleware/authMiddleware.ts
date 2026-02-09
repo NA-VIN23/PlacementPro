@@ -11,6 +11,7 @@ interface AuthRequest extends Request {
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
+    console.log(`[AuthMiddleware] Received Token: '${token ? token.substring(0, 20) + '...' : 'NULL/EMPTY'}'`);
 
     if (!token) {
         // Return 401 only if really no token.
@@ -49,7 +50,8 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
 export const authorize = (roles: UserRole[]) => {
     return (req: AuthRequest, res: Response, next: NextFunction) => {
         if (!req.user || !roles.includes(req.user.role)) {
-            return res.status(403).json({ message: 'Access denied. Insufficient permissions.' });
+            console.log(`Access Denied: User role '${req.user?.role}' does not match required roles: ${roles.join(', ')}`);
+            return res.status(403).json({ message: `Access denied. Your confirmed role is: '${req.user?.role || 'UNKNOWN'}'. Required: ${roles.join(', ')}.` });
         }
         next();
     };

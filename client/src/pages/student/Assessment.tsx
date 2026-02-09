@@ -83,7 +83,9 @@ export const StudentAssessment: React.FC = () => {
             type: 'Technical', // Default type
             status: a.status === 'Completed' ? 'Completed' : 'Pending', // pending/completed
             duration: a.duration,
-            questions: a.questions
+            questions: a.questions,
+            start_time: a.start_time,
+            end_time: a.end_time
         }));
 
     const getTotalDuration = (parts: WeeklyAssessment['parts']) => {
@@ -264,47 +266,122 @@ export const StudentAssessment: React.FC = () => {
 
             {/* Individual/Daily Assessment Cards */}
             {filteredAssessments.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredAssessments.map((assessment) => (
-                        <div key={assessment.id} className="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group overflow-hidden">
-                            <div className="p-6">
-                                <div className="flex justify-between items-start mb-4">
-                                    <span className={cn(
-                                        "px-3 py-1 rounded-full text-xs font-bold",
-                                        "bg-orange-50 text-orange-600"
-                                    )}>
-                                        Daily
-                                    </span>
-                                    {assessment.status === 'Available' && (
-                                        <span className="flex h-3 w-3 relative">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
-                                        </span>
+                <div className="space-y-6">
+                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <Code className="w-5 h-5 text-indigo-600" />
+                        Daily Practice
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredAssessments.map(t => {
+                            const now = new Date();
+                            const start = t.start_time ? new Date(t.start_time) : null;
+                            const end = t.end_time ? new Date(t.end_time) : null;
+
+                            // Status Logic
+                            // Locked if start time exists and is in future
+                            const isLocked = start && now < start;
+                            const isExpired = end && now > end;
+                            const isSubmitted = t.status === 'Completed';
+                            // Missed if expired and NOT submitted
+                            const isMissed = isExpired && !isSubmitted;
+
+                            // If submitted, can view results ONLY if expired (or immediate if no end time? assume end time exists)
+                            const canViewResults = isSubmitted && isExpired;
+                            const isWaitingForResult = isSubmitted && !isExpired;
+
+                            return (
+                                <div key={t.id} className="bg-white p-6 rounded-3xl border border-slate-200 hover:border-indigo-200 shadow-sm hover:shadow-lg transition-all flex flex-col h-full">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
+                                            <Code className="w-6 h-6" />
+                                        </div>
+                                        {isSubmitted ? (
+                                            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold flex items-center gap-1">
+                                                <CheckCircle2 className="w-3 h-3" />
+                                                Submitted
+                                            </span>
+                                        ) : isMissed ? (
+                                            <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold flex items-center gap-1">
+                                                <HelpCircle className="w-3 h-3" />
+                                                Not Attended
+                                            </span>
+                                        ) : isLocked ? (
+                                            <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-xs font-bold flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                Locked
+                                            </span>
+                                        ) : (
+                                            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold animate-pulse">
+                                                Live Now
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div className="mb-6 flex-1">
+                                        <h3 className="text-lg font-bold text-slate-800 mb-2 line-clamp-2" title={t.title}>{t.title}</h3>
+                                        <div className="flex items-center gap-4 text-xs text-slate-500 font-medium">
+                                            <div className="flex items-center gap-1">
+                                                <Clock className="w-3.5 h-3.5" />
+                                                {t.duration} mins
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <HelpCircle className="w-3.5 h-3.5" />
+                                                {t.questions} Questions
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 p-2 bg-slate-50 rounded-lg text-xs space-y-1">
+                                            <div className="flex justify-between">
+                                                <span className="text-slate-500">Starts:</span>
+                                                <span className="font-semibold text-slate-700">{start ? start.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-slate-500">Ends:</span>
+                                                <span className="font-semibold text-slate-700">{end ? end.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Button */}
+                                    {canViewResults ? (
+                                        <button
+                                            onClick={() => navigate(`/student/assessment/result/${t.id}`)}
+                                            className="w-full py-3 rounded-xl font-bold transition-all bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center gap-2"
+                                        >
+                                            View Results <ArrowRight className="w-4 h-4" />
+                                        </button>
+                                    ) : isWaitingForResult ? (
+                                        <button
+                                            disabled
+                                            className="w-full py-3 rounded-xl font-bold bg-slate-50 text-slate-400 cursor-not-allowed flex items-center justify-center gap-2"
+                                        >
+                                            Results visible after {end?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </button>
+                                    ) : isMissed ? (
+                                        <button
+                                            disabled
+                                            className="w-full py-3 rounded-xl font-bold bg-red-50 text-red-400 cursor-not-allowed flex items-center justify-center gap-2"
+                                        >
+                                            Not Attended
+                                        </button>
+                                    ) : isLocked ? (
+                                        <button
+                                            disabled
+                                            className="w-full py-3 rounded-xl font-bold bg-slate-50 text-slate-400 cursor-not-allowed flex items-center justify-center gap-2"
+                                        >
+                                            Starts {start?.toLocaleString()}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => navigate(`/student/assessment/${t.id}`)}
+                                            className="w-full py-3 rounded-xl font-bold text-white shadow-lg shadow-indigo-500/25 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transform hover:-translate-y-1 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            Start Assessment <ArrowRight className="w-4 h-4" />
+                                        </button>
                                     )}
                                 </div>
-                                <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">
-                                    {assessment.title}
-                                </h3>
-                                <div className="flex items-center gap-4 text-sm text-slate-500 mb-6">
-                                    <div className="flex items-center gap-1">
-                                        <Clock className="w-4 h-4" />
-                                        {assessment.duration} mins
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <HelpCircle className="w-4 h-4" />
-                                        {assessment.questions} Qs
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => navigate(`/student/assessment/${assessment.id}`)}
-                                    className="w-full py-3.5 rounded-2xl border-2 border-slate-100 font-bold text-slate-600 group-hover:border-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all flex items-center justify-center gap-2"
-                                >
-                                    Start Assessment
-                                    <ArrowRight className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
+                            );
+                        })}
+                    </div>
                 </div>
             )}
 

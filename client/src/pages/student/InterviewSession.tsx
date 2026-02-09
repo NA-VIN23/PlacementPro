@@ -6,9 +6,10 @@ import {
     useVoiceAssistant,
     BarVisualizer,
     useConnectionState,
+    useLocalParticipant,
 } from '@livekit/components-react';
 import { ConnectionState } from 'livekit-client';
-import { Mic, PhoneOff, Loader2 } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, Loader2 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -22,6 +23,13 @@ interface InterviewConfig {
 // Voice Assistant UI Component
 const VoiceAssistantUI: React.FC<{ onEnd: () => void }> = ({ onEnd }) => {
     const { state, audioTrack } = useVoiceAssistant();
+    const { isMicrophoneEnabled, localParticipant } = useLocalParticipant();
+
+    const toggleMic = async () => {
+        if (localParticipant) {
+            await localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
+        }
+    };
 
     const getStateText = () => {
         switch (state) {
@@ -80,14 +88,31 @@ const VoiceAssistantUI: React.FC<{ onEnd: () => void }> = ({ onEnd }) => {
                 </div>
             </div>
 
-            {/* Control Bar - Removed Disconnect, Kept End Button */}
+            {/* Control Bar */}
             <div className="flex items-center gap-6">
-                {/* Mute Toggle can be added here if needed, utilizing TrackToggle source={Track.Source.Microphone} 
-                     But user asked to remove left button, so keeping it clean. */}
+                <button
+                    onClick={toggleMic}
+                    className={`px-6 py-3 md:px-8 md:py-4 rounded-2xl font-bold flex items-center gap-2 md:gap-3 transition-all group text-sm md:text-base border ${isMicrophoneEnabled
+                        ? 'bg-slate-800 text-white border-slate-700 hover:bg-slate-700'
+                        : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'
+                        }`}
+                >
+                    {isMicrophoneEnabled ? (
+                        <>
+                            <Mic className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
+                            <span>Mute</span>
+                        </>
+                    ) : (
+                        <>
+                            <MicOff className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
+                            <span>Unmute</span>
+                        </>
+                    )}
+                </button>
 
                 <button
                     onClick={onEnd}
-                    className="px-6 py-3 md:px-8 md:py-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/50 rounded-2xl font-bold flex items-center gap-2 md:gap-3 transition-all group text-sm md:text-base"
+                    className="px-6 py-3 md:px-8 md:py-4 bg-red-500 hover:bg-red-600 text-white border border-red-500 rounded-2xl font-bold flex items-center gap-2 md:gap-3 transition-all group text-sm md:text-base shadow-lg shadow-red-500/20"
                 >
                     <PhoneOff className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
                     End Interview

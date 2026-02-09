@@ -4,6 +4,7 @@ import { StatsCard } from '../../components/ui/StatsCard';
 import { BarChart2, TrendingUp, Users, AlertTriangle } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { staffService } from '../../services/api';
+import { PaginatedTable, type Column } from '../../components/ui/PaginatedTable';
 
 export const StaffStudentAnalysis: React.FC = () => {
     const [submissions, setSubmissions] = useState<any[]>([]);
@@ -72,6 +73,40 @@ export const StaffStudentAnalysis: React.FC = () => {
         (sub.users?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const columns: Column<any>[] = [
+        {
+            header: "Student Name",
+            accessor: (sub) => (
+                <span className="font-medium text-slate-800">{sub.users?.name || 'Unknown'}</span>
+            )
+        },
+        {
+            header: "Exam Title",
+            accessor: (sub) => (
+                <span className="text-slate-600">{sub.exams?.title || 'Unknown Exam'}</span>
+            )
+        },
+        {
+            header: "Score",
+            accessor: (sub) => (
+                <span className={cn(
+                    "px-2.5 py-1 rounded-full text-xs font-bold",
+                    sub.score >= 4 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                )}>
+                    {sub.score}
+                </span>
+            )
+        },
+        {
+            header: "Submitted At",
+            accessor: (sub) => (
+                <span className="text-slate-500 text-xs">
+                    {new Date(sub.submitted_at).toLocaleDateString()}
+                </span>
+            )
+        }
+    ];
+
     return (
         <div className="space-y-8 animate-fade-in">
             <PageHeader
@@ -114,8 +149,8 @@ export const StaffStudentAnalysis: React.FC = () => {
             </div>
 
             {/* Main Table */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-4">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <h3 className="font-bold text-slate-800">Student Performance List</h3>
                     <div className="flex gap-2 w-full md:w-auto">
                         <input
@@ -128,43 +163,12 @@ export const StaffStudentAnalysis: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm min-w-[600px]">
-                        <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
-                            <tr>
-                                <th className="px-6 py-4">Student Name</th>
-                                <th className="px-6 py-4">Exam Title</th>
-                                <th className="px-6 py-4">Score</th>
-                                <th className="px-6 py-4">Submitted At</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {loading ? (
-                                <tr><td colSpan={4} className="p-4 text-center">Loading...</td></tr>
-                            ) : filteredSubmissions.length === 0 ? (
-                                <tr><td colSpan={4} className="p-4 text-center text-slate-500">No submissions found.</td></tr>
-                            ) : (
-                                filteredSubmissions.map((sub, i) => (
-                                    <tr key={i} className="hover:bg-slate-50 transition-colors">
-                                        <td className="px-6 py-4 font-medium text-slate-800">{sub.users?.name || 'Unknown'}</td>
-                                        <td className="px-6 py-4 text-slate-600">{sub.exams?.title || 'Unknown Exam'}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={cn(
-                                                "px-2.5 py-1 rounded-full text-xs font-bold",
-                                                sub.score >= 4 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-                                            )}>
-                                                {sub.score} / {sub.total || 5}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-500 text-xs">
-                                            {new Date(sub.submitted_at).toLocaleDateString()}
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                <PaginatedTable
+                    data={filteredSubmissions}
+                    columns={columns}
+                    loading={loading}
+                    emptyMessage="No submissions found."
+                />
             </div>
         </div>
     );

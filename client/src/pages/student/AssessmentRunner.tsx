@@ -26,10 +26,6 @@ export const AssessmentRunner: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
-    const [score, setScore] = useState<number | null>(null);
-    const [maxScore, setMaxScore] = useState<number | null>(null);
-    const [reviewDetails, setReviewDetails] = useState<any[]>([]);
-    const [gradingDetails, setGradingDetails] = useState<any>(null);
 
     // Core Assessment State
     const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -230,11 +226,8 @@ export const AssessmentRunner: React.FC = () => {
         setSubmitting(true);
         try {
             if (!id) return;
-            const result = await studentService.submitExam(id, answers, terminated);
-            setScore(result.score);
-            setMaxScore(result.maxScore || questions.length); // Fallback if no maxScore
-            setReviewDetails(result.reviewDetails || []);
-            setGradingDetails(result.gradingDetails || {});
+            await studentService.submitExam(id, answers, terminated);
+
             setSubmitted(true);
         } catch (err) {
             console.error('Submission failed', err);
@@ -277,113 +270,31 @@ export const AssessmentRunner: React.FC = () => {
     if (submitted) {
         return (
             <div className="fixed inset-0 bg-slate-50 overflow-y-auto animate-fade-in z-50">
-                <div className="max-w-4xl mx-auto py-12 px-4">
-                    {/* Score Card */}
+                <div className="max-w-xl mx-auto py-12 px-4 h-full flex flex-col justify-center">
+                    {/* Success Message Card */}
                     <div className="bg-white p-8 rounded-[2.5rem] shadow-xl text-center mb-8 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-green-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
                         <div className="relative z-10">
-                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <CheckCircle className="w-8 h-8 text-green-600" />
+                            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <CheckCircle className="w-10 h-10 text-green-600" />
                             </div>
-                            <h2 className="text-3xl font-bold text-slate-900 mb-2">Assessment Completed</h2>
-                            <div className="my-6">
-                                <span className="text-6xl font-black text-blue-600">{Math.round((score || 0) * 10) / 10}</span>
-                                <span className="text-2xl text-slate-400 font-medium ml-2">/ {maxScore}</span>
-                            </div>
+                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Assessment Submitted</h2>
+                            <p className="text-slate-500 mb-8 text-lg">
+                                Your responses have been successfully recorded.
+                                <br />
+                                <span className="font-semibold text-slate-700 mt-2 block">
+                                    Results will be available after {new Date(exam.end_time).toLocaleString()}.
+                                </span>
+                            </p>
+
                             <button
-                                onClick={() => navigate('/student/dashboard')}
-                                className="px-8 py-3 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all"
+                                onClick={() => navigate('/student/assessment')}
+                                className="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl"
                             >
-                                Return to Dashboard
+                                Return to Assessment Center
                             </button>
                         </div>
-                    </div>
-
-                    {/* Detailed Review */}
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-3 mb-6">
-                            <Eye className="w-6 h-6 text-blue-600" />
-                            <h3 className="text-2xl font-bold text-slate-800">Detailed Review</h3>
-                        </div>
-
-                        {questions.map((q, idx) => {
-                            const grade = gradingDetails?.[q.id];
-                            const correctDetail = reviewDetails?.find((r: any) => r.id === q.id);
-                            const correctAnswer = correctDetail?.correct_answer;
-                            const explanation = correctDetail?.explanation;
-                            const userAnswer = answers[q.id];
-
-                            // Determine correctness based on Score for flexibility
-                            const isCorrect = grade?.score === (grade?.maxScore || 1);
-                            const isPartial = grade?.score > 0 && grade?.score < (grade?.maxScore || 1);
-
-                            return (
-                                <div key={q.id} className={`p-6 rounded-3xl border ${isCorrect ? 'border-green-200 bg-green-50/30' : isPartial ? 'border-orange-200 bg-orange-50/30' : 'border-red-200 bg-red-50/30'} shadow-sm bg-white`}>
-                                    <div className="flex items-start gap-4 mb-4">
-                                        <div className={`w-8 h-8 rounded-2xl flex items-center justify-center shrink-0 font-bold ${isCorrect ? 'bg-green-100 text-green-700' : isPartial ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
-                                            {idx + 1}
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex justify-between items-start">
-                                                <p className="text-lg font-medium text-slate-900">{q.question_text}</p>
-                                                <div className="text-sm font-bold text-slate-500">
-                                                    {grade?.score !== undefined ? `${Math.round(grade.score * 10) / 10} / ${grade.maxScore || 1}` : 'N/A'} Pts
-                                                </div>
-                                            </div>
-
-                                            {/* CODING Specific Review */}
-                                            {q.question_type === 'CODING' && grade && (
-                                                <div className="mt-4 p-4 bg-slate-50 rounded-2xl text-sm font-mono border border-slate-200">
-                                                    <div className="flex gap-4 mb-2 border-b border-slate-200 pb-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className={`w-2 h-2 rounded-full ${grade.passed === grade.total ? 'bg-green-500' : 'bg-orange-500'}`}></div>
-                                                            <span className="text-slate-600">Test Cases: {grade.passed} / {grade.total} Passed</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                                                            <span className="text-slate-600">Language: {grade.language}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="mt-2">
-                                                        <p className="text-xs text-slate-400 uppercase mb-1">Your Solution:</p>
-                                                        <pre className="overflow-x-auto text-slate-800">{grade.code}</pre>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* MCQ / TEXT Options Review */}
-                                    {(!q.question_type || q.question_type === 'MCQ') && (
-                                        <div className="space-y-3 pl-12">
-                                            {q.options.map((opt, optIdx) => {
-                                                const isSelected = userAnswer === opt;
-                                                const isTheCorrectAnswer = correctAnswer === opt;
-
-                                                let optionClass = "border-slate-200 bg-white text-slate-700";
-                                                if (isTheCorrectAnswer) optionClass = "border-green-500 bg-green-50 text-green-900 font-bold";
-                                                else if (isSelected && !isCorrect) optionClass = "border-red-500 bg-red-50 text-red-900 font-medium";
-
-                                                return (
-                                                    <div key={optIdx} className={`flex items-center justify-between p-3 rounded-2xl border ${optionClass}`}>
-                                                        <span>{opt}</span>
-                                                        {isTheCorrectAnswer && <CheckCircle className="w-5 h-5 text-green-600" />}
-                                                        {isSelected && !isCorrect && <X className="w-5 h-5 text-red-500" />}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-
-                                    {explanation && (
-                                        <div className="mt-4 ml-12 p-4 bg-blue-50 rounded-2xl text-sm border border-blue-100 text-blue-800">
-                                            <strong>Explanation:</strong> {explanation}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
                     </div>
                 </div>
             </div>

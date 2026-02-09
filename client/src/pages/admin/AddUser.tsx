@@ -8,7 +8,7 @@ import { adminService } from '../../services/api';
 export const AdminAddUser: React.FC = () => {
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [role, setRole] = useState<'Student' | 'Staff' | 'Admin'>('Student');
+    const [role, setRole] = useState<'Student' | 'Staff' | 'HOD' | 'Admin'>('Student');
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -45,7 +45,7 @@ export const AdminAddUser: React.FC = () => {
                 role: role.toUpperCase() as any,
                 registration_number: role === 'Student' ? formData.rollNumber : undefined,
                 batch: role === 'Student' ? formData.batch : undefined,
-                department: role === 'Student' ? formData.branch : (role === 'Staff' ? formData.department : undefined),
+                department: role === 'Student' ? formData.branch : (role === 'Staff' || role === 'HOD' ? formData.department : undefined),
             });
 
             alert(`${role} created successfully!`);
@@ -77,7 +77,7 @@ export const AdminAddUser: React.FC = () => {
                 {/* Role Tabs */}
                 <div className="border-b border-slate-100 bg-slate-50 p-4">
                     <div className="flex bg-slate-200/50 p-1 rounded-2xl w-full max-w-lg mx-auto">
-                        {['Student', 'Staff', 'Admin'].map((r) => (
+                        {['Student', 'Staff', 'HOD', 'Admin'].map((r) => (
                             <button
                                 key={r}
                                 onClick={() => setRole(r as any)}
@@ -150,7 +150,7 @@ export const AdminAddUser: React.FC = () => {
                         <div className="space-y-6 animate-fade-in">
                             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                 <BookOpen className="w-5 h-5 text-blue-500" />
-                                Academic Details
+                                academic Details
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -194,7 +194,7 @@ export const AdminAddUser: React.FC = () => {
                         </div>
                     )}
 
-                    {role === 'Staff' && (
+                    {(role === 'Staff' || role === 'HOD') && (
                         <div className="space-y-6 animate-fade-in">
                             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                 <Building2 className="w-5 h-5 text-blue-500" />
@@ -227,8 +227,9 @@ export const AdminAddUser: React.FC = () => {
                                         type="text"
                                         name="designation"
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                                        placeholder="e.g. Assistant Professor"
+                                        placeholder={role === 'HOD' ? 'e.g. Head of Department' : "e.g. Assistant Professor"}
                                         onChange={handleChange}
+                                        value={role === 'HOD' ? 'Head of Department' : undefined}
                                     />
                                 </div>
                             </div>

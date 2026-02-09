@@ -1,6 +1,7 @@
 ﻿import { Request, Response } from 'express';
 import { supabase } from '../config/supabase';
 import { Exam, Submission } from '../models/types';
+import { getLeaderboardData } from '../services/leaderboardService';
 
 // STAFF: Create Exam
 export const createExam = async (req: Request, res: Response) => {
@@ -70,7 +71,8 @@ export const createExam = async (req: Request, res: Response) => {
                     code_template: q.code_template || null,
                     constraints: q.constraints || null,
                     test_cases: q.test_cases || [],
-                    function_name: q.function_name || null
+                    function_name: q.function_name || null,
+                    marks: q.marks || 1 // Save marks
                 };
                 return useSection ? { ...base, section: q.section || null } : base;
             });
@@ -242,7 +244,7 @@ export const getExamQuestions = async (req: Request, res: Response) => {
         // 4. Fetch Questions (Exclude correct_answer)
         const { data: questions, error: qError } = await supabase
             .from('questions')
-            .select('id, question_text, options, explanation, question_type, code_template, constraints, function_name, test_cases')
+            .select('id, question_text, options, explanation, question_type, code_template, constraints, function_name, test_cases, marks, input_format, output_format')
             .eq('exam_id', id);
 
         if (qError) throw qError;
@@ -256,6 +258,59 @@ export const getExamQuestions = async (req: Request, res: Response) => {
 // STUDENT: Submit Exam
 // STUDENT: Submit Exam - MOVED implementation to bottom of file for full evaluation support
 
+
+// STUDENT: Get Exam Analysis (Detailed Results)
+export const getExamAnalysis = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    // @ts-ignore
+    const studentId = req.user?.userId;
+
+    try {
+        // 1. Fetch Exam Details
+        const { data: exam, error: examError } = await supabase
+            .from('exams')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (examError || !exam) return res.status(404).json({ message: 'Exam not found' });
+
+        // 2. Validate End Time
+        const now = new Date();
+        const end = new Date(exam.end_time);
+
+        if (now < end) {
+            return res.status(403).json({ message: 'Results are only available after the exam ends.', endTime: end });
+        }
+
+        // 3. Fetch Submission
+        const { data: submission, error: subError } = await supabase
+            .from('submissions')
+            .select('*')
+            .eq('exam_id', id)
+            .eq('student_id', studentId)
+            .single();
+
+        if (subError || !submission) return res.status(404).json({ message: 'Submission not found' });
+
+        // 4. Fetch Questions (Include correct answer for review)
+        const { data: questions, error: qError } = await supabase
+            .from('questions')
+            .select('*') // Includes correct_answer
+            .eq('exam_id', id);
+
+        if (qError) throw qError;
+
+        res.json({
+            exam,
+            submission,
+            questions
+        });
+
+    } catch (err: any) {
+        res.status(500).json({ message: 'Error fetching analysis', error: err.message });
+    }
+};
 
 // STUDENT: Get My Results
 export const getStudentResults = async (req: Request, res: Response) => {
@@ -383,18 +438,20 @@ export const getStudentDashboardStats = async (req: Request, res: Response) => {
         let avgPercentage = 0;
         if (myExamIds.length > 0) {
             // Get all questions to calculate max scores for each exam
-            // We need to fetch questions for the exams the student has taken
             const { data: questions, error: qError } = await supabase
                 .from('questions')
-                .select('exam_id')
+                .select('exam_id, marks, question_type')
                 .in('exam_id', myExamIds);
 
             if (qError) throw qError;
 
             // Group questions by exam
-            const questionsPerExam: Record<string, number> = {};
+            const marksPerExam: Record<string, number> = {};
             questions?.forEach(q => {
-                questionsPerExam[q.exam_id] = (questionsPerExam[q.exam_id] || 0) + 1;
+                // Match logic in submitExam: CODING defaults to 5, others to 1 if marks is null
+                const defaultMarks = q.question_type === 'CODING' ? 5 : 1;
+                const qMarks = q.marks || defaultMarks;
+                marksPerExam[q.exam_id] = (marksPerExam[q.exam_id] || 0) + qMarks;
             });
 
             let totalMaxScore = 0;
@@ -406,10 +463,10 @@ export const getStudentDashboardStats = async (req: Request, res: Response) => {
                 // Take max score if multiple attempts
                 const bestScore = examSubs.length > 0 ? Math.max(...examSubs.map(s => s.score)) : 0;
 
-                const totalQ = questionsPerExam[examId] || 1; // Default to 1 to avoid /0
+                const maxScoreForExam = marksPerExam[examId] || 1; // Default to 1 to avoid /0
 
                 totalMyScore += bestScore;
-                totalMaxScore += totalQ;
+                totalMaxScore += maxScoreForExam;
             });
 
             if (totalMaxScore > 0) {
@@ -417,21 +474,84 @@ export const getStudentDashboardStats = async (req: Request, res: Response) => {
             }
         }
 
-        // 4. Rank 
-        // For now, we'll return a calculated rank based on a simplified heuristic or just a placeholder
-        // Real rank calculation requires aggregation across all users which is expensive here.
-        // We will mock it as "Top 10%" or similar based on their score for now.
+        // 4. Rank - REAL TIME
         let rank = "N/A";
-        if (avgPercentage >= 90) rank = "Top 5%";
-        else if (avgPercentage >= 75) rank = "Top 10%";
-        else if (avgPercentage >= 50) rank = "Top 25%";
-        else rank = "Top 50%";
+        // Calculate Leaderboard Score
+        let lbScore = 0;
+        try {
+            const leaderboard = await getLeaderboardData();
+            const studentRank = leaderboard.find((s: any) => s.id === studentId);
+            if (studentRank) {
+                rank = `#${studentRank.rank}`;
+                lbScore = studentRank.score;
+            }
+        } catch (rankErr) {
+            console.error("Failed to fetch rank for dashboard", rankErr);
+            // Fallback to N/A
+        }
+
+        // 5. Calendar Activity
+        const { data: allExams, error: examError } = await supabase
+            .from('exams')
+            .select('id, end_time');
+
+        if (examError) throw examError;
+
+        const activity: { date: string, status: 'attended' | 'missed' }[] = [];
+        const processedDates = new Set<string>();
+
+        // Process Submissions (Attended)
+        submissions?.forEach(sub => {
+            // @ts-ignore
+            if (sub.submitted_at) { // Ensure we have a date if available, or fetch it
+                // Actually the current select on submissions matches "exam_id, score", let's update it to fetch submitted_at
+            }
+        });
+
+        // RE-FETCH Submissions with time for calendar
+        const { data: submissionsWithTime, error: subTimeError } = await supabase
+            .from('submissions')
+            .select('exam_id, submitted_at')
+            .eq('student_id', studentId);
+
+        if (subTimeError) throw subTimeError;
+
+        submissionsWithTime?.forEach(sub => {
+            const dateStr = new Date(sub.submitted_at).toLocaleDateString('en-CA'); // YYYY-MM-DD
+            // If multiple on same day, Green takes precedence? User didn't specify, but assume yes.
+            // Actually, let's just push all events and handle precedence on frontend or here.
+            // User: "if nothings happens on that day then no circle"
+            // Let's store unique status per date.
+            // If attended any test on Date X -> Green.
+            if (!processedDates.has(dateStr)) {
+                activity.push({ date: dateStr, status: 'attended' });
+                processedDates.add(dateStr);
+            }
+        });
+
+        // Process Missed Exams
+        // Missed = Exam End Time < NOW && Not in myExamIds
+        const missedExams = allExams?.filter(e => {
+            const isFinished = new Date(e.end_time) < new Date(now);
+            const isSubmitted = myExamIds.includes(e.id);
+            return isFinished && !isSubmitted;
+        }) || [];
+
+        missedExams.forEach(e => {
+            const dateStr = new Date(e.end_time).toLocaleDateString('en-CA');
+            // Only mark as red if NOT already marked as green (attended)
+            if (!processedDates.has(dateStr)) {
+                activity.push({ date: dateStr, status: 'missed' });
+                processedDates.add(dateStr);
+            }
+        });
 
         res.json({
             assessmentsPassed: myExamIds.length,
             pendingTasks: pendingCount || 0,
             rank: rank,
-            avgScore: `${avgPercentage}%`
+            avgScore: `${lbScore}`,
+            activity: activity
         });
 
     } catch (err: any) {
@@ -491,7 +611,9 @@ export const getAssessmentPageData = async (req: Request, res: Response) => {
                 status,
                 dueDate: new Date(exam.end_time).toLocaleDateString(),
                 questions: qCount, // Map to parts on frontend
-                score: submissionMap.get(exam.id)
+                score: submissionMap.get(exam.id),
+                start_time: exam.start_time,
+                end_time: exam.end_time
             };
         }) || [];
 
@@ -625,7 +747,7 @@ export const runCode = async (req: Request, res: Response) => {
                     actual: data.run.stdout,
                     error: data.run.stderr,
                     hidden: false,
-                    passed: true, // Custom input always "passes" execution unless error
+                    passed: data.run.code === 0, // Pass if exit code is 0
                     isCustom: true
                 }]
             });
@@ -768,14 +890,15 @@ export const submitExam = async (req: Request, res: Response) => {
         // 2. Iterate and Grade
         for (const q of questions || []) {
             const studentAnswer = answers[q.id]; // Code or MCQ Option
+            // @ts-ignore
+            const qMarks = q.marks || (q.question_type === 'CODING' ? 5 : 1); // Default marks if not set
 
             if (q.question_type === 'CODING') {
-                const MAX_SCORE = 5; // Configurable?
-                maxPossibleScore += MAX_SCORE;
+                maxPossibleScore += qMarks;
 
                 // Server-side Evaluation
                 if (!studentAnswer) {
-                    finalAnswers[q.id] = { code: '', passed: 0, total: 0, score: 0 };
+                    finalAnswers[q.id] = { code: '', passed: 0, total: 0, score: 0, maxScore: qMarks };
                     continue;
                 }
 
@@ -790,39 +913,36 @@ export const submitExam = async (req: Request, res: Response) => {
                     if (typeof studentAnswer === 'object') {
                         code = studentAnswer.code;
                         lang = studentAnswer.language;
-                    } else if (typeof studentAnswer === 'string') {
-                        // Attempt to parse if it looks like JSON? Or just assume it's code
-                        // Frontend might be sending straight string from answers state.
-                        // We need a way to know language. 
-                        // For now we'll rely on what we have.
                     }
 
+                    // Evaluate Code
                     const evalResult = await evaluateCodeInternal(lang, code, testCases);
 
-                    const qScore = (evalResult.passed / evalResult.total) * MAX_SCORE;
+                    const qScore = (evalResult.passed / evalResult.total) * qMarks;
+                    const finalQScore = parseFloat(qScore.toFixed(2)); // Round to 2 decimals
 
-                    totalScore += qScore;
+                    totalScore += finalQScore;
                     finalAnswers[q.id] = {
                         code,
                         language: lang,
                         passed: evalResult.passed,
                         total: evalResult.total,
-                        score: qScore,
-                        maxScore: MAX_SCORE,
+                        score: finalQScore,
+                        maxScore: qMarks,
                         feedback: evalResult.results // Detailed pass/fail per case
                     };
                 } else {
                     // No test cases? full marks if submitted?
-                    totalScore += MAX_SCORE;
-                    finalAnswers[q.id] = { score: MAX_SCORE, maxScore: MAX_SCORE };
+                    totalScore += qMarks;
+                    finalAnswers[q.id] = { score: qMarks, maxScore: qMarks, code: studentAnswer };
                 }
 
             } else {
                 // MCQ / Text Logic
-                maxPossibleScore += 1;
+                maxPossibleScore += qMarks;
                 // For MCQ:
                 if (studentAnswer === q.correct_answer) {
-                    totalScore += 1;
+                    totalScore += qMarks;
                 }
                 finalAnswers[q.id] = studentAnswer;
             }

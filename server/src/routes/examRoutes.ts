@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createExam, getAvailableExams, getExamQuestions, submitExam, getStudentResults, getAllSubmissions, getDashboardStats, getStudentDashboardStats, getAssessmentPageData, runCode, saveCode } from '../controllers/examController';
+import { createExam, getAvailableExams, getExamQuestions, submitExam, getStudentResults, getAllSubmissions, getDashboardStats, getStudentDashboardStats, getAssessmentPageData, runCode, saveCode, getExamAnalysis } from '../controllers/examController';
 import { authenticate, authorize } from '../middleware/authMiddleware';
 import multer from 'multer';
 import { extractPdfContent } from '../controllers/pdfController';
@@ -25,6 +25,7 @@ router.post('/', authorize(['STAFF', 'ADMIN']), createExam);
 router.get('/', getAvailableExams); // List all
 router.get('/:id/take', authorize(['STUDENT']), getExamQuestions); // Start/View Questions
 router.post('/:id/submit', authorize(['STUDENT']), submitExam);
+router.get('/:id/analysis', authorize(['STUDENT']), getExamAnalysis);
 router.post('/run-code', authorize(['STUDENT']), runCode as any);
 router.post('/save-code', authorize(['STUDENT']), saveCode as any);
 
