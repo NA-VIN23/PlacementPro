@@ -5,6 +5,7 @@ import { Plus, Search, Shield, Mail, CheckCircle, XCircle, Trash2, Upload } from
 import { cn } from '../../utils/cn';
 import { adminService } from '../../services/api';
 import { BulkImportModal } from '../../components/admin/BulkImportModal';
+import { PaginatedTable, type Column } from '../../components/ui/PaginatedTable';
 
 export const AdminUserManagement: React.FC = () => {
     const navigate = useNavigate();
@@ -64,6 +65,76 @@ export const AdminUserManagement: React.FC = () => {
         }
     };
 
+    const columns: Column<any>[] = [
+        {
+            header: "Name / Email",
+            accessor: (user) => (
+                <div>
+                    <p className="font-bold text-slate-800">{user.name}</p>
+                    <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                        <Mail className="w-3 h-3" /> {user.email}
+                    </p>
+                </div>
+            )
+        },
+        {
+            header: "Role",
+            accessor: (user) => (
+                <span className={cn(
+                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border",
+                    user.role === 'STUDENT' ? "bg-blue-50 text-blue-700 border-blue-100" :
+                        user.role === 'STAFF' ? "bg-indigo-50 text-indigo-700 border-indigo-100" :
+                            user.role === 'HOD' ? "bg-violet-50 text-violet-700 border-violet-100" :
+                                "bg-slate-100 text-slate-700 border-slate-200"
+                )}>
+                    {user.role === 'ADMIN' && <Shield className="w-3 h-3" />}
+                    {user.role}
+                </span>
+            )
+        },
+        {
+            header: "Detail",
+            accessor: (user) => (
+                <span className="text-slate-600">
+                    {user.registration_number || '-'}
+                </span>
+            )
+        },
+        {
+            header: "Status",
+            accessor: (user) => (
+                <div className="flex items-center gap-2">
+                    <div className={cn("w-2.5 h-2.5 rounded-full", user.is_active ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" : "bg-red-500")}></div>
+                    <span className="text-slate-700 font-medium">{user.is_active ? 'Active' : 'Inactive'}</span>
+                </div>
+            )
+        },
+        {
+            header: "Actions",
+            className: "text-right",
+            headerClassName: "text-right",
+            accessor: (user) => (
+                <div className="flex items-center justify-end gap-2">
+                    <button
+                        onClick={() => handleToggleStatus(user.id, user.is_active ? 'Active' : 'Inactive')}
+                        className={cn("p-2 rounded-xl transition-colors", user.is_active ? "text-slate-400 hover:text-red-600 hover:bg-red-50" : "text-slate-400 hover:text-green-600 hover:bg-green-50")}
+                        title={user.is_active ? "Deactivate" : "Activate"}
+                    >
+                        {user.is_active ? <XCircle className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
+                    </button>
+
+                    <button
+                        onClick={() => handleDeleteUser(user)}
+                        className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
+                        title={`Delete ${user.role}`}
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            )
+        }
+    ];
+
     return (
         <div className="space-y-8 animate-fade-in">
             <PageHeader
@@ -89,11 +160,11 @@ export const AdminUserManagement: React.FC = () => {
                 }
             />
 
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-4">
                 {/* Filters */}
-                <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
-                        {['All', 'Student', 'Staff', 'Admin'].map(role => (
+                        {['All', 'Student', 'Staff', 'HOD', 'Admin'].map(role => (
                             <button
                                 key={role}
                                 onClick={() => setRoleFilter(role)}
@@ -120,82 +191,12 @@ export const AdminUserManagement: React.FC = () => {
                 </div>
 
                 {/* Table */}
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
-                            <tr>
-                                <th className="px-6 py-4">Name / Email</th>
-                                <th className="px-6 py-4">Role</th>
-                                <th className="px-6 py-4">Detail</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {loading ? (
-                                <tr><td colSpan={5} className="p-4 text-center">Loading...</td></tr>
-                            ) : filteredUsers.length === 0 ? (
-                                <tr><td colSpan={5} className="p-4 text-center text-slate-500">No users found.</td></tr>
-                            ) : (
-                                filteredUsers.map((user) => (
-                                    <tr key={user.id} className="hover:bg-slate-50 transition-colors group">
-                                        <td className="px-6 py-4">
-                                            <div>
-                                                <p className="font-bold text-slate-800">{user.name}</p>
-                                                <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                                                    <Mail className="w-3 h-3" /> {user.email}
-                                                </p>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={cn(
-                                                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border",
-                                                user.role === 'STUDENT' ? "bg-blue-50 text-blue-700 border-blue-100" :
-                                                    user.role === 'STAFF' ? "bg-indigo-50 text-indigo-700 border-indigo-100" :
-                                                        "bg-slate-100 text-slate-700 border-slate-200"
-                                            )}>
-                                                {user.role === 'ADMIN' && <Shield className="w-3 h-3" />}
-                                                {user.role}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-600">
-                                            {user.registration_number || '-'}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className={cn("w-2.5 h-2.5 rounded-full", user.is_active ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" : "bg-red-500")}></div>
-                                                <span className="text-slate-700 font-medium">{user.is_active ? 'Active' : 'Inactive'}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => handleToggleStatus(user.id, user.is_active ? 'Active' : 'Inactive')}
-                                                    className={cn("p-2 rounded-xl transition-colors", user.is_active ? "text-slate-400 hover:text-red-600 hover:bg-red-50" : "text-slate-400 hover:text-green-600 hover:bg-green-50")}
-                                                    title={user.is_active ? "Deactivate" : "Activate"}
-                                                >
-                                                    {user.is_active ? <XCircle className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
-                                                </button>
-
-                                                <button
-                                                    onClick={() => handleDeleteUser(user)}
-                                                    className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
-                                                    title={`Delete ${user.role}`}
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div className="p-4 border-t border-slate-100 bg-slate-50 text-xs text-slate-500 flex justify-between items-center rounded-b-3xl">
-                    <span>Showing {filteredUsers.length} users</span>
-                </div>
+                <PaginatedTable
+                    data={filteredUsers}
+                    columns={columns}
+                    loading={loading}
+                    emptyMessage="No users found matching your criteria."
+                />
             </div>
 
             <BulkImportModal

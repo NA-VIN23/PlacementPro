@@ -32,8 +32,14 @@ export const login = async (req: Request, res: Response) => {
         }
 
         // 3. Generate Token
+        // SPECIAL RULE: If email is ITHOD@college.edu (or contains 'hod' and is staff), promote to HOD role in Token
+        let finalRole = user.role;
+        if (user.role === 'STAFF' && user.email.toLowerCase().includes('hod')) {
+            finalRole = 'HOD';
+        }
+
         const token = jwt.sign(
-            { userId: user.id, role: user.role },
+            { userId: user.id, role: finalRole },
             process.env.JWT_SECRET || 'secret_key',
             { expiresIn: '24h' }
         );
@@ -41,7 +47,7 @@ export const login = async (req: Request, res: Response) => {
         res.json({
             token,
             id: user.id,
-            role: user.role,
+            role: finalRole,
             name: user.name,
             email: user.email,
             department: user.department,

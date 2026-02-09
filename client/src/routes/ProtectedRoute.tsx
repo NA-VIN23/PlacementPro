@@ -26,6 +26,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
         // Redirect to their meaningful dashboard if they are logged in but unauthorized for this specific route
         if (user.role === 'STUDENT') return <Navigate to="/student/dashboard" replace />;
         if (user.role === 'STAFF') return <Navigate to="/staff/dashboard" replace />;
+        if (user.role === 'HOD') return <Navigate to="/hod/dashboard" replace />;
         if (user.role === 'ADMIN') return <Navigate to="/admin/dashboard" replace />;
         return <Navigate to="/" replace />;
     }
