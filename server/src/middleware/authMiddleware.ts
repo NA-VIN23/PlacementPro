@@ -25,25 +25,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
         next();
     } catch (error: any) {
         console.error('JWT Verification Failed:', error.message);
-
-        // --- BYPASS FOR DEVELOPMENT/DEBUGGING ---
-        console.warn('⚠️ AUTH BYPASS ENABLED: Proceeding with unverified token due to verification failure.');
-        try {
-            // Decode without verifying signature to get user ID
-            const decoded = jwt.decode(token) as { userId: string; role: UserRole } | null;
-            if (decoded) {
-                req.user = { userId: decoded.userId, role: decoded.role || 'STUDENT' };
-                next();
-                return;
-            }
-        } catch (decodeError) {
-            console.error('Token decode failed:', decodeError);
-        }
-
-        // Fallback if decode fails (e.g. malformed token)
-        req.user = { userId: 'dev-bypass-user', role: 'STUDENT' };
-        next();
-        // ----------------------------------------
+        return res.status(401).json({ message: 'Access denied. Invalid token.' });
     }
 };
 

@@ -28,7 +28,7 @@ api.interceptors.response.use(
             localStorage.removeItem('placement_token');
             localStorage.removeItem('placement_user');
             // Optional: Redirect to login
-            // window.location.href = '/'; 
+            window.location.href = '/';
         }
         return Promise.reject(error);
     }
