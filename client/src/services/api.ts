@@ -52,7 +52,7 @@ export const studentService = {
         const response = await api.get(`/exams/${examId}/take`);
         return response.data;
     },
-    submitExam: async (examId: string, answers: Record<string, string>, terminated?: boolean): Promise<{
+    submitExam: async (examId: string, answers: Record<string, string>, terminated?: boolean, violations?: any[]): Promise<{
         message: string;
         score: number;
         total: number;
@@ -60,7 +60,7 @@ export const studentService = {
         reviewDetails?: any[];
         gradingDetails?: any;
     }> => {
-        const response = await api.post(`/exams/${examId}/submit`, { answers, terminated });
+        const response = await api.post(`/exams/${examId}/submit`, { answers, terminated, violations });
         return response.data;
     },
     getStudentResults: async (): Promise<any[]> => {

@@ -8,7 +8,8 @@ import {
     ChevronLeft,
     ChevronRight,
     Star,
-    Play
+    Play,
+    Eye
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Exam } from '../../types';
@@ -52,9 +53,11 @@ export const StudentDashboard: React.FC = () => {
 
     const [refreshing, setRefreshing] = useState(false);
 
-    const fetchData = async () => {
-        if (exams.length === 0) setLoading(true);
-        else setRefreshing(true);
+    const fetchData = async (silent = false) => {
+        if (!silent) {
+            if (exams.length === 0) setLoading(true);
+            else setRefreshing(true);
+        }
 
         try {
             const [statsData, examsData] = await Promise.all([
@@ -70,13 +73,21 @@ export const StudentDashboard: React.FC = () => {
         } catch (error) {
             console.error("Failed to load dashboard data", error);
         } finally {
-            setLoading(false);
-            setRefreshing(false);
+            if (!silent) {
+                setLoading(false);
+                setRefreshing(false);
+            }
         }
     };
 
     useEffect(() => {
         fetchData();
+
+        const interval = setInterval(() => {
+            fetchData(true); // Silent update
+        }, 5000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const getExamStatus = (exam: Exam): 'LOCKED' | 'ACTIVE' | 'COMPLETED' => {
@@ -188,7 +199,7 @@ export const StudentDashboard: React.FC = () => {
                                 <p className="text-slate-400 text-xs mt-1">Exams assigned to your batch</p>
                             </div>
                             <button
-                                onClick={fetchData}
+                                onClick={() => fetchData(false)}
                                 disabled={refreshing || loading}
                                 className={`p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-colors ${refreshing ? 'animate-spin' : ''}`}
                                 title="Refresh"
@@ -205,6 +216,7 @@ export const StudentDashboard: React.FC = () => {
                                         const isLocked = status === 'LOCKED';
                                         const isCompleted = status === 'COMPLETED';
                                         const isActive = status === 'ACTIVE';
+                                        const isMaxAttempts = (exam.attemptCount || 0) >= 2;
 
                                         return (
                                             <div key={i} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border rounded-2xl transition-all shadow-sm ${isActive ? 'border-indigo-100 bg-indigo-50/20' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
@@ -213,6 +225,7 @@ export const StudentDashboard: React.FC = () => {
                                                         {isActive && <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700 animate-pulse">Live</span>}
                                                         {isLocked && <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600">Upcoming</span>}
                                                         {isCompleted && <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-50 text-orange-600">Finished</span>}
+                                                        {isMaxAttempts && <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700">Max Attempts</span>}
 
                                                         <h4 className="font-bold text-slate-800 text-sm truncate">{exam.title}</h4>
                                                     </div>
@@ -225,24 +238,37 @@ export const StudentDashboard: React.FC = () => {
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calendar"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>
                                                             {new Date(exam.start_time).toLocaleDateString()}
                                                         </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="text-slate-500">
+                                                                Attempts: {exam.attemptCount || 0}/2
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <button
-                                                    onClick={() => {
-                                                        if (isActive) navigate(`/student/assessment/${exam.id}`);
-                                                        if (isCompleted) navigate(`/student/assessment/result/${exam.id}`);
-                                                    }}
-                                                    disabled={isLocked}
-                                                    className={`px-6 py-2 text-xs font-bold rounded-xl border transition-all flex items-center justify-center gap-2 group whitespace-nowrap
-                                                        ${isActive ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200' : ''}
-                                                        ${isLocked ? 'bg-slate-100 text-slate-400 border-slate-100 cursor-not-allowed' : ''}
-                                                        ${isCompleted ? 'bg-white text-slate-600 border-slate-200 hover:border-orange-200 hover:text-orange-600' : ''}
-                                                    `}
-                                                >
-                                                    {isLocked && <span className="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg> Locked</span>}
-                                                    {isActive && <span className="flex items-center gap-2"><Play className="w-3 h-3 fill-current" /> Start Now</span>}
-                                                    {isCompleted && <span>View Results</span>}
-                                                </button>
+                                                <div className="flex flex-col gap-2 items-end">
+                                                    <button
+                                                        onClick={() => navigate(`/student/assessment/${exam.id}`)}
+                                                        disabled={isLocked || isMaxAttempts || isCompleted}
+                                                        className={`px-6 py-2 text-xs font-bold rounded-xl border transition-all flex items-center justify-center gap-2 group whitespace-nowrap
+                                                            ${(isActive && !isMaxAttempts && !isCompleted) ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-400 border-slate-100 cursor-not-allowed'}
+                                                        `}
+                                                    >
+                                                        {isLocked && <span className="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg> Locked</span>}
+                                                        {(isActive && !isMaxAttempts && !isCompleted) && <span className="flex items-center gap-2"><Play className="w-3 h-3 fill-current" /> Start Now</span>}
+                                                        {isMaxAttempts && <span>Max Attempts</span>}
+                                                        {isCompleted && !isMaxAttempts && <span>Expired</span>}
+                                                    </button>
+
+                                                    {/* View Results Link (Secondary Action) */}
+                                                    {((exam.attemptCount || 0) > 0 || isCompleted) && (
+                                                        <button
+                                                            onClick={() => navigate(`/student/assessment/result/${exam.id}`)}
+                                                            className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1"
+                                                        >
+                                                            <Eye className="w-3 h-3" /> View Results
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         );
                                     })}
