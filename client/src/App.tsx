@@ -37,6 +37,12 @@ import { CompanyHistory } from './pages/student/placement-insights/CompanyHistor
 import { CompanyDetail } from './pages/student/placement-insights/CompanyDetail';
 import { PlacementRadar } from './pages/student/placement-insights/PlacementRadar';
 
+import { HODDashboard } from './pages/hod/Dashboard';
+import { HODStaffList } from './pages/hod/StaffList';
+import { HODStudentList } from './pages/hod/StudentList';
+import { HODAnalytics } from './pages/hod/Analytics';
+import { HODClassAnalysis } from './pages/hod/ClassAnalysis';
+
 function App() {
   return (
     <AuthProvider>
@@ -83,6 +89,18 @@ function App() {
                 <Route path="analysis" element={<StaffStudentAnalysis />} />
                 <Route path="profile" element={<StaffProfile />} />
                 <Route path="assessment/:id/grade" element={<StaffGradingConsole />} />
+                <Route index element={<Navigate to="dashboard" replace />} />
+              </Route>
+            </Route>
+
+            {/* HOD Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['HOD']} />}>
+              <Route path="/hod" element={<MainLayout />}>
+                <Route path="dashboard" element={<HODDashboard />} />
+                <Route path="staff" element={<HODStaffList />} />
+                <Route path="students" element={<HODStudentList />} />
+                <Route path="analytics" element={<HODAnalytics />} />
+                <Route path="analytics/:staffId" element={<HODClassAnalysis />} />
                 <Route index element={<Navigate to="dashboard" replace />} />
               </Route>
             </Route>

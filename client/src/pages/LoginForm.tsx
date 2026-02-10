@@ -19,7 +19,7 @@ export const LoginForm: React.FC = () => {
     const [loading, setLoading] = useState(false);
 
     // Validate role
-    const validRoles = ['student', 'staff', 'admin'];
+    const validRoles = ['student', 'staff', 'admin', 'hod'];
 
     const { user, isAuthenticated } = useAuth();
 
@@ -27,7 +27,8 @@ export const LoginForm: React.FC = () => {
         if (isAuthenticated && user) {
             const dashboard = user.role === 'STUDENT' ? '/student/dashboard' :
                 user.role === 'STAFF' ? '/staff/dashboard' :
-                    '/admin/dashboard';
+                    user.role === 'HOD' ? '/hod/dashboard' :
+                        '/admin/dashboard';
             navigate(dashboard, { replace: true });
         }
     }, [isAuthenticated, user, navigate]);
@@ -55,6 +56,14 @@ export const LoginForm: React.FC = () => {
             color: 'text-violet-600',
             bgColor: 'bg-violet-50'
         },
+        HOD: {
+            label: 'HOD Login',
+            identifierLabel: 'HOD Email',
+            identifierPlaceholder: 'e.g. ithod@college.edu',
+            icon: User,
+            color: 'text-indigo-600',
+            bgColor: 'bg-indigo-50'
+        },
         ADMIN: {
             label: 'Admin Login',
             identifierLabel: 'Administrator Email',
@@ -79,7 +88,8 @@ export const LoginForm: React.FC = () => {
             navigate(
                 currentRole === 'STUDENT' ? '/student/dashboard' :
                     currentRole === 'STAFF' ? '/staff/dashboard' :
-                        '/admin/dashboard'
+                        currentRole === 'HOD' ? '/hod/dashboard' :
+                            '/admin/dashboard'
             );
         } catch (error: any) {
             console.error('Login failed:', error);

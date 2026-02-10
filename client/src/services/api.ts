@@ -28,7 +28,7 @@ api.interceptors.response.use(
             localStorage.removeItem('placement_token');
             localStorage.removeItem('placement_user');
             // Optional: Redirect to login
-            // window.location.href = '/'; 
+            window.location.href = '/';
         }
         return Promise.reject(error);
     }
@@ -174,6 +174,37 @@ export const adminService = {
     },
     getStaffList: async () => {
         const response = await api.get('/users/staff/list');
+        return response.data;
+    }
+};
+
+export const hodService = {
+    getStats: async () => {
+        const response = await api.get('/hod/stats');
+        return response.data;
+    },
+    getStaff: async () => {
+        const response = await api.get('/hod/staff');
+        return response.data;
+    },
+    getStudents: async () => {
+        const response = await api.get('/hod/students');
+        return response.data;
+    },
+    getAnalytics: async () => {
+        const response = await api.get('/hod/analytics');
+        return response.data;
+    },
+    getStaffPerformance: async (staffId: string) => {
+        const response = await api.get(`/hod/staff/${staffId}/performance`);
+        return response.data;
+    },
+    compareClasses: async (classA: string, classB: string) => {
+        const response = await api.post('/hod/compare-classes', { classA, classB });
+        return response.data;
+    },
+    getStaffStudents: async (staffId: string) => {
+        const response = await api.get(`/hod/staff-students/${staffId}`);
         return response.data;
     }
 };
