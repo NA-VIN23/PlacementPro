@@ -31,6 +31,12 @@ import { StaffAssignment } from './pages/admin/StaffAssignment';
 
 import { AdminAddUser } from './pages/admin/AddUser';
 
+// Placement Insights
+import { PlacementInsightsHub } from './pages/student/placement-insights/PlacementInsightsHub';
+import { CompanyHistory } from './pages/student/placement-insights/CompanyHistory';
+import { CompanyDetail } from './pages/student/placement-insights/CompanyDetail';
+import { PlacementRadar } from './pages/student/placement-insights/PlacementRadar';
+
 function App() {
   return (
     <AuthProvider>
@@ -57,6 +63,13 @@ function App() {
                 <Route path="leaderboard" element={<StudentLeaderboard />} />
                 <Route path="resume-builder" element={<ResumeBuilder />} />
                 <Route path="profile" element={<StudentProfile />} />
+
+                {/* Placement Insights Module */}
+                <Route path="placement-insights" element={<PlacementInsightsHub />} />
+                <Route path="placement-insights/history" element={<CompanyHistory />} />
+                <Route path="placement-insights/company/:id" element={<CompanyDetail />} />
+                <Route path="placement-insights/radar" element={<PlacementRadar />} />
+
                 <Route index element={<Navigate to="dashboard" replace />} />
               </Route>
             </Route>
