@@ -1,14 +1,14 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Mic, PlayCircle } from 'lucide-react';
 
 export const StudentCommunication: React.FC = () => {
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
 
-    const startInterview = () => {
-        navigate('/student/interview');
-    };
+    // const startInterview = () => {
+    //     navigate('/student/interview');
+    // };
 
     return (
         <div className="space-y-8 animate-fade-in">
@@ -37,10 +37,10 @@ export const StudentCommunication: React.FC = () => {
 
                     <div className="flex flex-wrap gap-4">
                         <button
-                            onClick={startInterview}
-                            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-bold text-lg transition-all flex items-center gap-3 shadow-lg shadow-blue-500/25 group"
+                            disabled
+                            className="px-8 py-4 bg-slate-700 text-slate-500 rounded-2xl font-bold text-lg flex items-center gap-3 cursor-not-allowed"
                         >
-                            <PlayCircle className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                            <PlayCircle className="w-6 h-6" />
                             Start Interview
                         </button>
                     </div>
