@@ -31,6 +31,18 @@ import { StaffAssignment } from './pages/admin/StaffAssignment';
 
 import { AdminAddUser } from './pages/admin/AddUser';
 
+// Placement Insights
+import { PlacementInsightsHub } from './pages/student/placement-insights/PlacementInsightsHub';
+import { CompanyHistory } from './pages/student/placement-insights/CompanyHistory';
+import { CompanyDetail } from './pages/student/placement-insights/CompanyDetail';
+import { PlacementRadar } from './pages/student/placement-insights/PlacementRadar';
+
+import { HODDashboard } from './pages/hod/Dashboard';
+import { HODStaffList } from './pages/hod/StaffList';
+import { HODStudentList } from './pages/hod/StudentList';
+import { HODAnalytics } from './pages/hod/Analytics';
+import { HODClassAnalysis } from './pages/hod/ClassAnalysis';
+
 function App() {
   return (
     <AuthProvider>
@@ -57,6 +69,13 @@ function App() {
                 <Route path="leaderboard" element={<StudentLeaderboard />} />
                 <Route path="resume-builder" element={<ResumeBuilder />} />
                 <Route path="profile" element={<StudentProfile />} />
+
+                {/* Placement Insights Module */}
+                <Route path="placement-insights" element={<PlacementInsightsHub />} />
+                <Route path="placement-insights/history" element={<CompanyHistory />} />
+                <Route path="placement-insights/company/:id" element={<CompanyDetail />} />
+                <Route path="placement-insights/radar" element={<PlacementRadar />} />
+
                 <Route index element={<Navigate to="dashboard" replace />} />
               </Route>
             </Route>
@@ -70,6 +89,18 @@ function App() {
                 <Route path="analysis" element={<StaffStudentAnalysis />} />
                 <Route path="profile" element={<StaffProfile />} />
                 <Route path="assessment/:id/grade" element={<StaffGradingConsole />} />
+                <Route index element={<Navigate to="dashboard" replace />} />
+              </Route>
+            </Route>
+
+            {/* HOD Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['HOD']} />}>
+              <Route path="/hod" element={<MainLayout />}>
+                <Route path="dashboard" element={<HODDashboard />} />
+                <Route path="staff" element={<HODStaffList />} />
+                <Route path="students" element={<HODStudentList />} />
+                <Route path="analytics" element={<HODAnalytics />} />
+                <Route path="analytics/:staffId" element={<HODClassAnalysis />} />
                 <Route index element={<Navigate to="dashboard" replace />} />
               </Route>
             </Route>

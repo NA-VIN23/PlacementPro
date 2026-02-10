@@ -135,58 +135,55 @@ export const getAvailableExams = async (req: Request, res: Response) => {
 
         if (error) throw error;
 
-        // 4. Filter Exams based on Staff Assignment
-        // We need to check the creator of each exam
+        // Fetch My Submissions to check attempts
+        const { data: mySubmissions } = await supabase
+            .from('submissions')
+            .select('exam_id')
+            .eq('student_id', studentId);
+
+        const attemptMap = new Map();
+        mySubmissions?.forEach(sub => {
+            attemptMap.set(sub.exam_id, (attemptMap.get(sub.exam_id) || 0) + 1);
+        });
+
+        // 4. Filter Exams based on Staff Assignment & Attach Attempts
         const creatorIds = [...new Set(exams.map(e => e.created_by))];
+        let creatorMap = new Map();
 
-        if (creatorIds.length === 0) return res.json(exams);
-
-        const { data: creators } = await supabase
-            .from('users')
-            .select('id, batch')
-            .in('id', creatorIds);
-
-        const creatorMap = new Map();
-        creators?.forEach(c => creatorMap.set(c.id, c.batch));
+        if (creatorIds.length > 0) {
+            const { data: creators } = await supabase
+                .from('users')
+                .select('id, batch')
+                .in('id', creatorIds);
+            creators?.forEach(c => creatorMap.set(c.id, c.batch));
+        }
 
         const filteredExams = exams.filter(exam => {
             const creatorBatch = creatorMap.get(exam.created_by);
-
-            // If creator has no special assignment (no colon), allow visible to all (or restrict? assuming allow global staff)
-            // If it is 'RANGE:xxx:xxx', we check range.
-            if (!creatorBatch) return true; // Unassigned creator -> Visible to all? Safest for now.
+            if (!creatorBatch) return true;
 
             if (creatorBatch.startsWith('RANGE:')) {
-                // Format: "RANGE:Start:End|Extra1,Extra2"
                 const mainSplit = creatorBatch.split('|');
                 const rangePart = mainSplit[0];
                 const extrasPart = mainSplit[1] || '';
-
                 const rangeParts = rangePart.split(':');
-                // Validate range parts length is 3 (RANGE, S, E)
                 if (rangeParts.length !== 3) return false;
 
                 const startRegNo = rangeParts[1];
                 const endRegNo = rangeParts[2];
                 const extras = extrasPart ? extrasPart.split(',') : [];
-
                 const studentRegNo = student.registration_number;
                 if (!studentRegNo) return false;
 
-                // Check Range
-                const inRange = (startRegNo && endRegNo)
-                    ? (studentRegNo >= startRegNo && studentRegNo <= endRegNo)
-                    : false;
-
-                // Check Extras
+                const inRange = (startRegNo && endRegNo) ? (studentRegNo >= startRegNo && studentRegNo <= endRegNo) : false;
                 const inExtras = extras.includes(studentRegNo);
-
                 return inRange || inExtras;
             }
-
-            // Legacy/Other format -> Visible
             return true;
-        });
+        }).map(exam => ({
+            ...exam,
+            attemptCount: attemptMap.get(exam.id) || 0
+        }));
 
         res.json(filteredExams);
     } catch (err: any) {
@@ -255,10 +252,6 @@ export const getExamQuestions = async (req: Request, res: Response) => {
     }
 };
 
-// STUDENT: Submit Exam
-// STUDENT: Submit Exam - MOVED implementation to bottom of file for full evaluation support
-
-
 // STUDENT: Get Exam Analysis (Detailed Results)
 export const getExamAnalysis = async (req: Request, res: Response) => {
     const { id } = req.params;
@@ -283,12 +276,14 @@ export const getExamAnalysis = async (req: Request, res: Response) => {
             return res.status(403).json({ message: 'Results are only available after the exam ends.', endTime: end });
         }
 
-        // 3. Fetch Submission
+        // 3. Fetch Submission (Latest)
         const { data: submission, error: subError } = await supabase
             .from('submissions')
             .select('*')
             .eq('exam_id', id)
             .eq('student_id', studentId)
+            .order('submitted_at', { ascending: false })
+            .limit(1)
             .single();
 
         if (subError || !submission) return res.status(404).json({ message: 'Submission not found' });
@@ -312,7 +307,7 @@ export const getExamAnalysis = async (req: Request, res: Response) => {
     }
 };
 
-// STUDENT: Get My Results
+// STUDENT: Get My Results (Latest Attempt Only)
 export const getStudentResults = async (req: Request, res: Response) => {
     // @ts-ignore
     const studentId = req.user?.userId;
@@ -328,7 +323,17 @@ export const getStudentResults = async (req: Request, res: Response) => {
             .order('submitted_at', { ascending: false });
 
         if (error) throw error;
-        res.json(results);
+
+        // Filter: Keep only the latest attempt per exam
+        const latestResultsMap = new Map();
+        results?.forEach((sub) => {
+            if (!latestResultsMap.has(sub.exam_id)) {
+                latestResultsMap.set(sub.exam_id, sub);
+            }
+            // Since we ordered by submitted_at desc, the first one encountered is the latest.
+        });
+
+        res.json(Array.from(latestResultsMap.values()));
     } catch (err: any) {
         res.status(500).json({ message: 'Failed to fetch results', error: err.message });
     }
@@ -862,10 +867,10 @@ const evaluateCodeInternal = async (language: string, code: string, testCases: a
 };
 
 
-// STUDENT: Submit Exam (UPDATED for Full Evaluation)
+// STUDENT: Submit Exam (UPDATED for Full Evaluation & Multiple Attempts)
 export const submitExam = async (req: Request, res: Response) => {
     const { id } = req.params; // Exam ID
-    const { answers, terminated } = req.body; // { question_id: code/answer }
+    const { answers, terminated, violations } = req.body; // { question_id: code/answer }
     // @ts-ignore
     const studentId = req.user?.userId;
 
@@ -878,16 +883,36 @@ export const submitExam = async (req: Request, res: Response) => {
 
         if (qError) throw qError;
 
+        // 2. Check Attempt Count
+        const { data: existingSubs, error: subsError } = await supabase
+            .from('submissions')
+            .select('id, attempt_no')
+            .eq('exam_id', id)
+            .eq('student_id', studentId);
+
+        if (subsError) throw subsError;
+
+        const attemptCount = existingSubs?.length || 0;
+
+        if (attemptCount >= 2) {
+            return res.status(403).json({ message: 'Maximum attempts (2) reached for this exam.' });
+        }
+
+        const newAttemptNo = attemptCount + 1;
+
         let totalScore = 0;
         let maxPossibleScore = 0;
         const finalAnswers: any = {};
 
-        // Add Metadata if terminated
-        if (terminated) {
-            finalAnswers._metadata = { terminated: true, terminationReason: 'Max Violations Exceeded' };
-        }
+        // Add Metadata if terminated or violations exist
+        finalAnswers._metadata = {
+            terminated: terminated || false,
+            terminationReason: terminated ? 'Max Violations Exceeded' : null,
+            violations: violations || [],
+            violationCount: (violations || []).length
+        };
 
-        // 2. Iterate and Grade
+        // 3. Iterate and Grade
         for (const q of questions || []) {
             const studentAnswer = answers[q.id]; // Code or MCQ Option
             // @ts-ignore
@@ -948,32 +973,17 @@ export const submitExam = async (req: Request, res: Response) => {
             }
         }
 
-        // 3. Save Submission
-        // Check if submission exists (from auto-save) and update, or insert new
-        const { data: existingSub } = await supabase
-            .from('submissions')
-            .select('id, count') // check existing
-            .eq('exam_id', id)
-            .eq('student_id', studentId)
-            .single();
+        // 4. Save Submission (INSERT NEW)
+        const { error: insertError } = await supabase.from('submissions').insert({
+            student_id: studentId,
+            exam_id: id,
+            attempt_no: newAttemptNo,
+            score: totalScore,
+            answers: finalAnswers,
+            submitted_at: new Date()
+        });
 
-        const attempt_no = existingSub ? (existingSub.count || 1) : 1;
-
-        if (existingSub) {
-            await supabase.from('submissions').update({
-                score: totalScore,
-                answers: finalAnswers,
-                submitted_at: new Date() // Mark complete
-            }).eq('id', existingSub.id);
-        } else {
-            await supabase.from('submissions').insert({
-                student_id: studentId,
-                exam_id: id,
-                attempt_no,
-                score: totalScore,
-                answers: finalAnswers
-            });
-        }
+        if (insertError) throw insertError;
 
         res.json({
             message: 'Exam submitted successfully',

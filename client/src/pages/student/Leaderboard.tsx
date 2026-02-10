@@ -4,6 +4,7 @@ import { Trophy, Search, TrendingUp, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { PaginatedTable, type Column } from '../../components/ui/PaginatedTable';
 
 export const StudentLeaderboard: React.FC = () => {
     const { user: currentUser } = useAuth();
@@ -34,6 +35,75 @@ export const StudentLeaderboard: React.FC = () => {
     const first = leaderboardData[0] || { name: '-', score: 0, avatar: '?', rank: 1, batch: '' };
     const second = leaderboardData[1] || { name: '-', score: 0, avatar: '?', rank: 2, batch: '' };
     const third = leaderboardData[2] || { name: '-', score: 0, avatar: '?', rank: 3, batch: '' };
+
+    const columns: Column<any>[] = [
+        {
+            header: "Rank",
+            accessor: (user) => (
+                <div className="flex items-center gap-2">
+                    <span className={cn(
+                        "w-6 h-6 flex items-center justify-center font-bold rounded text-xs shrink-0",
+                        user.rank <= 3 ? "text-white" : "text-slate-500 bg-slate-100",
+                        user.rank === 1 ? "bg-yellow-400" :
+                            user.rank === 2 ? "bg-slate-400" :
+                                user.rank === 3 ? "bg-orange-400" : ""
+                    )}>
+                        {user.rank}
+                    </span>
+                    {user.trend === "up" && <ArrowUp className="w-3 h-3 text-emerald-500 shrink-0" />}
+                    {user.trend === "down" && <ArrowDown className="w-3 h-3 text-red-500 shrink-0" />}
+                    {user.trend === "same" && <div className="w-3 h-1 bg-slate-300 rounded-full shrink-0" />}
+                </div>
+            )
+        },
+        {
+            header: "Student",
+            accessor: (user) => (
+                <div className="flex items-center gap-2 md:gap-3">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 shrink-0">
+                        {user.avatar}
+                    </div>
+                    <div className="min-w-0">
+                        <p className={cn("font-bold text-sm truncate max-w-[120px] md:max-w-none", user.isUser ? "text-blue-700" : "text-slate-700")}>
+                            {user.name} {user.isUser && "(You)"}
+                        </p>
+                        <p className="text-xs text-slate-400 truncate">Batch {user.batch}</p>
+                    </div>
+                </div>
+            )
+        },
+        {
+            header: "Tests",
+            className: "hidden md:table-cell",
+            headerClassName: "hidden md:table-cell",
+            accessor: (user) => (
+                <span className="text-sm text-slate-600 font-medium">
+                    {user.tests}
+                </span>
+            )
+        },
+        {
+            header: "Streak",
+            className: "hidden md:table-cell",
+            headerClassName: "hidden md:table-cell",
+            accessor: (user) => (
+                <div className="flex items-center gap-1 text-orange-500 text-sm font-bold">
+                    <div className="p-1 bg-orange-100 rounded">
+                        <TrendingUp className="w-3 h-3" />
+                    </div>
+                    {user.streak} days
+                </div>
+            )
+        },
+        {
+            header: "Score",
+            className: "text-right",
+            headerClassName: "text-right",
+            accessor: (user) => (
+                <span className="font-bold text-slate-800">{user.score}</span>
+            )
+        }
+    ];
 
     return (
         <div className="space-y-8 animate-fade-in">
@@ -100,8 +170,8 @@ export const StudentLeaderboard: React.FC = () => {
             </div>
 
             {/* List View */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-end gap-4">
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-4 space-y-4">
+                <div className="flex flex-col md:flex-row justify-end gap-4">
                     <div className="relative w-full md:w-64">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
@@ -114,78 +184,12 @@ export const StudentLeaderboard: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                            <tr>
-                                <th className="px-3 md:px-6 py-4 whitespace-nowrap">Rank</th>
-                                <th className="px-3 md:px-6 py-4 w-full md:w-auto">Student</th>
-                                <th className="hidden md:table-cell px-6 py-4 whitespace-nowrap">Tests</th>
-                                <th className="hidden md:table-cell px-6 py-4 whitespace-nowrap">Streak</th>
-                                <th className="px-3 md:px-6 py-4 text-right whitespace-nowrap">Score</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {filteredLeaderboard.map((user) => (
-                                <tr key={user.rank} className={cn(
-                                    "hover:bg-slate-50 transition-colors",
-                                    user.isUser ? "bg-blue-50/50 hover:bg-blue-50" : ""
-                                )}>
-                                    <td className="px-3 md:px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center gap-2">
-                                            <span className={cn(
-                                                "w-6 h-6 flex items-center justify-center font-bold rounded text-xs shrink-0",
-                                                user.rank <= 3 ? "text-white" : "text-slate-500 bg-slate-100",
-                                                user.rank === 1 ? "bg-yellow-400" :
-                                                    user.rank === 2 ? "bg-slate-400" :
-                                                        user.rank === 3 ? "bg-orange-400" : ""
-                                            )}>
-                                                {user.rank}
-                                            </span>
-                                            {user.trend === "up" && <ArrowUp className="w-3 h-3 text-emerald-500 shrink-0" />}
-                                            {user.trend === "down" && <ArrowDown className="w-3 h-3 text-red-500 shrink-0" />}
-                                            {user.trend === "same" && <div className="w-3 h-1 bg-slate-300 rounded-full shrink-0" />}
-                                        </div>
-                                    </td>
-                                    <td className="px-3 md:px-6 py-4">
-                                        <div className="flex items-center gap-2 md:gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 shrink-0">
-                                                {user.avatar}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className={cn("font-bold text-sm truncate max-w-[120px] md:max-w-none", user.isUser ? "text-blue-700" : "text-slate-700")}>
-                                                    {user.name} {user.isUser && "(You)"}
-                                                </p>
-                                                <p className="text-xs text-slate-400 truncate">Batch {user.batch}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="hidden md:table-cell px-6 py-4 text-sm text-slate-600 font-medium whitespace-nowrap">
-                                        {user.tests}
-                                    </td>
-                                    <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center gap-1 text-orange-500 text-sm font-bold">
-                                            <div className="p-1 bg-orange-100 rounded">
-                                                <TrendingUp className="w-3 h-3" />
-                                            </div>
-                                            {user.streak} days
-                                        </div>
-                                    </td>
-                                    <td className="px-3 md:px-6 py-4 text-right whitespace-nowrap">
-                                        <span className="font-bold text-slate-800">{user.score}</span>
-                                    </td>
-                                </tr>
-                            ))}
-                            {filteredLeaderboard.length === 0 && (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-4 text-center text-slate-400 text-sm">
-                                        No students found.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                <PaginatedTable
+                    data={filteredLeaderboard}
+                    columns={columns}
+                    emptyMessage="No students found."
+                    rowClassName={(row) => row.isUser ? "bg-blue-50/50 hover:bg-blue-50" : ""}
+                />
             </div>
         </div>
     );

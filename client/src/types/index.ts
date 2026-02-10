@@ -1,4 +1,4 @@
-export type UserRole = 'ADMIN' | 'STAFF' | 'STUDENT';
+export type UserRole = 'ADMIN' | 'STAFF' | 'STUDENT' | 'HOD';
 
 export interface User {
     id: string; // UUID from DB
@@ -20,6 +20,7 @@ export interface Exam {
     end_time: string;
     type?: 'DAILY' | 'WEEKLY';
     mode?: 'MANUAL' | 'PDF';
+    attemptCount?: number;
     pdf_url?: string;
 }
 

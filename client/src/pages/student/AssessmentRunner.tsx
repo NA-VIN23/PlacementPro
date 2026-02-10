@@ -226,7 +226,7 @@ export const AssessmentRunner: React.FC = () => {
         setSubmitting(true);
         try {
             if (!id) return;
-            await studentService.submitExam(id, answers, terminated);
+            await studentService.submitExam(id, answers, terminated, violations);
 
             setSubmitted(true);
         } catch (err) {

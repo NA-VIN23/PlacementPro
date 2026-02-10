@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LogOut, UserCircle, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { STUDENT_NAV, STAFF_NAV, ADMIN_NAV } from '../../constants/navigation';
+import { STUDENT_NAV, STAFF_NAV, ADMIN_NAV, HOD_NAV } from '../../constants/navigation';
 import { cn } from '../../utils/cn';
 
 interface SidebarProps {
@@ -25,6 +25,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             break;
         case 'STAFF':
             navItems = STAFF_NAV;
+            roleColor = "text-indigo-600 bg-indigo-50";
+            break;
+        case 'HOD':
+            navItems = HOD_NAV;
             roleColor = "text-indigo-600 bg-indigo-50";
             break;
         case 'ADMIN':

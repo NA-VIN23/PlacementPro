@@ -7,7 +7,8 @@ import {
     Users,
     ClipboardList,
     BarChart,
-    BookOpen
+    BookOpen,
+    Briefcase
 } from 'lucide-react';
 
 export const STUDENT_NAV = [
@@ -17,6 +18,7 @@ export const STUDENT_NAV = [
     { label: 'Communication AI', icon: MessageSquare, path: '/student/communication' },
     { label: 'Leaderboard', icon: Trophy, path: '/student/leaderboard' },
     { label: 'Resume Builder (ATS)', icon: ClipboardList, path: '/student/resume-builder' },
+    { label: 'Placement Insights', icon: Briefcase, path: '/student/placement-insights' },
 ];
 
 export const STAFF_NAV = [
@@ -25,6 +27,13 @@ export const STAFF_NAV = [
     { label: 'Student Database', icon: Users, path: '/staff/students' },
     { label: 'Student Analysis', icon: BarChart, path: '/staff/analysis' },
     { label: 'Profile', icon: User, path: '/staff/profile' },
+];
+
+export const HOD_NAV = [
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/hod/dashboard' },
+    { label: 'Staff', icon: Users, path: '/hod/staff' },
+    { label: 'Students', icon: Users, path: '/hod/students' },
+    { label: 'Department Analytics', icon: BarChart, path: '/hod/analytics' },
 ];
 
 export const ADMIN_NAV = [
