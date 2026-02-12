@@ -21,23 +21,46 @@ export const StaffDashboard: React.FC = () => {
 
     const [refreshing, setRefreshing] = useState(false);
 
-    const fetchDashboardData = async () => {
-        setRefreshing(true);
+    const fetchDashboardData = async (silent = false) => {
+        if (!silent) setRefreshing(true);
         try {
             const statsData = await staffService.getStats();
             setStats(statsData);
 
             const submissionsData = await staffService.getAllSubmissions();
-            setRecentSubmissions(submissionsData);
+
+            // Ensure sorted by date DESC before grouping
+            submissionsData.sort((a: any, b: any) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime());
+
+            // Group by student+exam to show unique latest submission with attempt count
+            const uniqueMap = new Map();
+            submissionsData.forEach((sub: any) => {
+                const key = `${sub.student_id}-${sub.exam_id}`;
+                if (uniqueMap.has(key)) {
+                    const existing = uniqueMap.get(key);
+                    existing.totalAttempts = (existing.totalAttempts || 1) + 1;
+                } else {
+                    sub.totalAttempts = 1;
+                    uniqueMap.set(key, sub);
+                }
+            });
+
+            setRecentSubmissions(Array.from(uniqueMap.values()));
         } catch (err) {
             console.error("Failed to fetch dashboard data", err);
         } finally {
-            setRefreshing(false);
+            if (!silent) setRefreshing(false);
         }
     };
 
     useEffect(() => {
         fetchDashboardData();
+
+        const interval = setInterval(() => {
+            fetchDashboardData(true);
+        }, 3000); // Poll every 3 seconds
+
+        return () => clearInterval(interval);
     }, []);
 
     const columns: Column<any>[] = [
@@ -66,10 +89,32 @@ export const StaffDashboard: React.FC = () => {
             )
         },
         {
+            header: "Attempts",
+            accessor: (row) => (
+                <div className="text-slate-600 font-medium ml-4">
+                    {row.totalAttempts || 1}
+                </div>
+            )
+        },
+        {
+            header: "Violations",
+            accessor: (row) => {
+                const count = row.answers?._metadata?.violationCount || 0;
+
+                if (count === 0) return <span className="text-slate-400">-</span>;
+
+                return (
+                    <span className="px-2 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-bold">
+                        {count}
+                    </span>
+                );
+            }
+        },
+        {
             header: "Submitted",
             accessor: (row) => (
-                <div className="text-slate-500">
-                    {new Date(row.submitted_at).toLocaleDateString()}
+                <div className="text-slate-500 text-xs">
+                    {new Date(row.submitted_at).toLocaleString()}
                 </div>
             )
         }
@@ -131,7 +176,7 @@ export const StaffDashboard: React.FC = () => {
                     <div className="p-6 pb-2 flex justify-between items-center shrink-0">
                         <h3 className="font-bold text-slate-800">Recent Submissions</h3>
                         <button
-                            onClick={fetchDashboardData}
+                            onClick={() => fetchDashboardData(false)}
                             disabled={refreshing}
                             className={`p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-colors ${refreshing ? 'animate-spin' : ''}`}
                             title="Refresh Submissions"
