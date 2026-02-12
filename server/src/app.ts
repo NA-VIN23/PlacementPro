@@ -24,10 +24,20 @@ import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import examRoutes from './routes/examRoutes';
 import mockInterviewRoutes from './routes/mockInterviewRoutes';
+import resumeRoutes from './routes/resumeRoutes';
+import leaderboardRoutes from './routes/leaderboardRoutes';
+import studentRoutes from './routes/studentRoutes';
+import assessmentRoutes from './routes/assessmentRoutes';
+import hodRoutes from './routes/hodRoutes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/exams', examRoutes);
 app.use('/api/interviews', mockInterviewRoutes);
+app.use('/api/resume', resumeRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/student', studentRoutes);
+app.use('/api/assessment', assessmentRoutes);
+app.use('/api/hod', hodRoutes);
 
 export default app;

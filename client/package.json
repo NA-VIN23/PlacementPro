@@ -10,12 +10,27 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@livekit/components-react": "^2.9.19",
+    "@monaco-editor/react": "^4.7.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
+    "@react-three/rapier": "^2.2.0",
+    "@types/three": "^0.182.0",
+    "ace-builds": "^1.43.6",
+    "axios": "^1.13.4",
+    "clsx": "^2.1.0",
+    "date-fns": "^4.1.0",
+    "gsap": "^3.14.2",
+    "livekit-client": "^2.17.0",
+    "lucide-react": "^0.344.0",
+    "meshline": "^3.3.1",
+    "ogl": "^1.0.11",
     "react": "^19.2.0",
+    "react-ace": "^14.0.1",
     "react-dom": "^19.2.0",
     "react-router-dom": "^6.22.0",
-    "lucide-react": "^0.344.0",
-    "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.1"
+    "tailwind-merge": "^2.2.1",
+    "three": "^0.182.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -23,15 +38,15 @@
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
+    "autoprefixer": "^10.4.17",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.4",
-    "tailwindcss": "^3.4.1",
-    "postcss": "^8.4.35",
-    "autoprefixer": "^10.4.17"
+    "vite": "^7.2.4"
   }
 }

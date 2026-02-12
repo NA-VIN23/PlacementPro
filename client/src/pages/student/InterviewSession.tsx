@@ -1,197 +1,289 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare, Play } from 'lucide-react';
-import { cn } from '../../utils/cn';
+import {
+    LiveKitRoom,
+    RoomAudioRenderer,
+    useVoiceAssistant,
+    BarVisualizer,
+    useConnectionState,
+    useLocalParticipant,
+} from '@livekit/components-react';
+import { ConnectionState } from 'livekit-client';
+import { Mic, MicOff, PhoneOff, Loader2 } from 'lucide-react';
 
-export const InterviewSession: React.FC = () => {
-    const navigate = useNavigate();
-    const [isMicOn, setIsMicOn] = useState(true);
-    const [isCameraOn, setIsCameraOn] = useState(true);
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-    // Simulate AI speaking effect
-    const [displayedText, setDisplayedText] = useState("");
-    const [status, setStatus] = useState<'listening' | 'speaking' | 'processing'>('speaking');
-    const [transcript, setTranscript] = useState<{ role: 'ai' | 'user', text: string }[]>([
-        { role: 'ai', text: "Hello! Welcome to your technical mock interview. I'm your AI interviewer today. To get started, could you please introduce yourself and tell me a bit about your background in software development?" }
-    ]);
+interface InterviewConfig {
+    token: string;
+    roomName: string;
+    livekitUrl: string;
+    interviewId: string;
+}
 
-    useEffect(() => {
-        const lastMsg = transcript[transcript.length - 1];
-        if (lastMsg.role === 'ai') {
-            let i = 0;
-            const timer = setInterval(() => {
-                setDisplayedText(lastMsg.text.substring(0, i));
-                i++;
-                if (i > lastMsg.text.length) clearInterval(timer);
-            }, 30);
-            return () => clearInterval(timer);
-        } else {
-            setDisplayedText(lastMsg.text);
-        }
-    }, [transcript]);
+// Voice Assistant UI Component
+const VoiceAssistantUI: React.FC<{ onEnd: () => void }> = ({ onEnd }) => {
+    const { state, audioTrack } = useVoiceAssistant();
+    const { isMicrophoneEnabled, localParticipant } = useLocalParticipant();
 
-    const handleEndCall = () => {
-        if (confirm("End this interview session?")) {
-            navigate('/student/communication');
+    const toggleMic = async () => {
+        if (localParticipant) {
+            await localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
         }
     };
 
-    const simulateUserResponse = () => {
-        setStatus('listening');
-        setTimeout(() => {
-            const userResponse = "Hi, I'm a computer science student specializing in web development. I have experience with React and Node.js, and I recently built a full-stack project for managing library books.";
-            setTranscript(prev => [...prev, { role: 'user', text: userResponse }]);
-            setStatus('processing');
+    const getStateText = () => {
+        switch (state) {
+            case 'listening': return 'Listening...';
+            case 'thinking': return 'Thinking...';
+            case 'speaking': return 'AI Speaking...';
+            default: return 'Connecting...';
+        }
+    };
 
-            setTimeout(() => {
-                setTranscript(prev => [...prev, { role: 'ai', text: "That's great! React and Node.js are a powerful combination. Can you explain a challenging problem you faced while building that library project and how you solved it?" }]);
-                setStatus('speaking');
-            }, 2000);
-        }, 1500);
+    const getStateColor = () => {
+        switch (state) {
+            case 'listening': return 'text-green-400';
+            case 'thinking': return 'text-yellow-400';
+            case 'speaking': return 'text-blue-400';
+            default: return 'text-gray-400';
+        }
     };
 
     return (
-        <div className="flex bg-slate-900 h-[calc(100vh-theme(spacing.24))] -m-8 relative overflow-hidden text-white">
-            {/* Main Video Area */}
-            <div className="flex-1 flex flex-col p-4 relative z-10">
-                <div className="flex-1 rounded-3xl bg-slate-800 border border-slate-700 relative overflow-hidden shadow-2xl">
-                    {/* Simulated Camera Feed */}
-                    {isCameraOn ? (
-                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=2960&auto=format&fit=crop')] bg-cover bg-center opacity-80" />
+        <div className="flex flex-col items-center justify-center min-h-[50vh] md:min-h-[60vh] space-y-8 md:space-y-12 py-8">
+            {/* AI Avatar / Visualizer */}
+            <div className="relative">
+                <div className="w-32 h-32 md:w-48 md:h-48 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-cyan-500 flex items-center justify-center shadow-2xl shadow-blue-500/30 transition-all duration-500">
+                    {audioTrack ? (
+                        <BarVisualizer
+                            state={state}
+                            barCount={5}
+                            trackRef={audioTrack}
+                            style={{ width: '100%', height: '100%' }}
+                            className="text-white scale-75 md:scale-100"
+                        />
                     ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
-                            <div className="w-32 h-32 rounded-full bg-slate-700 flex items-center justify-center text-4xl font-bold text-slate-500">
-                                YOU
-                            </div>
-                        </div>
+                        <Mic className="w-10 h-10 md:w-16 md:h-16 text-white animate-pulse" />
                     )}
-
-                    {/* AI Avatar Overlay (Picture-in-Picture style) */}
-                    <div className="absolute top-6 right-6 w-48 h-36 bg-black rounded-2xl border-2 border-slate-600 overflow-hidden shadow-lg z-20">
-                        <div className="w-full h-full bg-indigo-900 relative flex items-center justify-center overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-b from-indigo-800 to-slate-900"></div>
-                            {/* Animated AI Visualizer */}
-                            <div className="flex items-center gap-1">
-                                {[1, 2, 3, 4, 5].map(i => (
-                                    <div key={i} className={cn(
-                                        "w-2 bg-blue-400 rounded-full animate-bounce",
-                                        status === 'speaking' ? "h-8" : "h-2"
-                                    )} style={{ animationDelay: `${i * 0.1}s` }}></div>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="absolute bottom-2 left-2 text-[10px] font-bold px-2 py-0.5 bg-black/50 rounded text-slate-300">AI Interviewer</div>
-                    </div>
-
-                    {/* Status Badge */}
-                    <div className="absolute top-6 left-6">
-                        <div className="flex items-center gap-2 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
-                            <div className={cn("w-2 h-2 rounded-full animate-pulse", status === 'listening' ? "bg-red-500" : "bg-green-500")}></div>
-                            <span className="text-sm font-medium tracking-wide uppercase">{status}</span>
-                        </div>
-                    </div>
-
-                    {/* Captions Overlay */}
-                    <div className="absolute bottom-12 left-0 right-0 px-12 text-center pointer-events-none">
-                        <p className="text-2xl font-medium text-white/90 drop-shadow-lg leading-relaxed max-w-4xl mx-auto">
-                            "{displayedText}"
-                        </p>
-                    </div>
                 </div>
 
-                {/* Control Bar */}
-                <div className="h-24 flex items-center justify-between px-8">
-                    <div className="flex items-center gap-2 text-slate-400 text-sm">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        Connected &bull; 00:01:24
-                    </div>
+                {/* Status Ring */}
+                <div className={`absolute inset-0 rounded-full border-4 transition-all duration-500 ${state === 'listening' ? 'border-green-400 shadow-[0_0_30px_rgba(74,222,128,0.3)]' :
+                    state === 'speaking' ? 'border-indigo-400 shadow-[0_0_30px_rgba(129,140,248,0.3)]' :
+                        'border-white/10'
+                    }`} style={{ pointerEvents: 'none' }} />
+            </div>
 
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => setIsMicOn(!isMicOn)}
-                            className={cn(
-                                "p-4 rounded-full transition-all duration-200 shadow-lg",
-                                isMicOn ? "bg-slate-700 hover:bg-slate-600 text-white" : "bg-red-500 hover:bg-red-600 text-white"
-                            )}
-                        >
-                            {isMicOn ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
-                        </button>
-                        <button
-                            onClick={() => setIsCameraOn(!isCameraOn)}
-                            className={cn(
-                                "p-4 rounded-full transition-all duration-200 shadow-lg",
-                                isCameraOn ? "bg-slate-700 hover:bg-slate-600 text-white" : "bg-red-500 hover:bg-red-600 text-white"
-                            )}
-                        >
-                            {isCameraOn ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
-                        </button>
-                        <button
-                            onClick={handleEndCall}
-                            className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold flex items-center gap-2 shadow-lg shadow-red-900/20 transition-all active:scale-95"
-                        >
-                            <PhoneOff className="w-5 h-5" />
-                            End Interview
-                        </button>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <button className="p-3 bg-slate-800 rounded-xl hover:bg-slate-700 text-slate-300">
-                            <MessageSquare className="w-5 h-5" />
-                        </button>
-                    </div>
+            {/* Status Text & User Feedback */}
+            <div className="text-center space-y-4 md:space-y-6">
+                <div className="space-y-2">
+                    <p className={`text-xl md:text-2xl font-bold transition-colors duration-300 ${getStateColor()}`}>
+                        {getStateText()}
+                    </p>
+                    <p className="text-slate-400 text-xs md:text-sm">
+                        {state === 'listening' ? 'Speak clearly while the ring is green' :
+                            state === 'speaking' ? 'Listen to the response' :
+                                'Processing your input...'}
+                    </p>
                 </div>
             </div>
 
-            {/* Sidebar (Transcript / Feedback) */}
-            <div className="w-96 bg-slate-800 border-l border-slate-700 flex flex-col z-20 shadow-2xl">
-                <div className="p-6 border-b border-slate-700 flex items-center justify-between bg-slate-900/50">
-                    <h3 className="font-bold text-white">Live Transcript</h3>
-                    <div className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs font-bold rounded uppercase">Beta</div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                    {transcript.map((msg, i) => (
-                        <div key={i} className={cn("flex gap-3", msg.role === 'user' ? "flex-row-reverse" : "")}>
-                            <div className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
-                                msg.role === 'ai' ? "bg-indigo-600" : "bg-slate-600"
-                            )}>
-                                {msg.role === 'ai' ? "AI" : "YOU"}
-                            </div>
-                            <div className={cn(
-                                "p-3 rounded-2xl text-sm leading-relaxed max-w-[80%]",
-                                msg.role === 'ai'
-                                    ? "bg-indigo-900/40 text-indigo-100 rounded-tl-none border border-indigo-500/20"
-                                    : "bg-slate-700 text-slate-100 rounded-tr-none"
-                            )}>
-                                {msg.text}
-                            </div>
-                        </div>
-                    ))}
-
-                    {/* Demo Control for Reviewers */}
-                    {status === 'speaking' && transcript.length < 3 && (
-                        <div className="mt-8 p-4 bg-slate-900/50 rounded-xl border border-slate-700/50 text-center">
-                            <p className="text-xs text-slate-500 mb-3">Simulation Controls</p>
-                            <button
-                                onClick={simulateUserResponse}
-                                className="w-full py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium flex items-center justify-center gap-2"
-                            >
-                                <Play className="w-4 h-4" /> Simulate Answer
-                            </button>
-                        </div>
+            {/* Control Bar */}
+            <div className="flex items-center gap-6">
+                <button
+                    onClick={toggleMic}
+                    className={`px-6 py-3 md:px-8 md:py-4 rounded-2xl font-bold flex items-center gap-2 md:gap-3 transition-all group text-sm md:text-base border ${isMicrophoneEnabled
+                        ? 'bg-slate-800 text-white border-slate-700 hover:bg-slate-700'
+                        : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'
+                        }`}
+                >
+                    {isMicrophoneEnabled ? (
+                        <>
+                            <Mic className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
+                            <span>Mute</span>
+                        </>
+                    ) : (
+                        <>
+                            <MicOff className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
+                            <span>Unmute</span>
+                        </>
                     )}
+                </button>
+
+                <button
+                    onClick={onEnd}
+                    className="px-6 py-3 md:px-8 md:py-4 bg-red-500 hover:bg-red-600 text-white border border-red-500 rounded-2xl font-bold flex items-center gap-2 md:gap-3 transition-all group text-sm md:text-base shadow-lg shadow-red-500/20"
+                >
+                    <PhoneOff className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
+                    End Interview
+                </button>
+            </div>
+        </div>
+    );
+};
+
+// Connection Status Component
+const ConnectionStatus: React.FC = () => {
+    const connectionState = useConnectionState();
+
+    if (connectionState === ConnectionState.Connected) {
+        return (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 rounded-full">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                <span className="text-green-400 text-sm font-medium">Connected</span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-500/20 rounded-full">
+            <Loader2 className="w-4 h-4 text-yellow-400 animate-spin" />
+            <span className="text-yellow-400 text-sm font-medium">Connecting...</span>
+        </div>
+    );
+};
+
+export const InterviewSession: React.FC = () => {
+    const navigate = useNavigate();
+    const [config, setConfig] = useState<InterviewConfig | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        startInterview();
+    }, []);
+
+    const startInterview = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const token = localStorage.getItem('placement_token');
+            if (!token) {
+                navigate('/login');
+                return;
+            }
+
+            const response = await fetch(`${API_BASE_URL}/interviews/start`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to start interview');
+            }
+
+            const data = await response.json();
+            setConfig({
+                token: data.token,
+                roomName: data.roomName,
+                livekitUrl: data.livekitUrl || 'wss://placementpro.livekit.cloud',
+                interviewId: data.interviewId,
+            });
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to start interview');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const endInterview = async () => {
+        if (!config) return;
+
+        try {
+            const token = localStorage.getItem('placement_token');
+            await fetch(`${API_BASE_URL}/interviews/end`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ interviewId: config.interviewId }),
+            });
+        } catch (err) {
+            console.error('Failed to end interview:', err);
+        }
+
+        navigate('/student/communication');
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+                <div className="text-center space-y-4">
+                    <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto" />
+                    <p className="text-white text-lg">Preparing your interview session...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !config) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+                <div className="text-center space-y-4">
+                    <p className="text-red-400 text-lg">{error || 'Configuration error'}</p>
+                    <button
+                        onClick={() => navigate('/student/communication')}
+                        className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-2xl"
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen relative overflow-hidden bg-slate-950">
+            {/* Ambient Background Effects */}
+            <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/10 blur-[100px] rounded-full pointer-events-none" />
+            <div className="absolute top-[20%] right-[-10%] w-[400px] h-[400px] bg-cyan-600/10 blur-[80px] rounded-full pointer-events-none" />
+
+            <div className="relative z-10">
+                {/* Header */}
+                <div className="p-6 border-b border-white/5">
+                    <div className="max-w-4xl mx-auto flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold text-white tracking-tight">AI Interview Session</h1>
+                            <p className="text-slate-400 text-sm">Speak naturally - the AI will listen and respond</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="p-4 bg-slate-900/50 border-t border-slate-700">
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-800 border border-slate-700">
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mx-2"></div>
-                        <input
-                            type="text"
-                            disabled
-                            placeholder="Listening..."
-                            className="bg-transparent border-0 focus:ring-0 text-slate-400 text-sm w-full"
-                        />
+                {/* LiveKit Room */}
+                <div className="max-w-4xl mx-auto p-6">
+                    <LiveKitRoom
+                        token={config.token}
+                        serverUrl={config.livekitUrl}
+                        connect={true}
+                        audio={true}
+                        video={false}
+                        className="bg-white/5 rounded-3xl p-8 backdrop-blur-xl border border-white/10 shadow-2xl"
+                    >
+                        <div className="absolute top-4 right-4">
+                            <ConnectionStatus />
+                        </div>
+                        <VoiceAssistantUI onEnd={endInterview} />
+                        <RoomAudioRenderer />
+                    </LiveKitRoom>
+                </div>
+
+                {/* Tips */}
+                <div className="max-w-4xl mx-auto px-6 pb-8">
+                    <div className="bg-white/5 rounded-2xl p-4 border border-white/10 checkbox-list">
+                        <h3 className="text-sm font-semibold text-blue-200 mb-2 flex items-center gap-2">
+                            <span className="text-lg">💡</span> Tips for a great interview:
+                        </h3>
+                        <ul className="text-sm text-slate-400 space-y-1 ml-1">
+                            <li>• Speak clearly and at a normal pace</li>
+                            <li>• Wait for the AI to finish before responding</li>
+                            <li>• Use the STAR method for behavioral questions</li>
+                        </ul>
                     </div>
                 </div>
             </div>

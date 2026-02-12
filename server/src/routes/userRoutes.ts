@@ -1,14 +1,32 @@
 import { Router } from 'express';
-import { addUser, listUsers, toggleUserParams } from '../controllers/userController';
+import { addUser, listUsers, toggleUserParams, updateProfile, getStaffActivityLogs, getStudents, bulkImportUsers, deleteUser } from '../controllers/userController';
 import { authenticate, authorize } from '../middleware/authMiddleware';
+import multer from 'multer';
+
+// Multer config for file uploads
+const upload = multer({ storage: multer.memoryStorage() });
 
 const router = Router();
 
-// Protect all routes: Admin only
-router.use(authenticate, authorize(['ADMIN']));
+// Base authentication for all routes
+router.use(authenticate);
 
-router.post('/add', addUser);
-router.get('/', listUsers);
-router.patch('/:id/toggle-active', toggleUserParams);
+// Profile and Logs - Accessible by Admin and Staff
+router.patch('/profile', authorize(['ADMIN', 'STAFF']), updateProfile);
+router.get('/logs', authorize(['ADMIN', 'STAFF']), getStaffActivityLogs);
+router.get('/students', authorize(['ADMIN', 'STAFF']), getStudents);
+
+// Admin Only Routes
+router.post('/add', authorize(['ADMIN']), addUser);
+router.post('/import-bulk', authorize(['ADMIN']), upload.single('file'), bulkImportUsers);
+router.delete('/:id', authorize(['ADMIN']), deleteUser);
+router.get('/', authorize(['ADMIN']), listUsers);
+router.patch('/:id/toggle-active', authorize(['ADMIN']), toggleUserParams);
+
+// Staff Assignment (Admin Only)
+import { assignClassAdvisor, listStaff } from '../controllers/staffController';
+
+router.post('/staff/assign-class-advisor', authorize(['ADMIN']), assignClassAdvisor);
+router.get('/staff/list', authorize(['ADMIN']), listStaff);
 
 export default router;

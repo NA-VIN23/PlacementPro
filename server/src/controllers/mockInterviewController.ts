@@ -1,59 +1,89 @@
 import { Request, Response } from 'express';
-import { MockInterview } from '../models/types';
 
-export let MOCK_INTERVIEWS_DB: MockInterview[] = [];
+const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY || '';
+const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET || '';
+const LIVEKIT_URL = process.env.LIVEKIT_URL || '';
 
-// START Interview (Initialize context)
-export const startInterview = (req: Request, res: Response) => {
-    const { type, resumeText } = req.body; // HR or TECHNICAL
+/**
+ * Generate LiveKit token for student to join interview room
+ */
+export const startInterview = async (req: Request, res: Response) => {
+    try {
+        const studentId = (req as any).user?.userId || 'demo-student';
+        const studentName = 'Student'; // req.user doesn't have name in jwt usually, strictly from DB
 
-    // In a real app, we would initialize an OpenAI/Gemini session here with the resume context
-    res.json({
-        message: 'Interview session started',
-        sessionId: Date.now().toString(),
-        firstQuestion: `Hello, I see you are applying for a specific role. Can you walk me through your resume?`
-    });
+        // Create unique room name for this interview
+        const roomName = `interview-${Date.now()}-${studentId}`;
+        const interviewId = `int-${Date.now()}`;
+
+        // Check if LiveKit credentials are configured
+        if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET || !LIVEKIT_URL) {
+            console.error('LiveKit credentials missing:', {
+                hasKey: !!LIVEKIT_API_KEY,
+                hasSecret: !!LIVEKIT_API_SECRET,
+                hasUrl: !!LIVEKIT_URL
+            });
+            return res.status(500).json({ error: 'LiveKit configuration missing' });
+        }
+
+        // Use require for CommonJS compatibility
+        const { AccessToken } = require('livekit-server-sdk');
+
+        // Generate LiveKit access token for student
+        const token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
+            identity: studentId,
+            name: studentName,
+        });
+
+        // Grant permissions to join room and publish audio
+        token.addGrant({
+            roomJoin: true,
+            room: roomName,
+            canPublish: true,
+            canSubscribe: true,
+            canPublishData: true,
+        });
+
+        const jwt = await token.toJwt();
+
+        console.log('Interview started:', { roomName, studentId, livekitUrl: LIVEKIT_URL });
+
+        res.json({
+            interviewId: interviewId,
+            roomName: roomName,
+            token: jwt,
+            livekitUrl: LIVEKIT_URL,
+        });
+
+    } catch (error: any) {
+        console.error('Failed to start interview:', error);
+        res.status(500).json({ error: 'Failed to start interview session', details: error.message });
+    }
 };
 
-// CHAT Interaction
-export const chatInterview = (req: Request, res: Response) => {
-    const { sessionId, userMessage } = req.body;
-
-    // Mock AI Response logic
-    const responses = [
-        "That's interesting. Can you elaborate on your experience with React?",
-        "How do you handle conflict in a team setting?",
-        "Explain the difference between SQL and NoSQL databases.",
-        "Good answer. Let's move to the next topic."
-    ];
-
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-
-    res.json({
-        response: randomResponse,
-        sessionId
-    });
+/**
+ * End interview and save feedback
+ */
+export const endInterview = async (req: Request, res: Response) => {
+    try {
+        const { interviewId } = req.body;
+        console.log('Interview ended:', interviewId);
+        res.json({ message: 'Interview ended successfully' });
+    } catch (error) {
+        console.error('Failed to end interview:', error);
+        res.status(500).json({ error: 'Failed to end interview' });
+    }
 };
 
-// END Interview (Submit Feedback)
-export const endInterview = (req: Request, res: Response) => {
-    const { sessionId } = req.body;
-    // @ts-ignore
-    const studentId = req.user?.userId || 'unknown';
-
-    const newInterview: MockInterview = {
-        id: Date.now().toString(),
-        student_id: studentId,
-        interview_type: 'HR', // Logic to track type needed
-        score: Math.floor(Math.random() * 5) + 5, // Mock score 5-10
-        feedback: 'Good confidence, but work on technical definitions.',
-        created_at: new Date()
-    };
-
-    MOCK_INTERVIEWS_DB.push(newInterview);
-
-    res.json({
-        message: 'Interview completed',
-        result: newInterview
-    });
+/**
+ * Get interview history for student
+ */
+export const getInterviewHistory = async (req: Request, res: Response) => {
+    try {
+        // Return empty array for now (no database)
+        res.json([]);
+    } catch (error) {
+        console.error('Failed to fetch interview history:', error);
+        res.status(500).json({ error: 'Failed to fetch history' });
+    }
 };

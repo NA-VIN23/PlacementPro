@@ -1,107 +1,100 @@
-import React from 'react';
-import { Mail, ShieldCheck, Activity, Key, Settings, AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Mail, ShieldCheck, Settings, Save } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { adminService } from '../../services/api';
 
 export const AdminProfile: React.FC = () => {
     const { user } = useAuth();
+    const [isEditing, setIsEditing] = useState(false);
+    const [email, setEmail] = useState(user?.email || '');
+    const [loading, setLoading] = useState(false);
+
+    const handleUpdate = async () => {
+        setLoading(true);
+        try {
+            await adminService.updateProfile({ email });
+            setIsEditing(false);
+            alert('Profile updated successfully!');
+            // Ideally update local user context here if needed, or force reload
+        } catch (error) {
+            console.error("Failed to update profile", error);
+            alert('Failed to update profile.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <div className="space-y-8 animate-fade-in">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="h-32 bg-slate-900 relative">
-                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-10"></div>
+        <div className="space-y-8 animate-fade-in max-w-4xl mx-auto">
+            {/* Header Card */}
+            {/* Header Card */}
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-8 flex flex-col md:flex-row items-center gap-6">
+                <div className="w-24 h-24 bg-slate-900 rounded-3xl flex items-center justify-center text-white shadow-xl rotate-3 hover:rotate-0 transition-all duration-300">
+                    <ShieldCheck className="w-10 h-10" />
                 </div>
-                <div className="px-8 pb-8 flex flex-col md:flex-row items-end -mt-10 gap-6">
-                    <div className="w-24 h-24 bg-brand-600 rounded-2xl border-4 border-white shadow-lg flex items-center justify-center text-white">
-                        <ShieldCheck className="w-10 h-10" />
-                    </div>
-                    <div className="flex-1 pb-2 text-center md:text-left">
-                        <h1 className="text-2xl font-bold text-slate-900">{user?.name}</h1>
-                        <p className="text-slate-500 text-sm font-medium">System Administrator • Since 2023</p>
-                    </div>
-                    <div className="pb-2">
-                        <button className="px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20">
-                            System Logs
-                        </button>
+                <div className="flex-1 text-center md:text-left">
+                    <h1 className="text-3xl font-bold text-slate-900">{user?.name}</h1>
+                    <p className="text-slate-500 font-medium">Administrator Profile</p>
+                    <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 rounded-xl text-xs font-bold text-emerald-700 border border-emerald-100">
+                        <span className="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                        Active Status
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-6">
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                        <Settings className="w-5 h-5 text-slate-400" />
-                        Account Settings
-                    </h3>
+            {/* Account Settings */}
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-8 space-y-8">
+                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-4">
+                    <Settings className="w-5 h-5 text-slate-400" />
+                    Account Settings
+                </h3>
 
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 border border-slate-100 rounded-xl bg-slate-50/50">
-                            <div className="flex items-center gap-4">
-                                <div className="p-2 bg-white rounded-lg border border-slate-100 text-slate-500">
-                                    <Mail className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-700">Email Address</p>
-                                    <p className="text-xs text-slate-500">{user?.email}</p>
-                                </div>
+                <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-white rounded-xl border border-slate-100 text-slate-500 shadow-sm">
+                                <Mail className="w-6 h-6" />
                             </div>
-                            <button className="text-brand-600 text-xs font-bold hover:underline">Change</button>
-                        </div>
-
-                        <div className="flex items-center justify-between p-4 border border-slate-100 rounded-xl bg-slate-50/50">
-                            <div className="flex items-center gap-4">
-                                <div className="p-2 bg-white rounded-lg border border-slate-100 text-slate-500">
-                                    <Key className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-700">Two-Factor Auth</p>
-                                    <p className="text-xs text-slate-500">Enabled</p>
-                                </div>
+                            <div>
+                                <p className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-1">Email Address</p>
+                                {isEditing ? (
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="px-3 py-1 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/50 w-full"
+                                    />
+                                ) : (
+                                    <p className="text-lg text-slate-900 font-medium">{email}</p>
+                                )}
                             </div>
-                            <div className="w-8 h-4 bg-emerald-500 rounded-full relative cursor-pointer">
-                                <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow-sm"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-6">
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                        <Activity className="w-5 h-5 text-slate-400" />
-                        System Health
-                    </h3>
-
-                    <div className="space-y-4">
-                        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                                <span className="text-sm font-bold text-emerald-800">All Systems Operational</span>
-                            </div>
-                            <p className="text-xs text-emerald-600">
-                                Database, API Gateway, and Auth Services are running optimally with 99.9% uptime.
-                            </p>
-                        </div>
-
-                        <div className="flex items-center justify-between p-3 border-b border-slate-50">
-                            <span className="text-sm text-slate-600">Database Load</span>
-                            <span className="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded">12%</span>
-                        </div>
-                        <div className="flex items-center justify-between p-3 border-b border-slate-50">
-                            <span className="text-sm text-slate-600">Storage Usage</span>
-                            <span className="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded">45%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="md:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm p-6 border-l-4 border-l-red-500">
-                    <div className="flex items-start gap-4">
-                        <div className="p-3 bg-red-50 text-red-600 rounded-xl">
-                            <AlertTriangle className="w-6 h-6" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-slate-900 mb-1">Critical Alerts</h3>
-                            <p className="text-slate-500 text-sm mb-4">No critical security alerts found in the last 24 hours.</p>
-                            <button className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline">View Security Log &rarr;</button>
+                            {isEditing ? (
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setIsEditing(false)}
+                                        className="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleUpdate}
+                                        disabled={loading}
+                                        className="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                                    >
+                                        <Save className="w-4 h-4" />
+                                        {loading ? 'Saving...' : 'Save Changes'}
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="px-6 py-2 text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors"
+                                >
+                                    Change Email
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
