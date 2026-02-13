@@ -103,6 +103,18 @@ export const StudentDashboard: React.FC = () => {
         return 'ACTIVE';
     };
 
+    const [selectedDate, setSelectedDate] = useState<Date | null>(new Date()); // Default to today
+
+    // Filter exams based on selectedDate
+    const filteredExams = selectedDate
+        ? exams.filter(exam => {
+            const examDate = new Date(exam.start_time);
+            return examDate.getDate() === selectedDate.getDate() &&
+                examDate.getMonth() === selectedDate.getMonth() &&
+                examDate.getFullYear() === selectedDate.getFullYear();
+        })
+        : exams;
+
     return (
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 min-h-screen pb-8 lg:pb-0">
             {/* Main Content Area */}
@@ -196,22 +208,38 @@ export const StudentDashboard: React.FC = () => {
                         <div className="flex items-center justify-between mb-6">
                             <div>
                                 <h2 className="text-lg font-bold text-slate-800">Available Assessments</h2>
-                                <p className="text-slate-400 text-xs mt-1">Exams assigned to your batch</p>
+                                <p className="text-slate-400 text-xs mt-1">
+                                    {selectedDate
+                                        ? `Exams for ${selectedDate.toLocaleDateString('default', { month: 'short', day: 'numeric' })}`
+                                        : 'All assigned exams'}
+                                </p>
                             </div>
-                            <button
-                                onClick={() => fetchData(false)}
-                                disabled={refreshing || loading}
-                                className={`p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-colors ${refreshing ? 'animate-spin' : ''}`}
-                                title="Refresh"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>
-                            </button>
+                            <div className="flex gap-2">
+                                {selectedDate && (
+                                    <button
+                                        onClick={() => setSelectedDate(null)}
+                                        className="px-3 py-1 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-full transition-colors"
+                                    >
+                                        Show All
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => fetchData(false)}
+                                    disabled={refreshing || loading}
+                                    className={`p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-colors ${refreshing ? 'animate-spin' : ''}`}
+                                    title="Refresh"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>
+                                </button>
+                            </div>
                         </div>
 
                         <div className="space-y-4 overflow-y-auto flex-1 pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                             {loading ? <div className="text-center text-xs text-slate-400">Loading...</div> :
-                                exams.length === 0 ? <div className="text-center text-xs text-slate-400 py-8">No active exams available at the moment.</div> :
-                                    exams.map((exam, i) => {
+                                filteredExams.length === 0 ? <div className="text-center text-xs text-slate-400 py-8">
+                                    {selectedDate ? `No exams found for ${selectedDate.toLocaleDateString()}.` : 'No active exams available.'}
+                                </div> :
+                                    filteredExams.map((exam, i) => {
                                         const status = getExamStatus(exam);
                                         const isLocked = status === 'LOCKED';
                                         const isCompleted = status === 'COMPLETED';
@@ -363,16 +391,19 @@ export const StudentDashboard: React.FC = () => {
                                 currentDate.getMonth() === new Date().getMonth() &&
                                 currentDate.getFullYear() === new Date().getFullYear();
 
-                            // Priority: Status (Green/Red) > Today (Blue)
-                            // User requirement: "if nothings happens on that day then no circle of color is needed" (unless it's Today? User said "Today's date circle is blue as default")
-                            // So:
-                            // - Attended -> Green
-                            // - Missed -> Red
-                            // - Today (and no status) -> Blue
-                            // - Else -> None
+                            // Check if this date is selected
+                            const isSelected = selectedDate &&
+                                day === selectedDate.getDate() &&
+                                currentDate.getMonth() === selectedDate.getMonth() &&
+                                currentDate.getFullYear() === selectedDate.getFullYear();
+
+                            // Priority: Selected > Status (Green/Red) > Today (Blue)
 
                             let bgClass = 'text-slate-600 hover:bg-slate-100';
-                            if (status === 'attended') {
+
+                            if (isSelected) {
+                                bgClass = 'bg-indigo-600 text-white ring-2 ring-indigo-200 shadow-lg scale-110 z-10';
+                            } else if (status === 'attended') {
                                 bgClass = 'bg-green-500 text-white shadow-md shadow-green-200';
                             } else if (status === 'missed') {
                                 bgClass = 'bg-red-500 text-white shadow-md shadow-red-200';
@@ -383,6 +414,7 @@ export const StudentDashboard: React.FC = () => {
                             return (
                                 <span
                                     key={day}
+                                    onClick={() => setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))}
                                     className={`flex items-center justify-center rounded-full w-6 h-6 cursor-pointer transition-all text-[11px] ${bgClass}`}
                                 >
                                     {day}

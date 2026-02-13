@@ -9,6 +9,8 @@ interface CodingEnvironmentProps {
     currentCode: string;
     onCodeChange: (code: string) => void;
     onRunCode: (lang: string, ver: string, code: string, customInput?: string) => Promise<any>;
+    onLanguageChange?: (lang: string) => void;
+    initialLanguage?: string;
 }
 
 const LANGUAGES = [
@@ -22,9 +24,13 @@ export const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
     question,
     currentCode,
     onCodeChange,
-    onRunCode
+    onRunCode,
+    onLanguageChange,
+    initialLanguage
 }) => {
-    const [selectedLang, setSelectedLang] = useState(LANGUAGES[0]);
+    const [selectedLang, setSelectedLang] = useState(
+        LANGUAGES.find(l => l.value === initialLanguage) || LANGUAGES[0]
+    );
     const [output, setOutput] = useState<any[] | null>(null);
     const [isRunning, setIsRunning] = useState(false);
     const [activeTab, setActiveTab] = useState<'problem' | 'output'>('problem');
@@ -76,7 +82,8 @@ export const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
     return (
         <div className="flex flex-col lg:flex-row h-full bg-slate-100 overflow-hidden">
             {/* Left Panel: Problem & Output */}
-            <div className="w-full lg:w-1/2 flex flex-col border-r border-slate-200 h-1/2 lg:h-full">
+            <div className="w-full lg:w-1/2 flex flex-col border-r border-slate-200 h-1/2 lg:h-full select-none"
+                onContextMenu={(e) => e.preventDefault()}>
                 {/* Tabs */}
                 <div className="flex border-b border-slate-200 bg-white shadow-sm z-10">
                     <button
@@ -239,7 +246,11 @@ export const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
                     <div className="flex items-center gap-2 lg:gap-4">
                         <select
                             value={selectedLang.value}
-                            onChange={(e) => setSelectedLang(LANGUAGES.find(l => l.value === e.target.value) || LANGUAGES[0])}
+                            onChange={(e) => {
+                                const newLang = LANGUAGES.find(l => l.value === e.target.value) || LANGUAGES[0];
+                                setSelectedLang(newLang);
+                                onLanguageChange?.(newLang.value);
+                            }}
                             className="bg-[#3c3c3c] text-white text-xs lg:text-sm px-2 lg:px-3 py-1.5 rounded border border-transparent focus:border-brand-500 focus:outline-none max-w-[100px] lg:max-w-none"
                         >
                             {LANGUAGES.map(lang => (

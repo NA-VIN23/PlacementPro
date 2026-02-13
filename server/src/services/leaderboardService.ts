@@ -6,7 +6,7 @@ export const getLeaderboardData = async () => {
         // 1. Fetch Students
         const { data: students, error: userError } = await supabase
             .from('users')
-            .select('id, name, batch')
+            .select('id, name, batch, registration_number') // Added registration_number
             .eq('role', 'STUDENT');
 
         if (userError) throw userError;
@@ -25,6 +25,25 @@ export const getLeaderboardData = async () => {
 
         if (qError) throw qError;
 
+        // 4. Fetch Exams & Creators for Streak Logic
+        const { data: exams, error: examError } = await supabase
+            .from('exams')
+            .select('id, created_by, start_time, end_time');
+
+        if (examError) throw examError;
+
+        // Get unique creator IDs
+        const creatorIds = [...new Set(exams?.map(e => e.created_by) || [])];
+        const { data: creators, error: creatorError } = await supabase
+            .from('users')
+            .select('id, batch')
+            .in('id', creatorIds);
+
+        if (creatorError) throw creatorError;
+
+        const creatorMap = new Map();
+        creators?.forEach(c => creatorMap.set(c.id, c.batch));
+
         console.log(`Fetched ${students?.length} students, ${submissions?.length} submissions.`);
 
         // Pre-process Questions Map: examId -> { qId: correct_answer }
@@ -34,7 +53,32 @@ export const getLeaderboardData = async () => {
             keyMap[q.exam_id][q.id] = q.correct_answer;
         });
 
-        // 4. Calculate Scores per Student
+        // Helper: Check if exam is assigned to student (Logic from examController)
+        const isExamAssigned = (exam: any, student: any) => {
+            const creatorBatch = creatorMap.get(exam.created_by);
+            if (!creatorBatch) return true; // Default public if no batch logic? Or assume assigned.
+
+            if (creatorBatch.startsWith('RANGE:')) {
+                const mainSplit = creatorBatch.split('|');
+                const rangePart = mainSplit[0];
+                const extrasPart = mainSplit[1] || '';
+                const rangeParts = rangePart.split(':');
+                if (rangeParts.length !== 3) return false;
+
+                const startRegNo = rangeParts[1];
+                const endRegNo = rangeParts[2];
+                const extras = extrasPart ? extrasPart.split(',') : [];
+                const studentRegNo = student.registration_number;
+                if (!studentRegNo) return false;
+
+                const inRange = (startRegNo && endRegNo) ? (studentRegNo >= startRegNo && studentRegNo <= endRegNo) : false;
+                const inExtras = extras.includes(studentRegNo);
+                return inRange || inExtras;
+            }
+            return true; // Use default visibility if not range-restricted
+        };
+
+        // 5. Calculate Scores per Student
         const leaderboard = students?.map(student => {
             const studentSubs = submissions?.filter(s => s.student_id === student.id) || [];
 
@@ -98,40 +142,62 @@ export const getLeaderboardData = async () => {
             // Aggregate Data
             const examIds = Object.keys(bestAttempts);
             let totalScore = 0;
-            const dates: Set<string> = new Set();
+            const submittedDates: Set<string> = new Set();
 
             examIds.forEach(eid => {
                 totalScore += bestAttempts[eid].lbScore;
                 try {
                     const dateStr = new Date(bestAttempts[eid].submitted_at).toISOString().split('T')[0];
-                    dates.add(dateStr);
+                    submittedDates.add(dateStr);
                 } catch (e) {
                     // Ignore date parse errors
                 }
             });
 
-            // Streak Calculation
-            const uniqueDates = Array.from(dates).sort();
-            let currentStreak = 0;
-            let maxStreak = 0;
-            let prevDate: Date | null = null;
+            // --- Streak Calculation (New Logic) ---
+            // 1. Identify all exams assigned to this student
+            const assignedExams = exams?.filter(e => isExamAssigned(e, student)) || [];
 
-            uniqueDates.forEach(dateStr => {
-                const d = new Date(dateStr);
-                if (prevDate) {
-                    const diffTime = Math.abs(d.getTime() - prevDate.getTime());
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    if (diffDays === 1) {
-                        currentStreak++;
-                    } else {
-                        currentStreak = 1;
-                    }
-                } else {
-                    currentStreak = 1;
-                }
-                if (currentStreak > maxStreak) maxStreak = currentStreak;
-                prevDate = d;
+            // 2. Collect all "Assigned Dates" (using end_time as the reference for assignment day)
+            // If an exam ends on 2023-10-10, it counts as an assigned task for that day.
+            const assignedDates: Set<string> = new Set();
+            assignedExams.forEach(e => {
+                // Use end_time local date string to match submission tracking
+                // If usage defines start_time as the 'day', switch this. 
+                // Usually deadlines (end_time) define "when you should have done it".
+                const d = new Date(e.end_time).toISOString().split('T')[0];
+                assignedDates.add(d);
             });
+
+            // Calculate range: First assignment to Today
+            const today = new Date().toISOString().split('T')[0];
+            const sortedAssignedDates = Array.from(assignedDates).sort();
+            const firstDate = sortedAssignedDates.length > 0 ? sortedAssignedDates[0] : today;
+
+            // Iterate day by day from first possible assignment to today
+            let currentStreak = 0;
+            // We need to iterate chronologically. 
+            // Finding max range.
+            const start = new Date(firstDate);
+            const end = new Date(today);
+
+            // Loop date
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const dateStr = d.toISOString().split('T')[0];
+
+                const isSubmitted = submittedDates.has(dateStr);
+                const isAssigned = assignedDates.has(dateStr);
+
+                if (isSubmitted) {
+                    // Attended test: Maintain/Increment
+                    currentStreak++;
+                } else if (isAssigned) {
+                    // Assigned BUT NOT Submitted: Break
+                    currentStreak = 0;
+                } else {
+                    // Not Assigned: Maintain (Do nothing)
+                }
+            }
 
             // Avatar Initials
             const initials = student.name
@@ -144,16 +210,16 @@ export const getLeaderboardData = async () => {
                 batch: student.batch || 'N/A',
                 score: Math.round(totalScore),
                 tests: examIds.length,
-                streak: maxStreak,
+                streak: currentStreak,
                 trend: 'same',
                 avatar: initials
             };
         });
 
-        // 5. Sort by Score DESC
+        // 6. Sort by Score DESC
         leaderboard?.sort((a, b) => b.score - a.score);
 
-        // 6. Assign Rank
+        // 7. Assign Rank
         const rankedLeaderboard = leaderboard?.map((user, index) => ({
             ...user,
             rank: index + 1

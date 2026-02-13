@@ -16,6 +16,8 @@ export const CompanyHistory: React.FC = () => {
     const [companies, setCompanies] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+    const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
 
     useEffect(() => {
         const load = async () => {
@@ -28,10 +30,58 @@ export const CompanyHistory: React.FC = () => {
         load();
     }, []);
 
-    const filteredCompanies = companies.filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.type.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const handleTypeChange = (type: string) => {
+        setSelectedTypes(prev =>
+            prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+        );
+    };
+
+    const handleRoleChange = (role: string) => {
+        setSelectedRoles(prev =>
+            prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]
+        );
+    };
+
+    // Helper to check if a company matches selected roles
+    const matchesRoles = (companyRoles: string[]) => {
+        if (selectedRoles.length === 0) return true;
+
+        // Normalize company roles to lowercase for comparison
+        const normalizedCompanyRoles = companyRoles.map(r => r.toLowerCase());
+
+        return selectedRoles.some(selectedRole => {
+            const role = selectedRole.toLowerCase();
+            if (role === 'sde') {
+                return normalizedCompanyRoles.some(r =>
+                    r.includes('software') || r.includes('developer') || r.includes('engineer') || r.includes('programmer') || r.includes('sde')
+                );
+            }
+            if (role === 'data analyst') {
+                return normalizedCompanyRoles.some(r => r.includes('data') || r.includes('analyst') || r.includes('scientist'));
+            }
+            if (role === 'frontend') return normalizedCompanyRoles.some(r => r.includes('frontend') || r.includes('ui') || r.includes('web'));
+            if (role === 'backend') return normalizedCompanyRoles.some(r => r.includes('backend') || r.includes('api') || r.includes('server'));
+
+            return normalizedCompanyRoles.some(r => r.includes(role));
+        });
+    };
+
+    const filteredCompanies = companies.filter(c => {
+        const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.type.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesType = selectedTypes.length === 0 ||
+            selectedTypes.some(t => c.type.toLowerCase().includes(t.toLowerCase()) ||
+                (t === 'MNC' && (c.type.includes('MNC') || c.type.includes('Global'))) ||
+                (t === 'Startup' && c.type.includes('Startup')) ||
+                (t === 'Product' && c.type.includes('Product')) ||
+                (t === 'Service' && c.type.includes('Service'))
+            );
+
+        const matchesRole = matchesRoles(c.roles);
+
+        return matchesSearch && matchesType && matchesRole;
+    });
 
     if (loading) return <div className="p-8">Loading...</div>;
 
@@ -79,7 +129,12 @@ export const CompanyHistory: React.FC = () => {
                             <div className="space-y-2">
                                 {['Product', 'Service', 'Startup', 'MNC'].map(type => (
                                     <label key={type} className="flex items-center gap-3 text-sm text-slate-600 cursor-pointer hover:text-slate-900">
-                                        <input type="checkbox" className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                                        <input
+                                            type="checkbox"
+                                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                            checked={selectedTypes.includes(type)}
+                                            onChange={() => handleTypeChange(type)}
+                                        />
                                         {type}
                                     </label>
                                 ))}
@@ -91,7 +146,12 @@ export const CompanyHistory: React.FC = () => {
                             <div className="space-y-2">
                                 {['SDE', 'Data Analyst', 'Frontend', 'Backend'].map(role => (
                                     <label key={role} className="flex items-center gap-3 text-sm text-slate-600 cursor-pointer hover:text-slate-900">
-                                        <input type="checkbox" className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                                        <input
+                                            type="checkbox"
+                                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                            checked={selectedRoles.includes(role)}
+                                            onChange={() => handleRoleChange(role)}
+                                        />
                                         {role}
                                     </label>
                                 ))}

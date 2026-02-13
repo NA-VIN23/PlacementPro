@@ -7,6 +7,7 @@ import type { Exam, Question } from '../../types';
 import { CodingEnvironment } from '../../components/assessment/CodingEnvironment';
 import { Modal } from '../../components/ui/Modal';
 import { useToast } from '../../context/ToastContext';
+import { useSecurityCheck } from '../../hooks/useSecurityCheck';
 
 type ViolationType = 'tab_switch' | 'fullscreen_exit' | 'copy_paste' | 'right_click';
 
@@ -31,6 +32,7 @@ export const AssessmentRunner: React.FC = () => {
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [timeLeft, setTimeLeft] = useState(0);
     const [answers, setAnswers] = useState<Record<string, string>>({});
+    const [languages, setLanguages] = useState<Record<string, string>>({});
     const [flags, setFlags] = useState<string[]>([]);
 
     // Alert/Modal State
@@ -47,6 +49,9 @@ export const AssessmentRunner: React.FC = () => {
     const [examStarted, setExamStarted] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const MAX_VIOLATIONS = 3;
+
+    // Security Check
+    const { isSecure, securityIssues } = useSecurityCheck();
 
     // Fetch Exam Data
     useEffect(() => {
@@ -99,6 +104,11 @@ export const AssessmentRunner: React.FC = () => {
 
     // Fullscreen Management
     const enterFullscreen = async () => {
+        if (!isSecure) {
+            toastError("Security Check Failed. Please resolve issues before starting.");
+            return;
+        }
+
         try {
             if (document.documentElement.requestFullscreen) {
                 await document.documentElement.requestFullscreen();
@@ -226,7 +236,20 @@ export const AssessmentRunner: React.FC = () => {
         setSubmitting(true);
         try {
             if (!id) return;
-            await studentService.submitExam(id, answers, terminated, violations);
+
+            // Construct payload with bundled language for Coding questions
+            // This ensures backend receives the language even if the separate map fails
+            const submissionAnswers: Record<string, any> = { ...answers };
+            questions.forEach(q => {
+                if (q.question_type === 'CODING' && submissionAnswers[q.id]) {
+                    submissionAnswers[q.id] = {
+                        code: submissionAnswers[q.id],
+                        language: languages[q.id] || 'python'
+                    };
+                }
+            });
+
+            await studentService.submitExam(id, submissionAnswers, terminated, violations, languages);
 
             setSubmitted(true);
         } catch (err) {
@@ -314,6 +337,34 @@ export const AssessmentRunner: React.FC = () => {
                     </div>
 
                     <div className="p-8 space-y-6">
+                        {/* Security Check Alert */}
+                        {isSecure === false ? (
+                            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 animate-pulse">
+                                <h3 className="font-bold text-red-800 flex items-center gap-2 mb-2">
+                                    <AlertTriangle className="w-5 h-5" />
+                                    Security Check Failed
+                                </h3>
+                                <ul className="text-sm text-red-700 list-disc list-inside">
+                                    {securityIssues.map((issue, idx) => (
+                                        <li key={idx}>{issue}</li>
+                                    ))}
+                                </ul>
+                                <p className="text-xs text-red-600 mt-2 font-semibold">
+                                    Please disable extensions and refresh the page.
+                                </p>
+                            </div>
+                        ) : isSecure === true ? (
+                            <div className="bg-green-50 border border-green-200 rounded-2xl p-3 flex items-center gap-2 text-green-800 text-sm font-medium">
+                                <CheckCircle className="w-4 h-4" />
+                                System Security Check Passed
+                            </div>
+                        ) : (
+                            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center gap-2 text-slate-600 text-sm font-medium">
+                                <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full"></div>
+                                Checking System Security...
+                            </div>
+                        )}
+
                         <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
                             <h3 className="font-bold text-red-800 flex items-center gap-2 mb-2">
                                 <AlertTriangle className="w-5 h-5" />
@@ -338,9 +389,10 @@ export const AssessmentRunner: React.FC = () => {
                         <div className="text-center pt-4">
                             <button
                                 onClick={enterFullscreen}
-                                className="px-8 py-4 bg-blue-600 text-white font-bold rounded-2xl text-lg hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all hover:scale-105"
+                                disabled={!isSecure}
+                                className="px-8 py-4 bg-blue-600 text-white font-bold rounded-2xl text-lg hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all hover:scale-105 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                             >
-                                I Understand, Start Exam
+                                {isSecure === false ? 'Security Check Failed' : 'I Understand, Start Exam'}
                             </button>
                             <p className="text-xs text-slate-400 mt-4">By clicking, you agree to the examination terms.</p>
                         </div>
@@ -357,7 +409,13 @@ export const AssessmentRunner: React.FC = () => {
     const currentQ = questions[currentQuestion];
 
     return (
-        <div className="fixed inset-0 bg-slate-100 flex flex-col select-none">
+        <div
+            className="fixed inset-0 bg-slate-100 flex flex-col select-none"
+            onContextMenu={(e) => e.preventDefault()}
+            onCopy={(e) => e.preventDefault()}
+            onCut={(e) => e.preventDefault()}
+            onPaste={(e) => e.preventDefault()}
+        >
             {/* Submit Confirmation Modal */}
             <Modal isOpen={showSubmitModal} onClose={() => setShowSubmitModal(false)} title="Submit Assessment">
                 <div className="space-y-4">
@@ -460,10 +518,13 @@ export const AssessmentRunner: React.FC = () => {
                     {/* Render Coding Environment if CODING type */}
                     {questions[currentQuestion].question_type === 'CODING' ? (
                         <CodingEnvironment
+                            key={questions[currentQuestion].id}
                             question={questions[currentQuestion]}
                             currentCode={answers[questions[currentQuestion].id] || questions[currentQuestion].code_template || ''}
                             onCodeChange={(code) => setAnswers(prev => ({ ...prev, [questions[currentQuestion].id]: code }))}
                             onRunCode={(lang, ver, code) => studentService.runCode(lang, ver, code, questions[currentQuestion].id)}
+                            onLanguageChange={(lang) => setLanguages(prev => ({ ...prev, [questions[currentQuestion].id]: lang }))}
+                            initialLanguage={languages[questions[currentQuestion].id]}
                         />
                     ) : (
                         // Standard MCQ / Text UI
