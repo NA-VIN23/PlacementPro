@@ -87,7 +87,7 @@ export const PlacementRadar: React.FC = () => {
 
                             {/* CTA */}
                             <div className="w-full md:w-auto mt-4 md:mt-0">
-                                <button className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95 flex items-center justify-center gap-2">
+                                <button onClick={() => navigate(`/student/placement-insights/eligibility/${drive.id}`)} className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95 flex items-center justify-center gap-2">
                                     Check Eligibility
                                     <CheckCircle className="w-4 h-4" />
                                 </button>

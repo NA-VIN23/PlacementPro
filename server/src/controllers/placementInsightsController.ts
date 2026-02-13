@@ -911,30 +911,12 @@ const PLACEMENT_HISTORY = [
 const UPCOMING_DRIVES = [
     {
         id: 'd1',
-        company: 'CloudFirst',
-        date: '2026-03-15',
-        role: 'Cloud Engineer',
+        company: 'Kaar Technologies (KaarTech)',
+        date: '2026-01-27',
+        role: 'SAP Consultant / Software Engineer',
         eligibility: 'All Branches, > 7.0 CGPA',
         status: 'Upcoming',
         type: 'On-Campus'
-    },
-    {
-        id: 'd2',
-        company: 'FinTech Global',
-        date: '2026-03-20',
-        role: 'Analyst',
-        eligibility: 'CSE/IT, > 8.0 CGPA',
-        status: 'Upcoming',
-        type: 'On-Campus'
-    },
-    {
-        id: 'd3',
-        company: 'AutoMotive Giants',
-        date: '2026-04-05',
-        role: 'Graduate Engineer Trainee',
-        eligibility: 'Mech/Auto/EEE, > 6.5 CGPA',
-        status: 'Tentative',
-        type: 'Off-Campus'
     }
 ];
 

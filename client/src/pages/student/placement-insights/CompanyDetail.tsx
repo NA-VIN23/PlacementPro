@@ -7,7 +7,6 @@ import {
     FileText,
     CheckCircle,
     XCircle,
-    BookOpen,
     MessageSquare,
     AlertTriangle
 } from 'lucide-react';
@@ -73,61 +72,43 @@ export const CompanyDetail: React.FC = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column: History & Pattern */}
-                <div className="space-y-8">
-                    {/* Recruitment Pattern */}
-                    <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                        <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
-                            <FileText className="w-5 h-5 text-indigo-600" />
-                            Recruitment Pattern
-                        </h3>
-                        <div className="relative pl-4 border-l-2 border-slate-100 space-y-6">
-                            {company.recruitmentPattern && company.recruitmentPattern.map((step: any, idx: number) => (
-                                <div key={idx} className="relative">
-                                    <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-blue-600 border-2 border-white ring-2 ring-blue-100"></div>
-                                    <h4 className="font-bold text-slate-800 text-sm">{step.stage}</h4>
+            <div className="space-y-8">
+                {/* Recruitment Pattern - Horizontal */}
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
+                        <FileText className="w-5 h-5 text-indigo-600" />
+                        Recruitment Pattern
+                    </h3>
+                    <div className="flex items-start gap-0 overflow-x-auto pb-2">
+                        {company.recruitmentPattern && company.recruitmentPattern.map((step: any, idx: number) => (
+                            <div key={idx} className="flex items-start flex-shrink-0">
+                                <div className="flex flex-col items-center text-center min-w-[140px] px-2">
+                                    <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center shadow-md">
+                                        {idx + 1}
+                                    </div>
+                                    <h4 className="font-bold text-slate-800 text-sm mt-3">{step.stage}</h4>
                                     <p className="text-xs text-slate-500 mt-1">{step.type} • {step.duration}</p>
-                                    <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold ${step.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
-                                            step.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-                                                'bg-red-100 text-red-700'
+                                    <span className={`inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-bold ${step.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
+                                        step.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                                            'bg-red-100 text-red-700'
                                         }`}>
                                         {step.difficulty}
                                     </span>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Placement History Table */}
-                    <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                        <h3 className="font-bold text-slate-900 mb-4">Past Placements</h3>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-slate-500 uppercase bg-slate-50">
-                                    <tr>
-                                        <th className="px-3 py-2 rounded-l-lg">Year</th>
-                                        <th className="px-3 py-2">Role</th>
-                                        <th className="px-3 py-2 rounded-r-lg">Count</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {company.history && company.history.map((h: any, i: number) => (
-                                        <tr key={i} className="border-b border-slate-50 hover:bg-slate-50">
-                                            <td className="px-3 py-3 font-medium text-slate-900">{h.year}</td>
-                                            <td className="px-3 py-3 text-slate-600">{h.role}</td>
-                                            <td className="px-3 py-3 font-bold text-blue-600">{h.studentsPlaced}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                {idx < company.recruitmentPattern.length - 1 && (
+                                    <div className="flex items-center mt-3 flex-shrink-0">
+                                        <div className="w-8 h-0.5 bg-blue-200"></div>
+                                        <div className="w-2 h-2 border-t-2 border-r-2 border-blue-300 transform rotate-45 -ml-1.5"></div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* Right Column: Prep Vault (Core) */}
-                <div className="lg:col-span-2">
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[500px] flex flex-col">
+                {/* Prep Vault: Topics / Strategy / Insights */}
+                <div>
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[250px] flex flex-col">
                         <div className="flex border-b border-slate-100">
                             {(['topics', 'strategy', 'insights'] as const).map(tab => (
                                 <button
@@ -168,17 +149,7 @@ export const CompanyDetail: React.FC = () => {
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="mt-6">
-                                        <h4 className="font-bold text-slate-900 mb-3">Recommended Resources</h4>
-                                        <div className="space-y-2">
-                                            {company.prepMaterial && company.prepMaterial.map((m: any, i: number) => (
-                                                <a key={i} href={m.url} className="block p-3 bg-white border border-slate-200 rounded-lg hover:border-blue-400 hover:shadow-sm transition-all flex items-center justify-between group">
-                                                    <span className="font-medium text-slate-700 group-hover:text-blue-700">{m.title}</span>
-                                                    <BookOpen className="w-4 h-4 text-slate-400 group-hover:text-blue-500" />
-                                                </a>
-                                            ))}
-                                        </div>
-                                    </div>
+
                                 </div>
                             )}
 

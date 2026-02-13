@@ -36,6 +36,7 @@ import { PlacementInsightsHub } from './pages/student/placement-insights/Placeme
 import { CompanyHistory } from './pages/student/placement-insights/CompanyHistory';
 import { CompanyDetail } from './pages/student/placement-insights/CompanyDetail';
 import { PlacementRadar } from './pages/student/placement-insights/PlacementRadar';
+import { EligibilityDetail } from './pages/student/placement-insights/EligibilityDetail';
 
 import { HODDashboard } from './pages/hod/Dashboard';
 import { HODStaffList } from './pages/hod/StaffList';
@@ -75,6 +76,7 @@ function App() {
                 <Route path="placement-insights/history" element={<CompanyHistory />} />
                 <Route path="placement-insights/company/:id" element={<CompanyDetail />} />
                 <Route path="placement-insights/radar" element={<PlacementRadar />} />
+                <Route path="placement-insights/eligibility/:driveId" element={<EligibilityDetail />} />
 
                 <Route index element={<Navigate to="dashboard" replace />} />
               </Route>
