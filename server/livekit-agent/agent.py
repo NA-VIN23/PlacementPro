@@ -5,10 +5,13 @@ Uses Gemini's native voice-to-voice capabilities - no separate STT/TTS needed!
 """
 
 import os
+import re
+import json
 import asyncio
 import httpx
 import logging
 from dotenv import load_dotenv
+from prompts import build_interview_prompt
 from livekit.agents import (
     AutoSubscribe,
     JobContext,
@@ -43,106 +46,137 @@ async def fetch_student_profile(student_id: str, token: str) -> dict:
     return {}
 
 
-def build_interview_prompt(profile: dict) -> str:
-    """Build personalized interview prompt based on student profile"""
-    
-    skills = profile.get("skills", [])
-    projects = profile.get("projects", [])
-    education = profile.get("education", [])
-    internships = profile.get("internships", [])
-    
-    skills_str = ", ".join(skills) if skills else "not specified"
-    
-    projects_str = ""
-    for p in projects[:3]:
-        projects_str += f"- {p.get('title', 'Untitled')}: {p.get('description', '')[:100]}\n"
-    
-    edu_str = ""
-    for e in education[:2]:
-        edu_str += f"- {e.get('degree', '')} at {e.get('institution', '')}\n"
-    
-    intern_str = ""
-    for i in internships[:2]:
-        intern_str += f"- {i.get('role', '')} at {i.get('company', '')}\n"
-    
-    return f"""You are a professional AI interviewer for PlacementPro, conducting a mock placement interview.
+def parse_scores_from_text(text: str) -> dict | None:
+    """
+    Parse the JSON scores block from the agent's transcript.
+    Looks for: ###SCORES_JSON###{ ... }###END_SCORES###
+    """
+    pattern = r"###SCORES_JSON###\s*(\{.*?\})\s*###END_SCORES###"
+    match = re.search(pattern, text, re.DOTALL)
+    if match:
+        try:
+            scores = json.loads(match.group(1))
+            logger.info(f"Parsed scores: {scores}")
+            return scores
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse scores JSON: {e}")
+    return None
 
-## Candidate Profile:
-- **Skills**: {skills_str}
-- **Projects**:
-{projects_str if projects_str else "  No projects listed"}
-- **Education**:
-{edu_str if edu_str else "  Not specified"}
-- **Internships**:
-{intern_str if intern_str else "  No internship experience"}
 
-## Interview Guidelines:
-1. Start with a warm greeting and ask them to introduce themselves
-2. Ask about their educational background and why they chose their field
-3. Deep-dive into their strongest skills from the list above
-4. Discuss one of their projects in detail - ask about challenges faced
-5. If they have internship experience, ask what they learned
-6. Ask behavioral questions (teamwork, handling pressure, problem-solving)
-7. End with asking if they have any questions
+async def submit_scores_to_backend(room_name: str, scores: dict):
+    """POST the parsed scores to the backend API"""
+    payload = {
+        "roomName": room_name,
+        "fluencyScore": scores.get("fluency", 0),
+        "grammarScore": scores.get("grammar", 0),
+        "communicationScore": scores.get("communication", 0),
+        "confidenceScore": scores.get("confidence", 0),
+        "correctnessScore": scores.get("correctness", 0),
+        "overallScore": scores.get("overall", 0),
+        "feedback": scores.get("feedback", ""),
+    }
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                f"{BACKEND_API_URL}/interviews/scores",
+                json=payload,
+                timeout=10.0,
+            )
+            if response.status_code == 200:
+                logger.info("Scores submitted to backend successfully")
+            else:
+                logger.error(f"Backend returned {response.status_code}: {response.text}")
+        except Exception as e:
+            logger.error(f"Failed to submit scores to backend: {e}")
 
-## Important Rules:
-- Be encouraging and professional
-- Ask ONE question at a time
-- Listen actively and ask follow-up questions
-- Keep responses concise (2-3 sentences max)
-- After 8-10 exchanges, wrap up the interview naturally
-- Personalize questions based on their actual profile data above
 
-Start by greeting the user warmly and asking them to introduce themselves.
-"""
+async def send_scores_to_client(room, scores: dict):
+    """Send scores to the frontend via LiveKit data channel"""
+    try:
+        from livekit.rtc import DataPacket
+        data = json.dumps({"type": "interview_scores", "scores": scores}).encode("utf-8")
+        await room.local_participant.publish_data(data, reliable=True)
+        logger.info("Scores sent to client via data channel")
+    except Exception as e:
+        logger.error(f"Failed to send scores via data channel: {e}")
 
 
 async def entrypoint(ctx: JobContext):
     """Main entry point for the interview agent"""
-    
+
     # Get metadata from room
-    student_id = ctx.room.name.split("-")[-1] if "-" in ctx.room.name else ""
-    
+    room_name = ctx.room.name
+    student_id = room_name.split("-")[-1] if "-" in room_name else ""
+
     # Fetch student profile (empty for now since no token)
     profile = await fetch_student_profile(student_id, "")
-    
+
     # Build personalized system prompt
     system_prompt = build_interview_prompt(profile)
-    
+
     # Connect to the room
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
-    
+
     # Wait for participant to join
     participant = await ctx.wait_for_participant()
     logger.info(f"Participant joined: {participant.identity}")
-    
+
     # Use Google Gemini Realtime Model as the LLM
     # This handles voice-to-voice natively without separate STT/TTS
     realtime_model = google.realtime.RealtimeModel(
         voice="Puck",  # Available voices: Puck, Charon, Kore, Fenrir, Aoede
         temperature=0.8,
     )
-    
+
+    # Collect transcript for score parsing
+    collected_text = []
+
     # Create an Agent that uses the RealtimeModel
     agent = Agent(
         instructions=system_prompt,
         llm=realtime_model,  # Pass the RealtimeModel as the LLM
     )
-    
+
     # Create and start the AgentSession
     session = AgentSession()
+
+    # Listen for agent speech to collect transcript
+    @session.on("agent_speech_committed")
+    def on_agent_speech(msg):
+        """Collect the agent's spoken text to parse scores later"""
+        if hasattr(msg, "content") and msg.content:
+            collected_text.append(msg.content)
+            logger.debug(f"Agent said: {msg.content[:100]}...")
+
     await session.start(
         agent=agent,
         room=ctx.room,
     )
-    
+
     logger.info("Gemini Realtime agent started...")
-    
+
     # Greet the user
-    await session.say("Hello! Welcome to your mock interview session. I'm your AI interviewer today. Please introduce yourself and tell me a bit about your background.")
-    
+    await session.say(
+        "Good morning. Thank you for attending this interview. "
+        "I am your interviewer today. Let us begin with a brief "
+        "introduction about yourself."
+    )
+
     # Keep agent running until session closes
     await session.aclose()
+
+    # ── After session ends, parse and submit scores ──────────────
+    logger.info("Session closed. Attempting to parse scores from transcript...")
+    full_transcript = "\n".join(collected_text)
+    scores = parse_scores_from_text(full_transcript)
+
+    if scores:
+        # Submit scores to backend
+        await submit_scores_to_backend(room_name, scores)
+        # Also try to send to client via data channel (may fail if client already left)
+        await send_scores_to_client(ctx.room, scores)
+    else:
+        logger.warning("Could not parse scores from agent transcript")
 
 
 def prewarm(proc: JobProcess):

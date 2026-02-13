@@ -87,6 +87,10 @@ export const studentService = {
         const response = await api.post('/mock-interviews/end', { interviewId });
         return response.data;
     },
+    async getInterviewHistory() {
+        const response = await api.get('/interviews/history');
+        return response.data;
+    },
     async getProfile() {
         const response = await api.get('/student/profile');
         return response.data;

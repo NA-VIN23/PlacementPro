@@ -22,7 +22,7 @@
     "date-fns": "^4.1.0",
     "gsap": "^3.14.2",
     "livekit-client": "^2.17.0",
-    "lucide-react": "^0.344.0",
+    "lucide-react": "^0.563.0",
     "meshline": "^3.3.1",
     "ogl": "^1.0.11",
     "react": "^19.2.0",

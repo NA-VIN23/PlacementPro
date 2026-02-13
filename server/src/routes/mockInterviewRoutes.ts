@@ -1,9 +1,13 @@
 import { Router } from 'express';
-import { startInterview, endInterview, getInterviewHistory } from '../controllers/mockInterviewController';
+import { startInterview, endInterview, getInterviewHistory, saveScores } from '../controllers/mockInterviewController';
 import { authenticate, authorize } from '../middleware/authMiddleware';
 
 const router = Router();
 
+// Agent-to-server score submission (no auth — called by the Python agent)
+router.post('/scores', saveScores);
+
+// Protected student routes
 router.use(authenticate);
 router.use(authorize(['STUDENT']));
 

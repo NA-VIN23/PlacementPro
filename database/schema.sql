@@ -114,7 +114,13 @@ CREATE TABLE mock_interviews (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   student_id UUID REFERENCES users(id),
   interview_type TEXT CHECK (interview_type IN ('HR', 'TECHNICAL')),
+  room_name TEXT,
   score INTEGER,
+  fluency_score INTEGER,
+  grammar_score INTEGER,
+  communication_score INTEGER,
+  confidence_score INTEGER,
+  correctness_score INTEGER,
   feedback TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
