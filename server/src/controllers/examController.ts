@@ -625,22 +625,55 @@ export const getAssessmentPageData = async (req: Request, res: Response) => {
         // 4. Calculate Stats
         const weeksCompleted = processedExams.filter(e => e.status === 'Completed' && e.title.toLowerCase().includes('week')).length;
 
-        let totalScore = 0;
-        let count = 0;
-        submissions?.forEach(s => {
-            totalScore += s.score;
-            count++;
-        });
-        const avgScore = count > 0 ? Math.round(totalScore / count) : 0;
+        let totalMyScore = 0;
+        let totalMaxScore = 0;
+        let avgScore = 0;
+
+        // Fetch questions for submitted exams to calculate max possible score
+        const myExamIds = [...submissionMap.keys()];
+        if (myExamIds.length > 0) {
+            const { data: questions, error: qError } = await supabase
+                .from('questions')
+                .select('exam_id, marks, question_type')
+                .in('exam_id', myExamIds);
+
+            if (!qError && questions) {
+                // Determine max score per exam
+                const maxScoreMap: Record<string, number> = {};
+                questions.forEach(q => {
+                    const defaultMarks = q.question_type === 'CODING' ? 5 : 1;
+                    const marks = q.marks || defaultMarks;
+                    maxScoreMap[q.exam_id] = (maxScoreMap[q.exam_id] || 0) + marks;
+                });
+
+                // Sum up my scores and max scores
+                myExamIds.forEach(eid => {
+                    const myScore = submissionMap.get(eid) || 0;
+                    const maxScore = maxScoreMap[eid] || 1; // Avoid division by zero, default 1 if question fetch fails or empty
+
+                    totalMyScore += myScore;
+                    totalMaxScore += maxScore;
+                });
+
+                if (totalMaxScore > 0) {
+                    avgScore = Math.round((totalMyScore / totalMaxScore) * 100);
+                }
+            } else {
+                // Fallback to simple average if question fetch fails (should ideally not happen)
+                let count = 0;
+                submissions?.forEach(s => {
+                    totalMyScore += s.score;
+                    count++;
+                });
+                avgScore = count > 0 ? Math.round(totalMyScore / count) : 0;
+            }
+        }
 
         const assessmentAvailable = processedExams.filter(e => e.status === 'Available').length;
 
-        // Categorize for convenience (filtering will happen on frontend, but we can flag type)
-        // We'll let frontend handle filtering based on Title.
-
         res.json({
             stats: {
-                weeksCompleted: weeksCompleted || processedExams.filter(e => e.status === 'Completed').length, // Fallback to all completed
+                weeksCompleted: weeksCompleted || processedExams.filter(e => e.status === 'Completed').length,
                 avgScore: `${avgScore}%`,
                 assessmentAvailable
             },

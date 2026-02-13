@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { PageHeader } from '../../components/ui/PageHeader';
-import { Trophy, Search, TrendingUp, ArrowUp, ArrowDown } from 'lucide-react';
+import { Trophy, TrendingUp, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { PaginatedTable, type Column } from '../../components/ui/PaginatedTable';
+import { type Column } from '../../components/ui/PaginatedTable';
 
 export const StudentLeaderboard: React.FC = () => {
     const { user: currentUser } = useAuth();
-    const [searchTerm, setSearchTerm] = useState('');
     const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
 
     useEffect(() => {
@@ -28,9 +27,19 @@ export const StudentLeaderboard: React.FC = () => {
         fetchLeaderboard();
     }, [currentUser]);
 
-    const filteredLeaderboard = leaderboardData.filter(user =>
-        user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const listData = leaderboardData.slice(3);
+
+    // Show Top 4-10 (which is indices 0 to 6 of listData)
+    const filteredLeaderboard = [...listData.slice(0, 7)];
+
+    // Check if current user is in the top 10 (ranks 1-10)
+    // We know 'leaderboardData' is sorted by rank.
+    // Ranks 1-3 are in podium. Ranks 4-10 are in filteredLeaderboard.
+    // So we just need to check if the current user is in the full list but has rank > 10.
+    const currentUserData = leaderboardData.find(u => u.isUser);
+    if (currentUserData && currentUserData.rank > 10) {
+        filteredLeaderboard.push(currentUserData);
+    }
 
     const first = leaderboardData[0] || { name: '-', score: 0, avatar: '?', rank: 1, batch: '' };
     const second = leaderboardData[1] || { name: '-', score: 0, avatar: '?', rank: 2, batch: '' };
@@ -127,6 +136,15 @@ export const StudentLeaderboard: React.FC = () => {
                     <div className="text-center mt-4 md:mt-5">
                         <h3 className="font-bold text-slate-800 text-xs md:text-base max-w-[80px] md:max-w-none truncate">{second.name}</h3>
                         <p className="text-blue-600 font-bold text-xs md:text-sm">{second.score} pts</p>
+                        <div className="flex items-center justify-center gap-3 mt-1">
+                            <span className="text-[10px] md:text-xs text-slate-500 font-medium">
+                                {second.tests} Tests
+                            </span>
+                            <div className="flex items-center gap-1 text-orange-500 text-[10px] md:text-xs font-bold">
+                                <TrendingUp className="w-3 h-3" />
+                                {second.streak}
+                            </div>
+                        </div>
                     </div>
                     <div className="h-16 w-16 md:h-24 md:w-24 bg-gradient-to-t from-slate-100 to-transparent mt-2 md:mt-4 rounded-t-2xl md:rounded-t-3xl"></div>
                 </div>
@@ -147,6 +165,15 @@ export const StudentLeaderboard: React.FC = () => {
                     <div className="text-center mt-6 md:mt-8">
                         <h3 className="font-bold text-slate-900 text-sm md:text-lg max-w-[100px] md:max-w-none truncate">{first.name}</h3>
                         <p className="text-yellow-600 font-bold text-sm md:text-base">{first.score} pts</p>
+                        <div className="flex items-center justify-center gap-3 mt-1">
+                            <span className="text-xs md:text-sm text-slate-500 font-medium">
+                                {first.tests} Tests
+                            </span>
+                            <div className="flex items-center gap-1 text-orange-500 text-xs md:text-sm font-bold">
+                                <TrendingUp className="w-3 h-3 md:w-4 md:h-4" />
+                                {first.streak}
+                            </div>
+                        </div>
                     </div>
                     <div className="h-24 w-24 md:h-32 md:w-32 bg-gradient-to-t from-yellow-50 to-transparent mt-2 md:mt-4 rounded-t-[2rem] md:rounded-t-[2.5rem]"></div>
                 </div>
@@ -164,32 +191,66 @@ export const StudentLeaderboard: React.FC = () => {
                     <div className="text-center mt-4 md:mt-5">
                         <h3 className="font-bold text-slate-800 text-xs md:text-base max-w-[80px] md:max-w-none truncate">{third.name}</h3>
                         <p className="text-blue-600 font-bold text-xs md:text-sm">{third.score} pts</p>
+                        <div className="flex items-center justify-center gap-3 mt-1">
+                            <span className="text-[10px] md:text-xs text-slate-500 font-medium">
+                                {third.tests} Tests
+                            </span>
+                            <div className="flex items-center gap-1 text-orange-500 text-[10px] md:text-xs font-bold">
+                                <TrendingUp className="w-3 h-3" />
+                                {third.streak}
+                            </div>
+                        </div>
                     </div>
                     <div className="h-14 w-16 md:h-20 md:w-24 bg-gradient-to-t from-orange-50 to-transparent mt-2 md:mt-4 rounded-t-2xl md:rounded-t-3xl"></div>
                 </div>
             </div>
 
             {/* List View */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-4 space-y-4">
-                <div className="flex flex-col md:flex-row justify-end gap-4">
-                    <div className="relative w-full md:w-64">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Search student..."
-                            className="w-full pl-10 pr-4 py-2.5 rounded-full border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm bg-slate-50 focus:bg-white transition-colors"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                <div className="overflow-auto max-h-[600px] scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+                    <table className="w-full text-left relative border-collapse">
+                        <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-100 sticky top-0 z-10 shadow-sm">
+                            <tr>
+                                {columns.map((col, idx) => (
+                                    <th
+                                        key={idx}
+                                        className={cn(
+                                            "px-6 py-4 text-xs font-bold uppercase tracking-wider bg-slate-50",
+                                            col.headerClassName
+                                        )}
+                                    >
+                                        {col.header}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 bg-white">
+                            {filteredLeaderboard.length === 0 ? (
+                                <tr>
+                                    <td colSpan={columns.length} className="p-8 text-center text-slate-500">
+                                        No students found.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredLeaderboard.map((row, rowIndex) => (
+                                    <tr
+                                        key={row.id || rowIndex}
+                                        className={cn(
+                                            "hover:bg-slate-50/80 transition-colors group",
+                                            row.isUser ? "bg-blue-50/50 hover:bg-blue-50" : ""
+                                        )}
+                                    >
+                                        {columns.map((col, colIndex) => (
+                                            <td key={colIndex} className={cn("px-6 py-4 text-sm text-slate-600", col.className)}>
+                                                {col.accessor(row)}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
-
-                <PaginatedTable
-                    data={filteredLeaderboard}
-                    columns={columns}
-                    emptyMessage="No students found."
-                    rowClassName={(row) => row.isUser ? "bg-blue-50/50 hover:bg-blue-50" : ""}
-                />
             </div>
         </div>
     );
