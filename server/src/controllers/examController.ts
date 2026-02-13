@@ -870,7 +870,7 @@ const evaluateCodeInternal = async (language: string, code: string, testCases: a
 // STUDENT: Submit Exam (UPDATED for Full Evaluation & Multiple Attempts)
 export const submitExam = async (req: Request, res: Response) => {
     const { id } = req.params; // Exam ID
-    const { answers, terminated, violations } = req.body; // { question_id: code/answer }
+    const { answers, terminated, violations, languages } = req.body; // { question_id: code/answer }
     // @ts-ignore
     const studentId = req.user?.userId;
 
@@ -932,12 +932,12 @@ export const submitExam = async (req: Request, res: Response) => {
                 if (testCases.length > 0) {
 
                     let code = studentAnswer;
-                    let lang = 'python'; // Default
+                    let lang = languages?.[q.id] || 'python'; // Use selected language or default
 
-                    // If studentAnswer is JSON string/object
+                    // If studentAnswer is JSON string/object (Legacy support)
                     if (typeof studentAnswer === 'object') {
                         code = studentAnswer.code;
-                        lang = studentAnswer.language;
+                        lang = studentAnswer.language || lang;
                     }
 
                     // Evaluate Code

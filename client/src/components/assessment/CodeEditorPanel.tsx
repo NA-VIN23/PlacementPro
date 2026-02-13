@@ -18,7 +18,7 @@ const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({ language, code, onCha
     };
 
     return (
-        <div className="h-full w-full border border-slate-700 rounded-lg overflow-hidden shadow-lg bg-[#1e1e1e]">
+        <div className="h-full w-full border border-slate-700 rounded-lg overflow-hidden shadow-lg bg-[#1e1e1e] select-text">
             {/* Header: Language Tag */}
             <div className="flex justify-between items-center px-4 py-2 bg-[#252526] border-b border-slate-700">
                 <span className="text-xs font-mono text-slate-400 uppercase">{language}</span>
